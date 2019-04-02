@@ -24,3 +24,4 @@ publish/package
 demo/report/report.html
 demo/report/stats.json
 package-lock.json
+vue.demo

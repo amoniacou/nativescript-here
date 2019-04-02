@@ -5,7 +5,8 @@ import {
     HereMapStyle,
     HereMarker,
     mapStyleProperty,
-    zoomLevelProperty
+    zoomLevelProperty,
+    tiltProperty
 } from './here.common';
 import * as app from 'tns-core-modules/application';
 import * as types from 'tns-core-modules/utils/types';
@@ -147,61 +148,80 @@ export class Here extends HereBase {
                 return false;
             },
         });
-        this.fragment.setMapMarkerDragListener(this.dragListener);
+        //this.fragment.setMapMarkerDragListener(this.dragListener);
+        const success = com.here.android.mpa.common.MapSettings.setIsolatedDiskCacheRootPath(
+            this._context.getExternalFilesDir(null) + "/" + ".here-maps",
+            "com.here.android.mpa.service.MapService.v3");
+
+        if(success) {
+            console.log('Ok')
+        } else {
+            console.log('Not ok')
+        }
+
         this.listener = new com.here.android.mpa.common.OnEngineInitListener({
             onEngineInitializationCompleted(error): void {
-                const owner = that.get();
-                if (!owner) return;
-                if (error === com.here.android.mpa.common.OnEngineInitListener.Error.NONE) {
-                    const map = owner.fragment.getMap();
-                    owner.isReady = true;
-                    const mapGesture = owner.fragment.getMapGesture();
-                    switch (owner.mapStyle) {
-                        case HereMapStyle.HYBRID_DAY:
-                            map.setMapScheme(com.here.android.mpa.mapping.Map.Scheme.HYBRID_DAY);
-                            break;
-                        case HereMapStyle.SATELLITE_DAY:
-                            map.setMapScheme(com.here.android.mpa.mapping.Map.Scheme.SATELLITE_DAY);
-                            break;
-                        case HereMapStyle.TERRAIN_DAY:
-                            map.setMapScheme(com.here.android.mpa.mapping.Map.Scheme.TERRAIN_DAY);
-                            break;
-                        default:
-                            map.setMapScheme(com.here.android.mpa.mapping.Map.Scheme.NORMAL_DAY);
-                            break;
-                    }
+                // const owner = that.get();
+                // if (!owner) return;
+                // if (error === com.here.android.mpa.common.OnEngineInitListener.Error.NONE) {
+                //     console.dir('DONE')
+                //     // const map = owner.fragment.getMap();
+                //     // owner.isReady = true;
 
-                    mapGesture.addOnGestureListener(owner.gestureListener);
+                //     // const mapGesture = owner.fragment.getMapGesture();
 
-                    if (owner.disableZoom) {
-                        mapGesture.setDoubleTapEnabled(false);
-                        mapGesture.setPinchEnabled(false);
-                        mapGesture.setTwoFingerTapEnabled(false);
-                        mapGesture.setKineticFlickEnabled(false);
-                    }
+                //     // switch (owner.mapStyle) {
+                //     //     case HereMapStyle.HYBRID_DAY:
+                //     //         map.setMapScheme(com.here.android.mpa.mapping.Map.Scheme.HYBRID_DAY);
+                //     //         break;
+                //     //     case HereMapStyle.SATELLITE_DAY:
+                //     //         map.setMapScheme(com.here.android.mpa.mapping.Map.Scheme.SATELLITE_DAY);
+                //     //         break;
+                //     //     case HereMapStyle.TERRAIN_DAY:
+                //     //         map.setMapScheme(com.here.android.mpa.mapping.Map.Scheme.TERRAIN_DAY);
+                //     //         break;
+                //     //     default:
+                //     //         map.setMapScheme(com.here.android.mpa.mapping.Map.Scheme.NORMAL_DAY);
+                //     //         break;
+                //     // }
 
-                    if (owner.disableScroll) {
-                        mapGesture.setPanningEnabled(false);
-                        mapGesture.setTwoFingerPanningEnabled(false);
-                    }
-                    map.setZoomLevel(owner.zoomLevel, com.here.android.mpa.mapping.Map.Animation.NONE);
-                    if (types.isNumber(+owner.latitude) && types.isNumber(+owner.longitude)) {
-                        map.setCenter(
-                            new com.here.android.mpa.common.GeoCoordinate(java.lang.Double.valueOf(owner.latitude).doubleValue(), java.lang.Double.valueOf(owner.longitude).doubleValue()),
-                            com.here.android.mpa.mapping.Map.Animation.NONE,
-                            com.here.android.mpa.mapping.Map.MOVE_PRESERVE_ZOOM_LEVEL,
-                            com.here.android.mpa.mapping.Map.MOVE_PRESERVE_ORIENTATION,
-                            com.here.android.mpa.mapping.Map.MOVE_PRESERVE_TILT);
-                    }
-                    owner.notify({
-                        eventName: HereBase.mapReadyEvent,
-                        object: owner,
-                        android: owner.fragment,
-                        ios: null
-                    });
-                } else {
-                    console.log(error.getDetails());
-                }
+                //     // mapGesture.addOnGestureListener(owner.gestureListener);
+
+                //     // if (owner.disableZoom) {
+                //     //     mapGesture.setDoubleTapEnabled(false);
+                //     //     mapGesture.setPinchEnabled(false);
+                //     //     mapGesture.setTwoFingerTapEnabled(false);
+                //     //     mapGesture.setKineticFlickEnabled(false);
+                //     // }
+
+                //     // if (owner.disableScroll) {
+                //     //     mapGesture.setPanningEnabled(false);
+                //     //     mapGesture.setTwoFingerPanningEnabled(false);
+                //     // }
+
+                //     // map.setZoomLevel(owner.zoomLevel, com.here.android.mpa.mapping.Map.Animation.NONE);
+
+                //     //map.setTilt(owner.tilt);
+
+                //     // if (types.isNumber(+owner.latitude) && types.isNumber(+owner.longitude)) {
+                //     //     map.setCenter(
+                //     //         new com.here.android.mpa.common.GeoCoordinate(java.lang.Double.valueOf(owner.latitude).doubleValue(), java.lang.Double.valueOf(owner.longitude).doubleValue()),
+                //     //         com.here.android.mpa.mapping.Map.Animation.NONE,
+                //     //         com.here.android.mpa.mapping.Map.MOVE_PRESERVE_ZOOM_LEVEL,
+                //     //         com.here.android.mpa.mapping.Map.MOVE_PRESERVE_ORIENTATION,
+                //     //         com.here.android.mpa.mapping.Map.MOVE_PRESERVE_TILT);
+                //     // }
+
+                //     // owner.notify({
+                //     //     eventName: HereBase.mapReadyEvent,
+                //     //     object: owner,
+                //     //     android: owner.fragment,
+                //     //     ios: null
+                //     // });
+                // } else {
+                //     console.dir('ERROR')
+                //     // console.log(error.getDetails());
+                // }
             }
         });
         return nativeView;
@@ -209,6 +229,8 @@ export class Here extends HereBase {
 
     public initNativeView(): void {
         super.initNativeView();
+        console.dir(this._context)
+        console.dir( this.listener)
         this.fragment.init(this._context, this.listener);
     }
 
@@ -229,6 +251,13 @@ export class Here extends HereBase {
         if (this.fragment && this.isReady) {
             const map = this.fragment.getMap();
             map.setZoomLevel(zoomLevel, com.here.android.mpa.mapping.Map.Animation.LINEAR);
+        }
+    }
+
+    [tiltProperty.setNative](tilt: number) {
+        if (this.fragment && this.isReady) {
+            const map = this.fragment.getMap();
+            map.setTilt(tilt);
         }
     }
 
@@ -289,6 +318,59 @@ export class Here extends HereBase {
             }
             resolve();
         });
+    }
+
+    addRoute(points) {
+        return new Promise<any>((resolve, reject) => {
+            resolve();
+            // if (this.fragment && this.isReady) {
+            //     const map = this.fragment.getMap();
+            //     const rm = new com.here.android.mpa.routing.RouteManager();
+            //     const routePlan = new com.here.android.mpa.routing.RoutePlan();
+
+            //     points.forEach(point => {
+            //         routePlan.addWaypoint(
+            //             new com.here.android.mpa.common.GeoCoordinate(
+            //                 java.lang.Double.valueOf(point.latitude).doubleValue(), 
+            //                 java.lang.Double.valueOf(point.longitude).doubleValue()
+            //             )
+            //         );
+            //     })
+    
+            //     const routeOptions = new com.here.android.mpa.routing.RouteOptions();
+            //     routeOptions.setTransportMode(com.here.android.mpa.routing.RouteOptions.TransportMode.CAR);
+            //     routeOptions.setRouteType(com.here.android.mpa.routing.RouteOptions.Type.FASTEST);
+    
+            //     routePlan.setRouteOptions(routeOptions);
+    
+            //     @Interfaces([com.here.android.mpa.routing.RouteManager.Listener])
+            //     class RouteListener extends java.lang.Object {
+            //         constructor() {
+            //             super();
+            //             return global.__native(this);
+            //         }
+    
+            //         onProgress(percentage) {
+            //             console.log(`ROUTE CALCULATE: ${ percentage }%`)
+            //         }
+                
+            //         onCalculateRouteFinished(error, routeResult) {
+            //             console.log('ROUTE CALCULATED!')
+                        
+            //             if (error == com.here.android.mpa.routing.RouteManager.Error.NONE) {
+            //                 const mapRoute = new com.here.android.mpa.mapping.MapRoute(routeResult.get(0).getRoute());
+            //                 map.addMapObject(mapRoute);
+
+            //                 resolve();
+            //             } else {
+            //                 reject()
+            //             }
+            //         }
+            //     }
+            
+            //     rm.calculateRoute(routePlan, new RouteListener());
+            // }
+        })
     }
 
     addMarkers(markers: HereMarker[]): Promise<any> {

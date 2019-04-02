@@ -40,8 +40,29 @@
 		</activity>
 		<activity android:name="com.tns.ErrorReportActivity"/>
 
-		<meta-data android:name="com.here.android.maps.appid" android:value=""/>
-		<meta-data android:name="com.here.android.maps.apptoken" android:value=""/>
+		<meta-data android:name="com.here.android.maps.appid" android:value="Do5dvOis8BfPjimRV3cv"/>
+		<meta-data android:name="com.here.android.maps.apptoken" android:value="9P0OwOUJb0tct7QofWfS_w"/>
+		<meta-data android:name="com.here.android.maps.license.key" android:value="ZYQN9lhSwcqpbVc1jMfpdciF/+aofpCzNOhhJ+Ni7R8Xend8YI7bUbQxhA9t2Yj7iWTcRVB94KjZyqxz+1jDZq3Ed273yWEOp/UnwPf+kWBBOGDwi2Ca53nmJtUbpe1gMIYHrbi3ClSsHFIa9W5SZafwEW/C0aSqJz2t2LrGILe0SCICXOcMH7GfjNk3GxsYBguqrMDD30z3KGho5TcVACuzh0LWuDt4KEGRifXo53LQSJHpd05w1RDvOhKEozb5nvUR06aLLiuVHJ0AYfIA2QSBpntlNjWO2bJvoCIBjStS5mlKPrbbFRDlxKSfnMxNE8NFdUXeRPOvjWFsWEmoRYDABhWzZ7Fj1igiI75PtzSphbMlFAEkYgHeY68try0pE+GsgdCOodehA+At/bICS4mrXiHdR/3592zMXe1ST1TacmLTXBsBY1/8bJvmEexSD1T+eA5VQ4an7DJKpjgvUQrME3DMdJfoaj9r+UmMo+jZfXdhI475zPRqCdJLCdcaSbn82GWMkiPOhmIgY/BAGwm+Fu5kDh2FlKAdqD7gLCpfMrqvKQS+7baMKWwmGKD8sVKI9r18g64pyO4UDcmcu6vrDwTONpqmXkceAi1QDIU4zaybPY9yhTxMuAoZT3IUp0BWhLrVMdNAmEvwuj4d/8UymXq/WgWzYOViAkyehHM="/>
+
+		<service
+			android:name="com.here.android.mpa.service.MapService"
+			android:label="HereMapService"
+			android:process="global.Here.Map.Service.v3"
+			android:exported="true" >
+			<intent-filter>
+				<action android:name="com.here.android.mpa.service.MapService.v3" >
+				</action>
+			</intent-filter>
+		</service>
+
+		<!-- <service 
+			android:exported="false" 
+			android:label="BasicMapSolutionMapService" 
+			android:name="com.here.android.mpa.service.MapService">
+			<intent-filter>
+				<action android:name="com.here.android.tutorial.MapService"></action>
+			</intent-filter>
+		</service> -->
 
 	</application>
 </manifest>

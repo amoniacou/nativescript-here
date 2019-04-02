@@ -12,18 +12,33 @@ export function pageLoaded(args: observable.EventData) {
     page = <pages.Page>args.object;
     markers = [1];
     page.bindingContext = new HelloWorldModel();
-    page.getViewById('map').on('mapReady', onMapReady.bind(this));
-    page.getViewById('map').on('mapClick', onMapClick.bind(this));
-    page.getViewById('map').on('mapLongClick', onMapLongClick.bind(this));
-
+    // page.getViewById('map').on('mapReady', onMapReady.bind(this));
+    // page.getViewById('map').on('mapClick', onMapClick.bind(this));
+    // page.getViewById('map').on('mapLongClick', onMapLongClick.bind(this));
 }
 
 
 export function onLoaded(args) {
     console.log('mapLoaded');
-    args.object.on('mapReady', args => {
-        onMapReady(args);
-    });
+
+    // const points = [
+    //     {
+    //         latitude: 59.435803,
+    //         longitude: 24.757259
+    //     }, {
+    //         latitude: 59.433808,
+    //         longitude: 24.766438
+    //     }, {
+    //         latitude: 59.438599,
+    //         longitude: 24.791812
+    //     }
+    // ]
+
+    // args.object.on('mapReady', args => {
+    //     onMapReady(args);
+    //     args.object.addRoute(points)
+    //     args.object.setCenter(points[0].latitude, points[0].longitude, true)
+    // });
 }
 
 export function removeMarkers() {
@@ -49,6 +64,7 @@ function onMapLongClick(event) {
     const map = event.object;
     const count = map._getMarkersCount();
     const next = count + 1;
+
     map.addMarkers(<HereMarker[]>[{
         id: next,
         latitude: event.latitude,
@@ -61,13 +77,13 @@ function onMapLongClick(event) {
             map.updateMarker(updatedMarker);
         }
     }]);
-    markers.push(next);
 
+    markers.push(next);
 }
 
 export function goToNY() {
     const map = page.getViewById('map') as Here;
-    map.setCenter(40.6976701, -74.2598632, true);
+    // map.setCenter(40.6976701, -74.2598632, true);
 }
 
 export function updateMarker(event) {
@@ -80,18 +96,23 @@ export function updateMarker(event) {
 
 function onMapReady(event) {
     const map = event.object;
-    map.addMarkers(<HereMarker[]>[{
-        id: 1,
-        latitude: 10.6689243,
-        longitude: -61.5315486,
-        title: 'Home',
-        description: 'Hmmm ... 🤔',
-        draggable: true,
-        onTap: (marker) => {
-            const updatedMarker = Object.assign({}, marker, {
-                selected: !marker.selected
-            });
-            map.updateMarker(updatedMarker);
-        }
-    }]);
+
+    
+
+    // map.addMarkers(<HereMarker[]>[{
+    //     id: 1,
+    //     latitude: 10.6689243,
+    //     longitude: -61.5315486,
+    //     title: 'Home',
+    //     description: 'Hmmm ... 🤔',
+    //     draggable: true,
+    //     onTap: (marker) => {
+    //         const updatedMarker = Object.assign({}, marker, {
+    //             selected: !marker.selected
+    //         });
+    //         map.updateMarker(updatedMarker);
+    //     }
+    // }]);
+
+    //map.addRoute()
 }

@@ -5,6 +5,7 @@ android {
 }
 
 dependencies {
+    implementation 'com.google.code.gson:gson:2.8.5'
     // Describe plugin native Android dependencies like
 	// compile "groupName:pluginName:ver" 
     // EXAMPLE: compile "com.facebook.fresco:fresco:0.9.0+"

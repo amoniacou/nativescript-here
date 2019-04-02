@@ -2,7 +2,7 @@
 import { Here } from 'nativescript-here';
 
 application.on('launch', () => {
-    Here.init('', '');
+  Here.init('4OSgdR9VowIkrO0EuNN3', 'bIGIECHgnHgAKW2_tZf5tw', 'gTSLU2nvgY6yb8/Bp/B4kdv0rZXCy2fIlYBfRpXidijTB5bcp0/x7XM32nw6sjzaKUb+LdVb22u1H92LxdUijaMX93QzzVw9rxtMhnrtOxavtRwBib+W8KnM2QzMIUKg0hi+miwa/Ap3JvY4VciEfeZDFtzQRHaI4TzjdmtHkfldZdboYHRQBS86RKSugMruFlgNF8lUaRzeYywCF1e3Zln4s0Dm3hv/k5zUUzX4N+EaD4EVx/jrJ1p6nnpxxk6wVE+/o50C6K9LZSDFXJ09OivQBiLEhuwSO43FTRYTeH5P6VrBJeNGJFNsppgCbNQxYqGnzPd7jWJi0vkjzR889BhydNLbQlzZtXPxIlbQ+gmyCzOO9madnMkilcEjW8K0UbDOI3fLGe40Md/nU1J2MIc3agAcR4RrmqMV6p56k2DQHLMggGnv6/Adm4JtPZbqR4eyjJ0zQib21MZnAvAYtVGNUKGbflvKo9rRKvwllY2viJ9DE/qQVtp1zKlphm73EE/rdwVtFeGQZcMq8lUOhQguhRtd6mhjJlECk7ZqOWEnpZv1UyM3mu0BPS1LYbqWuWqkKI8HV6z1D0SBsCmA6ISjUquFGypDcDVxBYilyiFdHnHizzVAklLfAk0BCy3EwH8mewgvpOsjVq9gZtj9yz1ZGK9NpKyztUkwVSfhFWM=');
 });
 
 application.start({moduleName: 'main-page'});

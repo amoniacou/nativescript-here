@@ -7,6 +7,7 @@ export abstract class HereBase extends View {
     disableZoom: boolean;
     disableScroll: boolean;
     zoomLevel: number;
+    tilt: number;
 
     static mapReadyEvent: string = 'mapReady';
 
@@ -46,9 +47,18 @@ export enum HereMapStyle {
     TERRAIN_DAY = 'terrain_day'
 }
 
+export const tiltProperty = new Property<HereBase, number>({
+    name: 'tilt',
+    defaultValue: 0,
+    valueConverter: v => +v
+});
+
+tiltProperty.register(HereBase);
+
 export const zoomLevelProperty = new Property<HereBase, number>({
     name: 'zoomLevel',
-    defaultValue: 0
+    defaultValue: 0,
+    valueConverter: v => +v
 });
 
 zoomLevelProperty.register(HereBase);

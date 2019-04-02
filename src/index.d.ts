@@ -16,4 +16,6 @@ export declare class Here extends HereBase {
     updateMarkers(markers: HereMarker[]): Promise<any>;
 
     updateMarker(marker: HereMarker): Promise<any>;
+
+    addRoute(): Promise<any>;
 }

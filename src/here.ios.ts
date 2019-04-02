@@ -41,8 +41,8 @@ export class Here extends HereBase {
         super();
     }
 
-    public static init(appId: string, appCode: string) {
-        NMAApplicationContext.setAppIdAppCode(appId, appCode);
+    public static init(appId: string, appCode: string, licenseKey: string) {
+        NMAApplicationContext.setAppIdAppCodeLicenseKey(appId, appCode, licenseKey);
     }
 
     public createNativeView(): Object {
@@ -55,7 +55,11 @@ export class Here extends HereBase {
         const url = NSURL.URLWithString(ios_icon);
         const data = NSData.dataWithContentsOfURL(url);
         this._defaultMarkerIcon = UIImage.imageWithData(data);
-        return NMAMapView.alloc().initWithFrame(CGRectZero);
+
+        console.dir('Before init')
+        const initial = NMAMapView.alloc().initWithFrame(CGRectZero);
+        console.dir('After init')
+        return initial
     }
 
 
@@ -91,7 +95,6 @@ export class Here extends HereBase {
         }
 
         nativeView.setGeoCenterWithAnimation(NMAGeoCoordinates.geoCoordinatesWithLatitudeLongitude(this.latitude, this.longitude), NMAMapAnimation.None);
-
     }
 
     public disposeNativeView(): void {
@@ -182,6 +185,12 @@ export class Here extends HereBase {
             }
             resolve();
         });
+    }
+
+    addRoute(points) {
+        return new Promise<any>((resolve, reject) => {
+            resolve()
+        })
     }
 
     addMarkers(markers: HereMarker[]): Promise<any> {
