@@ -12,33 +12,33 @@ export function pageLoaded(args: observable.EventData) {
     page = <pages.Page>args.object;
     markers = [1];
     page.bindingContext = new HelloWorldModel();
-    // page.getViewById('map').on('mapReady', onMapReady.bind(this));
-    // page.getViewById('map').on('mapClick', onMapClick.bind(this));
-    // page.getViewById('map').on('mapLongClick', onMapLongClick.bind(this));
+    page.getViewById('map').on('mapReady', onMapReady.bind(this));
+    page.getViewById('map').on('mapClick', onMapClick.bind(this));
+    page.getViewById('map').on('mapLongClick', onMapLongClick.bind(this));
 }
 
 
 export function onLoaded(args) {
     console.log('mapLoaded');
 
-    // const points = [
-    //     {
-    //         latitude: 59.435803,
-    //         longitude: 24.757259
-    //     }, {
-    //         latitude: 59.433808,
-    //         longitude: 24.766438
-    //     }, {
-    //         latitude: 59.438599,
-    //         longitude: 24.791812
-    //     }
-    // ]
+    const points = [
+        {
+            latitude: 59.435803,
+            longitude: 24.757259
+        }, {
+            latitude: 59.433808,
+            longitude: 24.766438
+        }, {
+            latitude: 59.438599,
+            longitude: 24.791812
+        }
+    ]
 
-    // args.object.on('mapReady', args => {
-    //     onMapReady(args);
-    //     args.object.addRoute(points)
-    //     args.object.setCenter(points[0].latitude, points[0].longitude, true)
-    // });
+    args.object.on('mapReady', args => {
+        onMapReady(args);
+        args.object.addRoute(points)
+        args.object.setCenter(points[0].latitude, points[0].longitude, true)
+    });
 }
 
 export function removeMarkers() {

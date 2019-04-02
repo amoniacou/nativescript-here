@@ -1,6 +1,6 @@
 {
   "nativescript": {
-    "id": "com.github.triniwiz.tns.here",
+    "id": "eu.amoniac.tns.here",
     "tns-ios": {
       "version": "5.1.0"
     },

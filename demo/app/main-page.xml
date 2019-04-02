@@ -13,6 +13,6 @@
             disableScroll="false" 
             latitude="49.1966286" 
             longitude="-123.0053635" 
-            tilt="45" />
+            tilt="0" />
     </GridLayout>
 </Page>

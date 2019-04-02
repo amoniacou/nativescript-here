@@ -43,35 +43,25 @@
 
 		<meta-data 
 			android:name="com.here.android.maps.appid" 
-			android:value="Do5dvOis8BfPjimRV3cv" />
+			android:value="wtPMBDZZu2FCGOIV84hu" />
 
 		<meta-data 
 			android:name="com.here.android.maps.apptoken" 
-			android:value="9P0OwOUJb0tct7QofWfS_w" />
+			android:value="KLEy98BFRP3mrt0X8sH7dg" />
 
 		<meta-data 
 			android:name="com.here.android.maps.license.key" 
-			android:value="ZYQN9lhSwcqpbVc1jMfpdciF/+aofpCzNOhhJ+Ni7R8Xend8YI7bUbQxhA9t2Yj7iWTcRVB94KjZyqxz+1jDZq3Ed273yWEOp/UnwPf+kWBBOGDwi2Ca53nmJtUbpe1gMIYHrbi3ClSsHFIa9W5SZafwEW/C0aSqJz2t2LrGILe0SCICXOcMH7GfjNk3GxsYBguqrMDD30z3KGho5TcVACuzh0LWuDt4KEGRifXo53LQSJHpd05w1RDvOhKEozb5nvUR06aLLiuVHJ0AYfIA2QSBpntlNjWO2bJvoCIBjStS5mlKPrbbFRDlxKSfnMxNE8NFdUXeRPOvjWFsWEmoRYDABhWzZ7Fj1igiI75PtzSphbMlFAEkYgHeY68try0pE+GsgdCOodehA+At/bICS4mrXiHdR/3592zMXe1ST1TacmLTXBsBY1/8bJvmEexSD1T+eA5VQ4an7DJKpjgvUQrME3DMdJfoaj9r+UmMo+jZfXdhI475zPRqCdJLCdcaSbn82GWMkiPOhmIgY/BAGwm+Fu5kDh2FlKAdqD7gLCpfMrqvKQS+7baMKWwmGKD8sVKI9r18g64pyO4UDcmcu6vrDwTONpqmXkceAi1QDIU4zaybPY9yhTxMuAoZT3IUp0BWhLrVMdNAmEvwuj4d/8UymXq/WgWzYOViAkyehHM=" />
+			android:value="gI4UG4VJiYO5Aot7tWLRaX2lnR1UWyUL4UhGI4jxrqidYBhzaZ7OKqPU79oY5JZJWUK++0VDpMucdEBy0CPe1ebPbz4mZqAgiEomfzA2ZHvtXA7wyZuZS54kgjobEXLiHaGxrdcFF2UAwUDhBUsJ3CA/5kX92MuAfVe20aw7U4NnnjLSZhUBTZ2KJbS19qOW+fjHys4YBpSTp69k2w7juUNFzCU2xqMTEL+/RwftRR9akWrGoHZ8DhV7laR4+E+dYFAzy4ywFcagnC2MKx9aOCDCNXFW1WKb9tmbMxKzGyUnll6PaQwnsgXtGxa/rNhqhu0sGyjfc6QUWp83zqEcjo7KxKOUzpag9zVvLLW7Mh0kzMCm5BDWUCST9YaXqK1f/G8k6X4/G/iQW+17h68urAW83e/P3ZN5rPIyyQ0uXsh4pID6Y3H1LZILPx8whCQFjWfXYbWe4Zh8RRlxlIU3jgeSSkGgL7tzwjZTgKowyJZgWfLZEPjwJLcGzhCPzc4HCgcJxqb0/mc/AC0FE6OBr/CVrbCgtD23CdsREW1bsdIDAkBEwlhIIXf4LTb7C6rSj58p9kOOrvdjIOuVpCSpt9JwHCKSebySCX8oNGrq0xaE79//YdYmUIjqsiGJFI1z9H2htBcoJY24Ilq5PHxdNDRLS6uezBpSDSLCVm8YPxE=" />
 
 		<service
-			android:name="com.here.android.mpa.service.MapService"
-			android:label="HereMapService"
-			android:process="global.Here.Map.Service.v3"
-			android:exported="true" >
-			<intent-filter>
-				<action android:name="com.here.android.mpa.service.MapService.v3" >
-				</action>
-			</intent-filter>
-		</service>
-
-		<!-- <service 
 			android:exported="false" 
 			android:label="BasicMapSolutionMapService" 
 			android:name="com.here.android.mpa.service.MapService">
 			<intent-filter>
-				<action android:name="com.here.android.tutorial.MapService"></action>
+				<action android:name="eu.amoniac.tns.here.MapService">
+				</action>
 			</intent-filter>
-		</service> -->
+		</service>
 
 	</application>
 </manifest>
