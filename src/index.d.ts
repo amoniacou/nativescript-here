@@ -3,7 +3,7 @@ import { HereBase, HereMarker } from './here.common';
 export { HereMarker, HereMapStyle } from './here.common';
 
 export declare class Here extends HereBase {
-    public static init(appId: string, appCode: string): void;
+    public static init(appId: string, appCode: string, licenseKey: string): void;
 
     _getMarkersCount(): number;
 

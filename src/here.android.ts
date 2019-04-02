@@ -32,7 +32,7 @@ export class Here extends HereBase {
         super();
     }
 
-    public static init(appId: string, appCode: string) {
+    public static init(appId: string, appCode: string, licenseKey: string) {
     }
 
     public createNativeView(): Object {
@@ -161,67 +161,67 @@ export class Here extends HereBase {
 
         this.listener = new com.here.android.mpa.common.OnEngineInitListener({
             onEngineInitializationCompleted(error): void {
-                // const owner = that.get();
-                // if (!owner) return;
-                // if (error === com.here.android.mpa.common.OnEngineInitListener.Error.NONE) {
-                //     console.dir('DONE')
-                //     // const map = owner.fragment.getMap();
-                //     // owner.isReady = true;
+                const owner = that.get();
+                if (!owner) return;
+                if (error === com.here.android.mpa.common.OnEngineInitListener.Error.NONE) {
+                    console.dir('Prepeare map draw')
+                    // const map = owner.fragment.getMap();
+                    // owner.isReady = true;
 
-                //     // const mapGesture = owner.fragment.getMapGesture();
+                    // const mapGesture = owner.fragment.getMapGesture();
 
-                //     // switch (owner.mapStyle) {
-                //     //     case HereMapStyle.HYBRID_DAY:
-                //     //         map.setMapScheme(com.here.android.mpa.mapping.Map.Scheme.HYBRID_DAY);
-                //     //         break;
-                //     //     case HereMapStyle.SATELLITE_DAY:
-                //     //         map.setMapScheme(com.here.android.mpa.mapping.Map.Scheme.SATELLITE_DAY);
-                //     //         break;
-                //     //     case HereMapStyle.TERRAIN_DAY:
-                //     //         map.setMapScheme(com.here.android.mpa.mapping.Map.Scheme.TERRAIN_DAY);
-                //     //         break;
-                //     //     default:
-                //     //         map.setMapScheme(com.here.android.mpa.mapping.Map.Scheme.NORMAL_DAY);
-                //     //         break;
-                //     // }
+                    // switch (owner.mapStyle) {
+                    //     case HereMapStyle.HYBRID_DAY:
+                    //         map.setMapScheme(com.here.android.mpa.mapping.Map.Scheme.HYBRID_DAY);
+                    //         break;
+                    //     case HereMapStyle.SATELLITE_DAY:
+                    //         map.setMapScheme(com.here.android.mpa.mapping.Map.Scheme.SATELLITE_DAY);
+                    //         break;
+                    //     case HereMapStyle.TERRAIN_DAY:
+                    //         map.setMapScheme(com.here.android.mpa.mapping.Map.Scheme.TERRAIN_DAY);
+                    //         break;
+                    //     default:
+                    //         map.setMapScheme(com.here.android.mpa.mapping.Map.Scheme.NORMAL_DAY);
+                    //         break;
+                    // }
 
-                //     // mapGesture.addOnGestureListener(owner.gestureListener);
+                    // mapGesture.addOnGestureListener(owner.gestureListener);
 
-                //     // if (owner.disableZoom) {
-                //     //     mapGesture.setDoubleTapEnabled(false);
-                //     //     mapGesture.setPinchEnabled(false);
-                //     //     mapGesture.setTwoFingerTapEnabled(false);
-                //     //     mapGesture.setKineticFlickEnabled(false);
-                //     // }
+                    // if (owner.disableZoom) {
+                    //     mapGesture.setDoubleTapEnabled(false);
+                    //     mapGesture.setPinchEnabled(false);
+                    //     mapGesture.setTwoFingerTapEnabled(false);
+                    //     mapGesture.setKineticFlickEnabled(false);
+                    // }
 
-                //     // if (owner.disableScroll) {
-                //     //     mapGesture.setPanningEnabled(false);
-                //     //     mapGesture.setTwoFingerPanningEnabled(false);
-                //     // }
+                    // if (owner.disableScroll) {
+                    //     mapGesture.setPanningEnabled(false);
+                    //     mapGesture.setTwoFingerPanningEnabled(false);
+                    // }
 
-                //     // map.setZoomLevel(owner.zoomLevel, com.here.android.mpa.mapping.Map.Animation.NONE);
+                    // map.setZoomLevel(owner.zoomLevel, com.here.android.mpa.mapping.Map.Animation.NONE);
 
-                //     //map.setTilt(owner.tilt);
+                    //map.setTilt(owner.tilt);
 
-                //     // if (types.isNumber(+owner.latitude) && types.isNumber(+owner.longitude)) {
-                //     //     map.setCenter(
-                //     //         new com.here.android.mpa.common.GeoCoordinate(java.lang.Double.valueOf(owner.latitude).doubleValue(), java.lang.Double.valueOf(owner.longitude).doubleValue()),
-                //     //         com.here.android.mpa.mapping.Map.Animation.NONE,
-                //     //         com.here.android.mpa.mapping.Map.MOVE_PRESERVE_ZOOM_LEVEL,
-                //     //         com.here.android.mpa.mapping.Map.MOVE_PRESERVE_ORIENTATION,
-                //     //         com.here.android.mpa.mapping.Map.MOVE_PRESERVE_TILT);
-                //     // }
+                    // if (types.isNumber(+owner.latitude) && types.isNumber(+owner.longitude)) {
+                    //     map.setCenter(
+                    //         new com.here.android.mpa.common.GeoCoordinate(java.lang.Double.valueOf(owner.latitude).doubleValue(), java.lang.Double.valueOf(owner.longitude).doubleValue()),
+                    //         com.here.android.mpa.mapping.Map.Animation.NONE,
+                    //         com.here.android.mpa.mapping.Map.MOVE_PRESERVE_ZOOM_LEVEL,
+                    //         com.here.android.mpa.mapping.Map.MOVE_PRESERVE_ORIENTATION,
+                    //         com.here.android.mpa.mapping.Map.MOVE_PRESERVE_TILT);
+                    // }
 
-                //     // owner.notify({
-                //     //     eventName: HereBase.mapReadyEvent,
-                //     //     object: owner,
-                //     //     android: owner.fragment,
-                //     //     ios: null
-                //     // });
-                // } else {
-                //     console.dir('ERROR')
-                //     // console.log(error.getDetails());
-                // }
+                    // owner.notify({
+                    //     eventName: HereBase.mapReadyEvent,
+                    //     object: owner,
+                    //     android: owner.fragment,
+                    //     ios: null
+                    // });
+                } else {
+                    console.dir('ERROR')
+                    console.log(error.getDetails());
+                }
             }
         });
         return nativeView;
@@ -229,9 +229,12 @@ export class Here extends HereBase {
 
     public initNativeView(): void {
         super.initNativeView();
-        console.dir(this._context)
-        console.dir( this.listener)
-        this.fragment.init(this._context, this.listener);
+        const context = new com.here.android.mpa.common.ApplicationContext(this._context)
+
+        context.setAppIdCode('Do5dvOis8BfPjimRV3cv', '9P0OwOUJb0tct7QofWfS_w')
+        context.setLicenseKey('ZYQN9lhSwcqpbVc1jMfpdciF/+aofpCzNOhhJ+Ni7R8Xend8YI7bUbQxhA9t2Yj7iWTcRVB94KjZyqxz+1jDZq3Ed273yWEOp/UnwPf+kWBBOGDwi2Ca53nmJtUbpe1gMIYHrbi3ClSsHFIa9W5SZafwEW/C0aSqJz2t2LrGILe0SCICXOcMH7GfjNk3GxsYBguqrMDD30z3KGho5TcVACuzh0LWuDt4KEGRifXo53LQSJHpd05w1RDvOhKEozb5nvUR06aLLiuVHJ0AYfIA2QSBpntlNjWO2bJvoCIBjStS5mlKPrbbFRDlxKSfnMxNE8NFdUXeRPOvjWFsWEmoRYDABhWzZ7Fj1igiI75PtzSphbMlFAEkYgHeY68try0pE+GsgdCOodehA+At/bICS4mrXiHdR/3592zMXe1ST1TacmLTXBsBY1/8bJvmEexSD1T+eA5VQ4an7DJKpjgvUQrME3DMdJfoaj9r+UmMo+jZfXdhI475zPRqCdJLCdcaSbn82GWMkiPOhmIgY/BAGwm+Fu5kDh2FlKAdqD7gLCpfMrqvKQS+7baMKWwmGKD8sVKI9r18g64pyO4UDcmcu6vrDwTONpqmXkceAi1QDIU4zaybPY9yhTxMuAoZT3IUp0BWhLrVMdNAmEvwuj4d/8UymXq/WgWzYOViAkyehHM=')
+
+        this.fragment.init(context, this.listener);
     }
 
     public disposeNativeView(): void {
