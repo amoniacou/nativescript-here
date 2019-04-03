@@ -8,11 +8,11 @@
             loaded="onLoaded" 
             row="3" 
             id="map" 
-            zoomLevel="15"  
+            zoomLevel="17"  
             disableZoom="false" 
             disableScroll="false" 
             latitude="49.1966286" 
             longitude="-123.0053635" 
-            tilt="0" />
+            tilt="45" />
     </GridLayout>
 </Page>

@@ -6,7 +6,8 @@ import {
     HereMarker,
     mapStyleProperty,
     zoomLevelProperty,
-    tiltProperty
+    tiltProperty,
+    landmarksProperty
 } from './here.common';
 import * as app from 'tns-core-modules/application';
 import * as types from 'tns-core-modules/utils/types';
@@ -85,36 +86,36 @@ export class Here extends HereBase {
             },
 
             onMapObjectsSelected(objects: java.util.List<any>): boolean {
-                // const owner = that ? that.get() : null;
-                // if (owner) {
-                //     const size = objects.size();
-                //     for (let i = 0; i < size; i++) {
-                //         const nativeMarker = objects.get(i);
-                //         const marker = owner.markers.get(nativeMarker);
-                //         if (marker) {
-                //             const callback = owner.markersCallback.get(marker.id);
-                //             if (callback) {
-                //                 callback(marker);
-                //             }
-                //         }
-                //     }
-                // }
+                const owner = that ? that.get() : null;
+                if (owner) {
+                    const size = objects.size();
+                    for (let i = 0; i < size; i++) {
+                        const nativeMarker = objects.get(i);
+                        const marker = owner.markers.get(nativeMarker);
+                        if (marker) {
+                            const callback = owner.markersCallback.get(marker.id);
+                            if (callback) {
+                                callback(marker);
+                            }
+                        }
+                    }
+                }
                 return false;
             },
 
             onTapEvent(point: globalAndroid.graphics.PointF): boolean {
-                // const owner = that ? that.get() : null;
-                // if (owner) {
-                //     const map = owner.fragment ? owner.fragment.getMap() : null;
-                //     if (!map) return false;
-                //     const cord = map.pixelToGeo(point);
-                //     owner.notify({
-                //         eventName: HereBase.mapClickEvent,
-                //         object: owner,
-                //         latitude: cord.getLatitude(),
-                //         longitude: cord.getLongitude()
-                //     });
-                // }
+                const owner = that ? that.get() : null;
+                if (owner) {
+                    const map = owner.fragment ? owner.fragment.getMap() : null;
+                    if (!map) return false;
+                    const cord = map.pixelToGeo(point);
+                    owner.notify({
+                        eventName: HereBase.mapClickEvent,
+                        object: owner,
+                        latitude: cord.getLatitude(),
+                        longitude: cord.getLongitude()
+                    });
+                }
                 return false;
             },
 
@@ -212,9 +213,11 @@ export class Here extends HereBase {
                     //     mapGesture.setTwoFingerPanningEnabled(false);
                     // }
 
-                    map.setZoomLevel(owner.zoomLevel, com.here.android.mpa.mapping.Map.Animation.NONE);
+                    map.setZoomLevel(owner.zoomLevel, com.here.android.mpa.mapping.Map.Animation.NONE)
 
-                    map.setTilt(owner.tilt);
+                    map.setTilt(owner.tilt)
+
+                    map.setLandmarksVisible(owner.landmarks)
 
                     if (types.isNumber(+owner.latitude) && types.isNumber(+owner.longitude)) {
                         map.setCenter(
@@ -242,8 +245,8 @@ export class Here extends HereBase {
 
     public initNativeView(): void {
         super.initNativeView();
-        const context = new com.here.android.mpa.common.ApplicationContext(this._context)
-        this.fragment.init(context, this.listener);
+        this.context = new com.here.android.mpa.common.ApplicationContext(this._context)
+        this.fragment.init(this.context, this.listener);
     }
 
     public disposeNativeView(): void {
@@ -270,6 +273,13 @@ export class Here extends HereBase {
         if (this.fragment && this.isReady) {
             const map = this.fragment.getMap();
             map.setTilt(tilt);
+        }
+    }
+
+    [landmarksProperty.setNative](state: boolean) {
+        if (this.fragment && this.isReady) {
+            const map = this.fragment.getMap();
+            map.setLandmarksVisible(state);
         }
     }
 
@@ -334,11 +344,15 @@ export class Here extends HereBase {
 
     addRoute(points) {
         return new Promise<any>((resolve, reject) => {
-            // resolve();
             if (this.fragment && this.isReady) {
-                const map = this.fragment.getMap();
-                const rm = new com.here.android.mpa.routing.RouteManager();
-                const routePlan = new com.here.android.mpa.routing.RoutePlan();
+                const map = this.fragment.getMap()
+                console.log('Start create route')
+
+                const rm = new com.here.android.mpa.routing.RouteManager()
+                console.log('RouteManager created')
+
+                const routePlan = new com.here.android.mpa.routing.RoutePlan()
+                console.log('RoutePlan created')
 
                 points.forEach(point => {
                     routePlan.addWaypoint(
@@ -346,25 +360,23 @@ export class Here extends HereBase {
                             java.lang.Double.valueOf(point.latitude).doubleValue(), 
                             java.lang.Double.valueOf(point.longitude).doubleValue()
                         )
-                    );
+                    )
                 })
+                console.log('RoutePlan waypoints added')
     
-                const routeOptions = new com.here.android.mpa.routing.RouteOptions();
+                const routeOptions = new com.here.android.mpa.routing.RouteOptions()
+                console.log('RouteOptions created')
+
                 routeOptions.setTransportMode(com.here.android.mpa.routing.RouteOptions.TransportMode.CAR);
                 routeOptions.setRouteType(com.here.android.mpa.routing.RouteOptions.Type.FASTEST);
+                console.log('RouteOptions params seted')
     
                 routePlan.setRouteOptions(routeOptions);
     
-                @Interfaces([com.here.android.mpa.routing.RouteManager.Listener])
-                class RouteListener extends java.lang.Object {
-                    constructor() {
-                        super();
-                        return global.__native(this);
-                    }
-    
+                const routeListener = new com.here.android.mpa.routing.RouteManager.Listener({ 
                     onProgress(percentage) {
                         console.log(`ROUTE CALCULATE: ${ percentage }%`)
-                    }
+                    },
                 
                     onCalculateRouteFinished(error, routeResult) {
                         console.log('ROUTE CALCULATED!')
@@ -378,9 +390,9 @@ export class Here extends HereBase {
                             reject()
                         }
                     }
-                }
+                })
             
-                rm.calculateRoute(routePlan, new RouteListener());
+                rm.calculateRoute(routePlan, routeListener);
             }
         })
     }
@@ -390,12 +402,21 @@ export class Here extends HereBase {
             const markerIcons = [];
             if (this.fragment && this.isReady) {
                 const map = this.fragment.getMap();
+
                 markers.forEach((marker) => {
                     if (marker.onTap && typeof marker.onTap === 'function') {
                         this.markersCallback.set(marker.id, marker.onTap);
                     }
-                    const nativeMarker = new com.here.android.mpa.mapping.MapMarker();
-                    nativeMarker.setCoordinate(new com.here.android.mpa.common.GeoCoordinate(java.lang.Double.valueOf(marker.latitude).doubleValue(), java.lang.Double.valueOf(marker.longitude).doubleValue()));
+
+                    const nativeMarker = new com.here.android.mpa.mapping.MapMarker()
+
+                    nativeMarker.setCoordinate(
+                        new com.here.android.mpa.common.GeoCoordinate(
+                            java.lang.Double.valueOf(marker.latitude).doubleValue(), 
+                            java.lang.Double.valueOf(marker.longitude).doubleValue()
+                        )
+                    )
+
                     if (marker.title) {
                         nativeMarker.setTitle(marker.title);
                     }
@@ -425,12 +446,13 @@ export class Here extends HereBase {
                     } else {
                         nativeMarker.hideInfoBubble();
                     }
-                });
-                resolve();
+                })
+
+                resolve()
             } else {
-                reject();
+                reject()
             }
-        });
+        })
     }
 
     removeMarkers(markers?: number[]): Promise<any> {

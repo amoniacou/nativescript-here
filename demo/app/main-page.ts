@@ -17,7 +17,6 @@ export function pageLoaded(args: observable.EventData) {
     page.getViewById('map').on('mapLongClick', onMapLongClick.bind(this));
 }
 
-
 export function onLoaded(args) {
     console.log('mapLoaded');
 
@@ -36,8 +35,26 @@ export function onLoaded(args) {
 
     args.object.on('mapReady', args => {
         onMapReady(args);
-        args.object.addRoute(points)
-        args.object.setCenter(points[0].latitude, points[0].longitude, true)
+        args.object
+            .addRoute(points)
+            .then(() => {
+                this.map.addMarkers(points.map((point, index) => ({
+                    ...point,
+                    id: index,
+                    title: `Point ${ index + 1 }`,
+                    description: null,
+                    draggable: false,
+                    selected: !index,
+                    onTap: (marker) => {
+                        const updatedMarker = Object.assign({}, marker, {
+                            selected: !marker.selected
+                        });
+                        args.object.updateMarker(updatedMarker);
+                    }
+                })))
+            })
+
+        args.object.setCenter(points[0].latitude, points[0].longitude, true)   
     });
 }
 
@@ -96,8 +113,6 @@ export function updateMarker(event) {
 
 function onMapReady(event) {
     const map = event.object;
-
-    
 
     // map.addMarkers(<HereMarker[]>[{
     //     id: 1,

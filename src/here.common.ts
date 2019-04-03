@@ -1,13 +1,14 @@
 import { Property, View } from 'tns-core-modules/ui/core/view';
 
 export abstract class HereBase extends View {
-    mapStyle: HereMapStyle;
-    latitude: number;
-    longitude: number;
-    disableZoom: boolean;
-    disableScroll: boolean;
-    zoomLevel: number;
-    tilt: number;
+    mapStyle:       HereMapStyle;
+    latitude:       number;
+    longitude:      number;
+    disableZoom:    boolean;
+    disableScroll:  boolean;
+    zoomLevel:      number;
+    tilt:           number;
+    landmarks:      boolean;
 
     static mapReadyEvent: string = 'mapReady';
 
@@ -47,6 +48,18 @@ export enum HereMapStyle {
     TERRAIN_DAY = 'terrain_day'
 }
 
+const booleanConverter = (v: any): boolean => {
+    return String(v) === 'true';
+};
+
+export const landmarksProperty = new Property<HereBase, boolean>({
+    name: 'landmarks',
+    defaultValue: false,
+    valueConverter: v => booleanConverter(v)
+});
+
+landmarksProperty.register(HereBase);
+
 export const tiltProperty = new Property<HereBase, number>({
     name: 'tilt',
     defaultValue: 0,
@@ -81,11 +94,6 @@ export const longitudeProperty = new Property<HereBase, number>({
 });
 
 longitudeProperty.register(HereBase);
-
-
-const booleanConverter = (v: any): boolean => {
-    return String(v) === 'true';
-};
 
 export const disableZoomProperty = new Property<HereBase, boolean>({
     name: 'disableZoom',
