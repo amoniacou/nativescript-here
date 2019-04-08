@@ -187,6 +187,12 @@ export class Here extends HereBase {
         });
     }
 
+    createNavigation() {
+        return new Promise<any>((resolve, reject) => {
+            resolve()
+        })
+    }
+
     addRoute(points) {
         return new Promise<any>((resolve, reject) => {
             resolve()

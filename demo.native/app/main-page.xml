@@ -1,0 +1,23 @@
+<Page xmlns="http://schemas.nativescript.org/tns.xsd" loaded="pageLoaded" class="page"
+      xmlns:ui="nativescript-here">
+    <FlexboxLayout flexDirection="column" alignItems="stretch">
+        <!-- <Button row="0" text="Remove Markers" tap="removeMarkers"/>
+        <Button row="1" text="Update Marker" tap="updateMarker"/>
+        <Button row="2" text="Go to New York ✈️" tap="goToNY"/> -->
+        <ui:Here 
+            flexGrow="1"
+            loaded="onLoaded" 
+            id="map" 
+            zoomLevel="17"  
+            disableZoom="false"
+            disableScroll="false"
+            latitude="49.1966286"
+            longitude="-123.0053635"
+            tilt="{{ tilt }}" />
+        <FlexboxLayout flexShrink="0">
+            <Button flexGrow="1" text="Navigation" tap="navigation"/>
+            <Button flexGrow="1" text="Simulation" tap="simulation"/>
+            <Button flexGrow="1" text="Stop" tap="stop"/>
+        </FlexboxLayout>
+    </FlexboxLayout>
+</Page>

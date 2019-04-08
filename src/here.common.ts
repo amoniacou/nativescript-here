@@ -27,6 +27,14 @@ export abstract class HereBase extends View {
     abstract updateMarker(marker: HereMarker): Promise<any>;
 
     abstract _getMarkersCount(): number;
+
+    abstract _requestPremision(): any;
+
+    abstract calculateRoute(): any;
+    
+    abstract startNavigation(): any;
+
+    abstract stopNavigation(): any;
 }
 
 export interface HereMarker {

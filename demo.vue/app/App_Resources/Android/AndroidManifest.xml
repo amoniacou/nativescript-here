@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+	package="__PACKAGE__"
+	android:versionCode="10000"
+	android:versionName="1.0">
+
+	<supports-screens
+		android:smallScreens="true"
+		android:normalScreens="true"
+		android:largeScreens="true"
+		android:xlargeScreens="true"/>
+
+	<uses-sdk
+		android:minSdkVersion="17"
+		android:targetSdkVersion="__APILEVEL__"/>
+
+	<uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
+	<uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
+	<uses-permission android:name="android.permission.INTERNET"/>
+
+	<application
+		android:name="com.tns.NativeScriptApplication"
+		android:allowBackup="true"
+		android:icon="@drawable/icon"
+		android:label="@string/app_name"
+		android:theme="@style/AppTheme">
+
+		<activity
+			android:name="com.tns.NativeScriptActivity"
+			android:label="@string/title_activity_kimera"
+			android:configChanges="keyboard|keyboardHidden|orientation|screenSize|smallestScreenSize|screenLayout|locale|uiMode"
+			android:theme="@style/LaunchScreenTheme">
+
+			<meta-data android:name="SET_THEME_ON_LAUNCH" android:resource="@style/AppTheme" />
+
+			<intent-filter>
+				<action android:name="android.intent.action.MAIN" />
+				<category android:name="android.intent.category.LAUNCHER" />
+			</intent-filter>
+		</activity>
+		<activity android:name="com.tns.ErrorReportActivity"/>
+
+		<meta-data 
+			android:name="com.here.android.maps.appid" 
+			android:value="wtPMBDZZu2FCGOIV84hu" />
+
+		<meta-data 
+			android:name="com.here.android.maps.apptoken" 
+			android:value="KLEy98BFRP3mrt0X8sH7dg" />
+
+		<meta-data 
+			android:name="com.here.android.maps.license.key" 
+			android:value="gI4UG4VJiYO5Aot7tWLRaX2lnR1UWyUL4UhGI4jxrqidYBhzaZ7OKqPU79oY5JZJWUK++0VDpMucdEBy0CPe1ebPbz4mZqAgiEomfzA2ZHvtXA7wyZuZS54kgjobEXLiHaGxrdcFF2UAwUDhBUsJ3CA/5kX92MuAfVe20aw7U4NnnjLSZhUBTZ2KJbS19qOW+fjHys4YBpSTp69k2w7juUNFzCU2xqMTEL+/RwftRR9akWrGoHZ8DhV7laR4+E+dYFAzy4ywFcagnC2MKx9aOCDCNXFW1WKb9tmbMxKzGyUnll6PaQwnsgXtGxa/rNhqhu0sGyjfc6QUWp83zqEcjo7KxKOUzpag9zVvLLW7Mh0kzMCm5BDWUCST9YaXqK1f/G8k6X4/G/iQW+17h68urAW83e/P3ZN5rPIyyQ0uXsh4pID6Y3H1LZILPx8whCQFjWfXYbWe4Zh8RRlxlIU3jgeSSkGgL7tzwjZTgKowyJZgWfLZEPjwJLcGzhCPzc4HCgcJxqb0/mc/AC0FE6OBr/CVrbCgtD23CdsREW1bsdIDAkBEwlhIIXf4LTb7C6rSj58p9kOOrvdjIOuVpCSpt9JwHCKSebySCX8oNGrq0xaE79//YdYmUIjqsiGJFI1z9H2htBcoJY24Ilq5PHxdNDRLS6uezBpSDSLCVm8YPxE=" />
+
+		<service
+			android:exported="false" 
+			android:label="BasicMapSolutionMapService" 
+			android:name="com.here.android.mpa.service.MapService">
+			<intent-filter>
+				<action android:name="eu.amoniac.tns.here.MapService">
+				</action>
+			</intent-filter>
+		</service>
+		
+	</application>
+</manifest>
