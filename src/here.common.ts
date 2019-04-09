@@ -28,13 +28,19 @@ export abstract class HereBase extends View {
 
     abstract _getMarkersCount(): number;
 
-    abstract _requestPremision(): any;
+    abstract _requestPremision(): Promise<any>;
 
-    abstract calculateRoute(): any;
+    abstract calculateRoute(points: object[]): Promise<any>;
+
+    abstract showWay(): Promise<any>;
     
-    abstract startNavigation(): any;
+    abstract startNavigation(): Promise<any>;
 
-    abstract stopNavigation(): any;
+    abstract stopNavigation(): Promise<any>;
+
+    abstract toNextWaypoint(): void;
+
+    abstract toPrevWaypoint(): void;
 }
 
 export interface HereMarker {

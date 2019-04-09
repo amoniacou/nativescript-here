@@ -46,11 +46,7 @@
         "name": "Osei Fortune",
         "email": "fortune.osei@yahoo.com"
     },
-    "bugs": {
-        "url": "https://github.com/triniwiz/nativescript-here/issues"
-    },
     "license": "Apache-2.0",
-    "homepage": "https://github.com/triniwiz/nativescript-here",
     "readmeFilename": "README.md",
     "devDependencies": {
         "tns-core-modules": "^5.0.1",

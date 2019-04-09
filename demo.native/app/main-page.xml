@@ -14,10 +14,11 @@
             latitude="49.1966286"
             longitude="-123.0053635"
             tilt="{{ tilt }}" />
-        <FlexboxLayout flexShrink="0">
-            <Button flexGrow="1" text="Navigation" tap="navigation"/>
-            <Button flexGrow="1" text="Simulation" tap="simulation"/>
-            <Button flexGrow="1" text="Stop" tap="stop"/>
+        <FlexboxLayout flexShrink="0" flexWrap="wrap" justifyContent="space-between">
+            <Button width="33.3%" text="Navigation" tap="navigation"/>
+            <Button width="33.3%" text="Simulation" tap="simulation"/>
+            <Button width="33.3%" text="Stop" tap="stop"/>
+            <Button width="50%" text="Show way" tap="showWay"/>
         </FlexboxLayout>
     </FlexboxLayout>
 </Page>

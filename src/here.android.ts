@@ -39,6 +39,8 @@ export class Here extends HereBase {
     private navigationRouteBoundingBox;
     private navigationArrowIcon;
     private navigationArrow;
+    private routeOptions;
+    private mapRoute;
 
     constructor() {
         super();
@@ -181,7 +183,7 @@ export class Here extends HereBase {
 
         const isolatedDiskCacheRootPathStatus = com.here.android.mpa.common.MapSettings.setIsolatedDiskCacheRootPath(
             this._context.getExternalFilesDir(null) + java.io.File.separator + ".here-maps",
-            "eu.amoniac.tns.here.MapService"
+            "tns.here.MapService"
         )
 
         console.log(`Isolate Disk Cache: ${ isolatedDiskCacheRootPathStatus ? 'OK' : 'WITH ERRORS' }`)
@@ -239,7 +241,9 @@ export class Here extends HereBase {
 
                 console.dir(`Navigation: lat: ${lat}, lng: ${lng}, headin: ${heading}`)
 
-                owner.navigationArrow.setCenter(position)
+                // owner.navigationArrow.setCenter(position)
+
+                owner.navigationArrow.setCoordinate(position)
                 
                 map.setCenter(
                     position, 
@@ -277,26 +281,62 @@ export class Here extends HereBase {
                         new java.lang.ref.WeakReference(owner.positionListener)
                     )
 
-                    // owner.navigationArrowIcon = new com.here.android.mpa.common.Image()
+                    class RerouteListene extends com.here.android.mpa.guidance.NavigationManager.RerouteListener {
+                        onRerouteBegin() {
+                            console.dir('Reroute!!')
+                        }
 
-                    // const decodedString = android.util.Base64.decode(navigation_arrow, android.util.Base64.DEFAULT);
-                    // const decodedByte = android.graphics.BitmapFactory.decodeByteArray(decodedString, 0, decodedString.length); 
+                        onRerouteEnd(routeResults, routingError) {
+                            if (routingError == com.here.android.mpa.routing.RoutingError.NONE) {
+                                if (routeResults.getRoute() != null) {
+    
+                                    owner.navigationRoute = routeResults.getRoute();
+                                    console.log('navigationRoute')
+    
+                                    map.removeMapObject(this.mapRoute)
+                                    this.mapRoute = new com.here.android.mpa.mapping.MapRoute(owner.navigationRoute);
+                                    console.log('mapRoute')
+    
+                                    this.mapRoute.setManeuverNumberVisible(true)
+                                    map.addMapObject(this.mapRoute)
+    
+                                    owner.navigationRouteBoundingBox = routeResults.getRoute().getBoundingBox();
+                                    owner.navigationRouteBoundingBox.expand(200, 200)
+                                } else {
+                                    console.log('Woooops... route results returned is not valid')
+                                }
+                            } else {
+                                console.log('Woooops... route calculation returned error code: ' + routingError)
+                            }
+                        }
+                    }
+
+                    const rerouteListener = new RerouteListene()
+
+                    owner.navigationManager.addRerouteListener(
+                        new java.lang.ref.WeakReference(rerouteListener)
+                    )
+
+                    owner.navigationArrowIcon = new com.here.android.mpa.common.Image()
+
+                    const decodedString = android.util.Base64.decode(navigation_arrow, android.util.Base64.DEFAULT);
+                    const decodedByte = android.graphics.BitmapFactory.decodeByteArray(decodedString, 0, decodedString.length); 
                     // console.log(decodedByte)
                     // console.dir(decodedByte)
 
-                    // owner.navigationArrowIcon.setBitmap(decodedByte)
+                    owner.navigationArrowIcon.setBitmap(decodedByte)
 
-                    // owner.navigationArrow = new com.here.android.mpa.mapping.MapMarker(
-                    //     com.here.android.mpa.common.GeoCoordinate(0, 0),
-                    //     owner.navigationArrowIcon
-                    // )
-
-                    owner.navigationArrow = new com.here.android.mpa.mapping.MapCircle(
-                        4, new com.here.android.mpa.common.GeoCoordinate(0, 0)
+                    owner.navigationArrow = new com.here.android.mpa.mapping.MapMarker(
+                        new com.here.android.mpa.common.GeoCoordinate(0, 0),
+                        owner.navigationArrowIcon
                     )
+
+                    // owner.navigationArrow = new com.here.android.mpa.mapping.MapCircle(
+                    //     4, new com.here.android.mpa.common.GeoCoordinate(0, 0)
+                    // )
                     
-                    owner.navigationArrow.setLineColor(android.graphics.Color.rgb(255, 255, 255))
-                    owner.navigationArrow.setLineWidth(8)
+                    // owner.navigationArrow.setLineColor(android.graphics.Color.rgb(255, 255, 255))
+                    // owner.navigationArrow.setLineWidth(8)
 
                     map.addMapObject(owner.navigationArrow)
 
@@ -480,6 +520,14 @@ export class Here extends HereBase {
         })
     }
 
+    toNextWaypoint(): void {
+
+    }
+
+    toPrevWaypoint(): void {
+        
+    }
+
     setCenter(lat: number, lon: number, animated: boolean): Promise<any> {
         return new Promise<any>(resolve => {
             if (this.fragment && this.isReady) {
@@ -498,7 +546,21 @@ export class Here extends HereBase {
         });
     }
 
-    calculateRoute(points): any {
+    showWay(): any {
+        if (this.fragment && this.isReady) {
+            const map = this.fragment.getMap()
+
+            map.setOrientation(0);
+            map.setTilt(0);
+            map.zoomTo(
+                this.navigationRouteBoundingBox, 
+                com.here.android.mpa.mapping.Map.Animation.LINEAR, 
+                com.here.android.mpa.mapping.Map.MOVE_PRESERVE_ORIENTATION,
+            );
+        }
+    }
+
+    calculateRoute(points): Promise<any> {
         const owner = this;
         
         return new Promise<any>((resolve, reject) => {
@@ -516,13 +578,14 @@ export class Here extends HereBase {
                 const routePlan = new com.here.android.mpa.routing.RoutePlan()
                 console.log('routePlan')
 
-                const routeOptions = new com.here.android.mpa.routing.RouteOptions()
-                console.log('routeOptions')
+                this.routeOptions = new com.here.android.mpa.routing.RouteOptions()
 
-                routeOptions.setTransportMode(com.here.android.mpa.routing.RouteOptions.TransportMode.CAR)     
-                routeOptions.setHighwaysAllowed(false)
-                routeOptions.setRouteType(com.here.android.mpa.routing.RouteOptions.Type.SHORTEST)
-                routeOptions.setRouteCount(1)
+                this.routeOptions.setTransportMode(com.here.android.mpa.routing.RouteOptions.TransportMode.UNDEFINED)     
+                this.routeOptions.setHighwaysAllowed(false)
+                this.routeOptions.setParksAllowed(true)
+                this.routeOptions.setRouteType(com.here.android.mpa.routing.RouteOptions.Type.FASTEST)
+                this.routeOptions.setRouteCount(1)
+
                 console.log('Route Params')
 
                 points.forEach(point => {
@@ -546,11 +609,15 @@ export class Here extends HereBase {
                                 owner.navigationRoute = routeResults.get(0).getRoute();
                                 console.log('navigationRoute')
 
-                                const mapRoute = new com.here.android.mpa.mapping.MapRoute(owner.navigationRoute);
+                                if(this.mapRoute) {
+                                    map.removeMapObject(this.mapRoute)
+                                }
+                                
+                                this.mapRoute = new com.here.android.mpa.mapping.MapRoute(owner.navigationRoute);
                                 console.log('mapRoute')
 
-                                mapRoute.setManeuverNumberVisible(true)
-                                map.addMapObject(mapRoute)
+                                this.mapRoute.setManeuverNumberVisible(true)
+                                map.addMapObject(this.mapRoute)
 
                                 owner.navigationRouteBoundingBox = routeResults.get(0).getRoute().getBoundingBox();
                                 owner.navigationRouteBoundingBox.expand(200, 200)
@@ -581,7 +648,7 @@ export class Here extends HereBase {
         }) 
     }
 
-    startNavigation(): any {
+    startNavigation(): Promise<any> {
         return new Promise<any>((resolve, reject) => {
             if (this.fragment && this.isReady) {
                 const map = this.fragment.getMap()
@@ -604,7 +671,7 @@ export class Here extends HereBase {
         })
     }
 
-    startSimulation(): any {
+    startSimulation(): Promise<any> {
         return new Promise<any>((resolve, reject) => {
             if (this.fragment && this.isReady) {
                 const map = this.fragment.getMap()
@@ -627,7 +694,7 @@ export class Here extends HereBase {
         })
     }
 
-    stopNavigation(): any {
+    stopNavigation(): Promise<any> {
         return new Promise<any>((resolve, reject) => {
             if (this.fragment && this.isReady) {
                 this.navigationManager.stop();
@@ -757,7 +824,10 @@ export class Here extends HereBase {
             if (this.fragment && this.isReady) {
                 const nativeMarker = this.nativeMarkers.get(marker.id);
                 if (nativeMarker) {
-                    nativeMarker.setCoordinate(new com.here.android.mpa.common.GeoCoordinate(java.lang.Double.valueOf(marker.latitude).doubleValue(), java.lang.Double.valueOf(marker.longitude).doubleValue()));
+                    nativeMarker.setCoordinate(new com.here.android.mpa.common.GeoCoordinate(
+                        java.lang.Double.valueOf(marker.latitude).doubleValue(), 
+                        java.lang.Double.valueOf(marker.longitude).doubleValue()
+                    ));
                     if (marker.title) {
                         nativeMarker.setTitle(marker.title);
                     }

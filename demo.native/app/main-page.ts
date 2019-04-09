@@ -6,6 +6,7 @@ import { Here, HereMarker } from 'nativescript-here';
 let page;
 let markers;
 let tilt;
+let map = null;
 
 // Event handler for Page 'loaded' event attached in main-page.xml
 export function pageLoaded(args: observable.EventData) {
@@ -23,68 +24,67 @@ export function onLoaded(args) {
     const points = [
         {
             latitude: 59.435803,
-            longitude: 24.757259
+            longitude: 24.757259,
+            activationRadius: 10
         }, {
             latitude: 59.433808,
-            longitude: 24.766438
+            longitude: 24.766438,
+            activationRadius: 15
         }, {
             latitude: 59.438599,
-            longitude: 24.791812
+            longitude: 24.791812,
+            activationRadius: 25
         }
     ]
 
     args.object.on('mapReady', args => {
         onMapReady(args);
 
-        args.object.toggleScroll(false)
-        args.object.toggleZoom(false)
+        map = args.object;
 
-        args.object
+        map.toggleScroll(false)
+        map.toggleZoom(false)
+
+        map
             .calculateRoute(points)
             .then(() => {
-                args.object.addMarkers(<HereMarker[]>points.map((point, index) => {
-                    console.log(index)
-                    return {
-                        id: index,
-                        latitude: point.latitude,
-                        longitude: point.longitude,
-                        title: `Point ${index}`,
-                        onTap: (marker) => {
-                            const updatedMarker = Object.assign({}, marker, {
-                                selected: !marker.selected
-                            });
-                            args.object.updateMarker(updatedMarker);
-                        }
+                map.addMarkers(<HereMarker[]>points.map((point, index) => ({
+                    id: index,
+                    latitude: point.latitude,
+                    longitude: point.longitude,
+                    title: `Point ${index}`,
+                    onTap: (marker) => {
+                        const updatedMarker = Object.assign({}, marker, {
+                            selected: !marker.selected
+                        });
+                        map.updateMarker(updatedMarker);
                     }
-                }));
+                })));
             })
     });
 }
 
 export function removeMarkers() {
-    page.getViewById('map').removeMarkers(markers);
+    map.removeMarkers(markers);
 }
 
 export function navigation() {
-    const map = page.getViewById('map');
-
     map.startNavigation()
 }
 
 export function simulation() {
-    const map = page.getViewById('map');
-
     map.startSimulation()
 }
 
 export function stop() {
-    const map = page.getViewById('map');
-
     map.stopNavigation()
 }
 
+export function showWay() {
+    map.showWay()
+}
+
 function onMapClick(event) {
-    const map = event.object;
     const count = map._getMarkersCount();
     const next = count + 1;
 
@@ -98,7 +98,6 @@ function onMapClick(event) {
 }
 
 function onMapLongClick(event) {
-    const map = event.object;
     const count = map._getMarkersCount();
     const next = count + 1;
 
@@ -118,10 +117,6 @@ function onMapLongClick(event) {
     // markers.push(next);
 }
 
-export function goToNY() {
-    const map = page.getViewById('map') as Here;
-}
-
 export function updateMarker(event) {
     page.getViewById('map').updateMarker({
         id: 1,
@@ -131,6 +126,5 @@ export function updateMarker(event) {
 }
 
 function onMapReady(event) {
-    const map = event.object;
-
+   
 }

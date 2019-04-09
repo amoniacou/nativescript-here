@@ -178,6 +178,44 @@ export class Here extends HereBase {
         return this.nativeMarkers ? this.nativeMarkers.size : 0;
     }
 
+    _requestPremision(): Promise<any> {
+        return new Promise<any>((resolve, reject) => {
+            resolve()
+        })
+    }
+
+    calculateRoute(points): Promise<any> {
+        return new Promise<any>((resolve, reject) => {
+            resolve()
+        })
+    }
+
+    showWay(): Promise<any> {
+        return new Promise<any>((resolve, reject) => {
+            resolve()
+        })
+    }
+    
+    startNavigation(): Promise<any> {
+        return new Promise<any>((resolve, reject) => {
+            resolve()
+        })
+    }
+
+    stopNavigation(): Promise<any> {
+        return new Promise<any>((resolve, reject) => {
+            resolve()
+        })
+    }
+
+    toNextWaypoint(): void {
+
+    }
+
+    toPrevWaypoint(): void {
+
+    }
+
     setCenter(lat: number, lon: number, animated: boolean): Promise<any> {
         return new Promise<any>((resolve) => {
             if (this.nativeView) {
