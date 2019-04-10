@@ -29,9 +29,14 @@ export class Here extends HereBase {
     private isReady: boolean = false;
     private dragListener;
     private gestureListener;
+
     private nativeMarkers: Map<number, any>;
     private markersCallback: Map<number, any>;
     private markers: Map<any, HereMarker>;
+
+    private nativeCircles: Map<number, any>;
+    private circles: Map<any, any>;
+
     private navigationManager;
     private navigationManagerListener;
     private positionListener;
@@ -41,6 +46,7 @@ export class Here extends HereBase {
     private navigationArrow;
     private routeOptions;
     private mapRoute;
+    private navigationFollow: boolean = false;
 
     constructor() {
         super();
@@ -239,14 +245,22 @@ export class Here extends HereBase {
 
                 // const routeElement = geoPosition.getRoadElement();
 
-                console.dir(`Navigation: lat: ${lat}, lng: ${lng}, headin: ${heading}`)
+                owner.notify({
+                    eventName: HereBase.geoPositionChange,
+                    object: owner,
+                    latitude: lat,
+                    longitude: lng,
+                    heading
+                });
+
+                console.dir(`Navigation: lat: ${lat}, lng: ${lng}, heading: ${heading}`)
 
                 // owner.navigationArrow.setCenter(position)
 
                 owner.navigationArrow.setCoordinate(position)
                 
                 map.setCenter(
-                    position, 
+                    position,
                     com.here.android.mpa.mapping.Map.Animation.LINEAR,
                     com.here.android.mpa.mapping.Map.MOVE_PRESERVE_ZOOM_LEVEL,
                     heading,
@@ -591,7 +605,10 @@ export class Here extends HereBase {
                 points.forEach(point => {
                     routePlan.addWaypoint(
                         new com.here.android.mpa.routing.RouteWaypoint(
-                            new com.here.android.mpa.common.GeoCoordinate(point.latitude, point.longitude)
+                            new com.here.android.mpa.common.GeoCoordinate(
+                                java.lang.Double.valueOf(point.latitude).doubleValue(),
+                                java.lang.Double.valueOf(point.longitude).doubleValue()
+                            )
                         )
                     )
                 })

@@ -16,6 +16,8 @@ export abstract class HereBase extends View {
 
     static mapLongClickEvent: string = 'mapLongClick';
 
+    static geoPositionChange: string = 'geoPositionChange';
+
     abstract setCenter(lat: number, lon: number, animated: boolean): Promise<any>;
 
     abstract addMarkers(markers: HereMarker[]): Promise<any>;
