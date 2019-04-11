@@ -33,6 +33,15 @@ exec('tns --version', (err, stdout, stderr) => {
                 }
             })
 
+            console.log(`Cloning .json files`);
+            exec('cp -R package.json ../ && cp -R tsconfig.json ../', (err, stdout, stderr) => {
+                if (err) {
+                    // node couldn't execute the command
+                    console.log(`${err}`);
+                    return;
+                }
+            })
+
             console.log(`Cloning typings files`);
             exec('cp -R ./typings ../', (err, stdout, stderr) => {
                 if (err) {
