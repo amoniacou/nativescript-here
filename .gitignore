@@ -2,10 +2,8 @@
 .idea
 .DS_Store
 *.esm.json
-*.js
 *.js.map
 *.log
-!src/*.js
 !src/*.d.ts
 !src/index.d.ts
 !src/references.d.ts
