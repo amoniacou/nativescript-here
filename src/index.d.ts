@@ -14,6 +14,7 @@ export declare class Here extends HereBase {
   removeMarkers(markers?: number[]): Promise<any>;
   updateMarkers(markers: HereMarker[]): Promise<any>;
   updateMarker(marker: HereMarker): Promise<any>;
+  calculateRoute(points: object[]): Promise<any>;
 }
 
 

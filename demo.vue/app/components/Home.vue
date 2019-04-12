@@ -14,7 +14,7 @@
                 disableScroll="false" 
                 :latitude="latitude" 
                 :longitude="longitude" 
-                tilt="45" />
+                :tilt="45" />
         </GridLayout>
     </Page>
 </template>
@@ -54,25 +54,26 @@
                 this.map = args.object
                 
                 this.toStart()
-                // this.map
-                //     .addRoute(this.points)
-                //     .then(() => {
-                //         this.toStart()
-                //         this.map.addMarkers(this.points.map((point, index) => ({
-                //             ...point,
-                //             id: index,
-                //             title: `Point ${ index + 1 }`,
-                //             description: null,
-                //             draggable: false,
-                //             selected: !index,
-                //             onTap: (marker) => {
-                //                 const updatedMarker = Object.assign({}, marker, {
-                //                     selected: !marker.selected
-                //                 });
-                //                 this.map.updateMarker(updatedMarker);
-                //             }
-                //         })))
-                //     })
+                this.map
+                    .calculateRoute(this.points)
+                    .then(() => {
+                        this.map.showWay()
+                        // this.toStart()
+                        this.map.addMarkers(this.points.map((point, index) => ({
+                            ...point,
+                            id: index,
+                            title: `Point ${ index + 1 }`,
+                            description: null,
+                            draggable: false,
+                            selected: !index,
+                            // onTap: (marker) => {
+                            //     const updatedMarker = Object.assign({}, marker, {
+                            //         selected: !marker.selected
+                            //     });
+                            //     this.map.updateMarker(updatedMarker);
+                            // }
+                        })))
+                    })
             },
 
             toStart() {

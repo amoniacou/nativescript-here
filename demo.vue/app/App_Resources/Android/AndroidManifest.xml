@@ -57,7 +57,7 @@
 			android:label="BasicMapSolutionMapService" 
 			android:name="com.here.android.mpa.service.MapService">
 			<intent-filter>
-				<action android:name="eu.amoniac.tns.here.MapService">
+				<action android:name="tns.here.MapService">
 				</action>
 			</intent-filter>
 		</service>

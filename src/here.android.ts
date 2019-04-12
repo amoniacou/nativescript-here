@@ -916,6 +916,8 @@ export class Here extends HereBase {
                     this.addCircle(circle)
                 })
 
+                console.log('Test')
+
                 resolve()
             } else {
                 reject()
