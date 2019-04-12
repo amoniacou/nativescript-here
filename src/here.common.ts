@@ -43,6 +43,8 @@ export abstract class HereBase extends View {
     abstract toNextWaypoint(): void;
 
     abstract toPrevWaypoint(): void;
+
+    abstract addCircle(circle): void;
 }
 
 export interface HereMarker {

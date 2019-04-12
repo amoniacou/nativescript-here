@@ -649,11 +649,11 @@ export class Here extends HereBase {
                                 resolve();
                             } else {
                                 console.log('Woooops... route results returned is not valid')
-                                reject();
+                                reject('Woooops... route results returned is not valid');
                             }
                         } else {
                             console.log('Woooops... route calculation returned error code: ' + routingError)
-                            reject();
+                            reject('Woooops... route calculation returned error code: ' + routingError);
                         }
                     }
                 })
@@ -866,5 +866,60 @@ export class Here extends HereBase {
                 }
             }
         });
+    }
+
+    addCircle(circle): void {
+        if (this.fragment && this.isReady) {
+            const map = this.fragment.getMap()
+
+            const nativeObj = new com.here.android.mpa.mapping.MapCircle()
+
+            this._setCircleOptions(nativeObj, circle)
+            
+            this.nativeCircles.set(circle.id, nativeObj)
+            this.circles.set(nativeObj, circle)
+            map.addMapObject(nativeObj)
+        }
+    }
+
+    updateCircle(circle): void {
+        if (this.fragment && this.isReady) {
+            const map = this.fragment.getMap()
+
+            const nativeObj = this.nativeCircles.get(circle.id);
+            this._setCircleOptions(nativeObj, circle)
+        }
+    }
+
+    _setCircleOptions(nativeObj, options) {
+        nativeObj.setCenter(
+            new com.here.android.mpa.common.GeoCoordinate(
+                java.lang.Double.valueOf(options.latitude).doubleValue(), 
+                java.lang.Double.valueOf(options.longitude).doubleValue()
+            )
+        )
+
+        nativeObj.setRadius(
+            java.lang.Double.valueOf(options.radius).doubleValue()
+        )
+        nativeObj.setFillColor(android.graphics.Color.argb(150, 5, 5, 255))
+        nativeObj.setLineColor(android.graphics.Color.rgb(5, 5, 255))
+        nativeObj.setLineWidth(5)
+    }
+
+    addCircles(circles): Promise<any> {
+        return new Promise<any>((resolve, reject) => {
+            if (this.fragment && this.isReady) {
+                const map = this.fragment.getMap();
+
+                circles.forEach((circle) => {
+                    this.addCircle(circle)
+                })
+
+                resolve()
+            } else {
+                reject()
+            }
+        })
     }
 }

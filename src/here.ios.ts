@@ -384,6 +384,9 @@ export class Here extends HereBase {
         });
     }
 
+    addCircle(circle): void {
+        
+    }
 }
 
 // @ts-ignore
