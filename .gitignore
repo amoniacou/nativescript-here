@@ -2,9 +2,10 @@
 .idea
 .DS_Store
 *.esm.json
+*.js
 *.js.map
 *.log
-!src/*.d.ts
+src/*.d.ts
 !src/index.d.ts
 !src/references.d.ts
 !src/scripts/*.js
@@ -23,4 +24,3 @@ publish/package
 demo/report/report.html
 demo/report/stats.json
 package-lock.json
-vue.demo

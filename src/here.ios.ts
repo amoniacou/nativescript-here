@@ -25,6 +25,7 @@ declare var NMAMapView,
     NMAMapGestureType,
     NMAGeoCoordinates,
     NMAMapMarker;
+    NMANavigationManager;
 
 global.moduleMerge(common, exports);
 
@@ -62,7 +63,6 @@ export class Here extends HereBase {
         return initial
     }
 
-
     public initNativeView(): void {
         super.initNativeView();
         const nativeView = this.nativeView;
@@ -94,7 +94,10 @@ export class Here extends HereBase {
                 break;
         }
 
-        nativeView.setGeoCenterWithAnimation(NMAGeoCoordinates.geoCoordinatesWithLatitudeLongitude(this.latitude, this.longitude), NMAMapAnimation.None);
+        nativeView.setGeoCenterWithAnimation(
+            NMAGeoCoordinates.geoCoordinatesWithLatitudeLongitude(this.latitude, this.longitude), 
+            NMAMapAnimation.None
+        )
     }
 
     public disposeNativeView(): void {
@@ -148,10 +151,10 @@ export class Here extends HereBase {
         }
     }
 
-    [disableScrollProperty.setNative](disable: boolean) {
+    toggleScroll(enable: boolean) {
         const nativeView = this.nativeView;
         if (this.isReady) {
-            if (disable) {
+            if (!enable) {
                 nativeView.disableMapGestures(NMAMapGestureType.Pan);
             } else {
                 nativeView.enableMapGestures(NMAMapGestureType.Pan);
@@ -159,10 +162,14 @@ export class Here extends HereBase {
         }
     }
 
-    [disableZoomProperty.setNative](disable: boolean) {
+    [disableScrollProperty.setNative](enable: boolean) {
+        this.toggleScroll(enable)
+    }
+
+    toggleZoom(enable: boolean) {
         const nativeView = this.nativeView;
         if (this.isReady) {
-            if (disable) {
+            if (!enable) {
                 nativeView.disableMapGestures(NMAMapGestureType.Pinch);
                 nativeView.disableMapGestures(NMAMapGestureType.DoubleTap);
                 nativeView.disableMapGestures(NMAMapGestureType.TwoFingerTap);
@@ -172,6 +179,10 @@ export class Here extends HereBase {
                 nativeView.enableMapGestures(NMAMapGestureType.TwoFingerTap);
             }
         }
+    }
+
+    [disableZoomProperty.setNative](enable: boolean) {
+        this.toggleZoom(enable)
     }
 
     _getMarkersCount(): number {

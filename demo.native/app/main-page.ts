@@ -47,20 +47,20 @@ export function onLoaded(args) {
 
         map
             .calculateRoute(points)
-            .then(() => {
-                map.addMarkers(<HereMarker[]>points.map((point, index) => ({
-                    id: index,
-                    latitude: point.latitude,
-                    longitude: point.longitude,
-                    title: `Point ${index}`,
-                    onTap: (marker) => {
-                        const updatedMarker = Object.assign({}, marker, {
-                            selected: !marker.selected
-                        });
-                        map.updateMarker(updatedMarker);
-                    }
-                })));
-            })
+        //     .then(() => {
+        //         map.addMarkers(<HereMarker[]>points.map((point, index) => ({
+        //             id: index,
+        //             latitude: point.latitude,
+        //             longitude: point.longitude,
+        //             title: `Point ${index}`,
+        //             onTap: (marker) => {
+        //                 const updatedMarker = Object.assign({}, marker, {
+        //                     selected: !marker.selected
+        //                 });
+        //                 map.updateMarker(updatedMarker);
+        //             }
+        //         })));
+        //     })
     });
 }
 
