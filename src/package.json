@@ -4,9 +4,6 @@
     "description": "NativeScript sdk for Here Maps",
     "main": "here",
     "typings": "index.d.ts",
-    "publishConfig": {
-        "registry":"https://npm.dev.amoniac.eu"
-    },
     "nativescript": {
         "platforms": {
             "android": "5.0.0",
