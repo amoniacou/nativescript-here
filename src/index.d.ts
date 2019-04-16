@@ -7,14 +7,26 @@ export declare class Here extends HereBase {
   createNativeView(): Object;
   initNativeView(): void;
   disposeNativeView(): void;
-  _getMarkersCount(): number;
+
   setCenter(lat: number, lon: number, animated: boolean): Promise<any>;
-  addRoute(points: any): Promise<any>;
+
+  // Markers
   addMarkers(markers: HereMarker[]): Promise<any>;
   removeMarkers(markers?: number[]): Promise<any>;
   updateMarkers(markers: HereMarker[]): Promise<any>;
   updateMarker(marker: HereMarker): Promise<any>;
+  _getMarkersCount(): number;
+
+  // Navigation
+  _requestPremision(): Promise<any>;
   calculateRoute(points: object[]): Promise<any>;
+  showWay(): Promise<any>;
+  startNavigation(): Promise<any>;
+  startSimulation(): Promise<any>;
+  stopNavigation(): void;
+
+  // Circles
+  addCircle(circle): void;
 }
 
 

@@ -7,6 +7,21 @@ let page;
 let markers;
 let tilt;
 let map = null;
+let points = [
+    {
+        latitude: 59.435803,
+        longitude: 24.757259,
+        activationRadius: 10
+    }, {
+        latitude: 59.433808,
+        longitude: 24.766438,
+        activationRadius: 15
+    }, {
+        latitude: 59.438599,
+        longitude: 24.791812,
+        activationRadius: 25
+    }
+]
 
 // Event handler for Page 'loaded' event attached in main-page.xml
 export function pageLoaded(args: observable.EventData) {
@@ -21,46 +36,45 @@ export function pageLoaded(args: observable.EventData) {
 }
 
 export function onLoaded(args) {
-    const points = [
-        {
-            latitude: 59.435803,
-            longitude: 24.757259,
-            activationRadius: 10
-        }, {
-            latitude: 59.433808,
-            longitude: 24.766438,
-            activationRadius: 15
-        }, {
-            latitude: 59.438599,
-            longitude: 24.791812,
-            activationRadius: 25
-        }
-    ]
-
     args.object.on('mapReady', args => {
+        console.dir('mapReady')
         onMapReady(args);
 
         map = args.object;
 
-        map.toggleScroll(false)
-        map.toggleZoom(false)
+        // map.toggleScroll(false)
+        // map.toggleZoom(false)
 
         map
             .calculateRoute(points)
-        //     .then(() => {
-        //         map.addMarkers(<HereMarker[]>points.map((point, index) => ({
-        //             id: index,
-        //             latitude: point.latitude,
-        //             longitude: point.longitude,
-        //             title: `Point ${index}`,
-        //             onTap: (marker) => {
-        //                 const updatedMarker = Object.assign({}, marker, {
-        //                     selected: !marker.selected
-        //                 });
-        //                 map.updateMarker(updatedMarker);
-        //             }
-        //         })));
-        //     })
+            .then(() => {
+                console.log('Hello from view!')
+
+                map
+                    .addMarkers(<HereMarker[]>points.map((point, index) => ({
+                        id: index,
+                        latitude: point.latitude,
+                        longitude: point.longitude,
+                        title: `Point ${index}`,
+                        draggable: false
+                    })))
+                    .then(() => {
+                        console.log('Markers added!')
+                    })
+            })
+
+                // map.addMarkers(<HereMarker[]>points.map((point, index) => ({
+                //     id: index,
+                //     latitude: point.latitude,
+                //     longitude: point.longitude,
+                //     title: `Point ${index}`,
+                //     onTap: (marker) => {
+                //         const updatedMarker = Object.assign({}, marker, {
+                //             selected: !marker.selected
+                //         });
+                //         map.updateMarker(updatedMarker);
+                //     }
+                // })));
     });
 }
 
@@ -70,6 +84,10 @@ export function removeMarkers() {
 
 export function navigation() {
     map.startNavigation()
+}
+
+export function calculate() {
+    map.calculateRoute(points)
 }
 
 export function simulation() {

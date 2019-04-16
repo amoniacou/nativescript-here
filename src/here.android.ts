@@ -711,14 +711,10 @@ export class Here extends HereBase {
         })
     }
 
-    stopNavigation(): Promise<any> {
-        return new Promise<any>((resolve, reject) => {
-            if (this.fragment && this.isReady) {
-                this.navigationManager.stop();
-            }
-
-            resolve();
-        });
+    stopNavigation(): void {
+        if (this.fragment && this.isReady) {
+            this.navigationManager.stop();
+        }
     }
 
     addMarkers(markers: HereMarker[]): Promise<any> {

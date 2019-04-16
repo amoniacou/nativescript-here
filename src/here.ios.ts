@@ -24,8 +24,13 @@ declare var NMAMapView,
     NMAMapAnimation,
     NMAMapGestureType,
     NMAGeoCoordinates,
-    NMAMapMarker;
-    NMANavigationManager;
+    NMAMapMarker,
+    NMANavigationManager,
+    NMACoreRouter,
+    NMARoutingType,
+    NMATransportMode,
+    NMARoutingOption,
+    NMARoutingMode;
 
 global.moduleMerge(common, exports);
 
@@ -37,6 +42,10 @@ export class Here extends HereBase {
     private gestureDelegate: NMAMapGestureDelegateImpl;
     isReady: boolean = false;
     private _defaultMarkerIcon;
+    private router;
+    private navigationRouteBoundingBox;
+    private navigationManager;
+    private route;
 
     constructor() {
         super();
@@ -53,14 +62,13 @@ export class Here extends HereBase {
         this.delegate = NMAMapViewDelegateImpl.initWithOwner(new WeakRef<Here>(this));
         this.gestureDelegate = NMAMapGestureDelegateImpl.initWithOwner(new WeakRef<Here>(this));
 
-        const url = NSURL.URLWithString(ios_icon);
-        const data = NSData.dataWithContentsOfURL(url);
-        this._defaultMarkerIcon = UIImage.imageWithData(data);
+        const url = NSURL.URLWithString(ios_icon)
+        const data = NSData.dataWithContentsOfURL(url)
+        const image = UIImage.imageWithDataScale(data, 3)
 
-        console.dir('Before init')
-        const initial = NMAMapView.alloc().initWithFrame(CGRectZero);
-        console.dir('After init')
-        return initial
+        this._defaultMarkerIcon = NMAImage.imageWithUIImage(image)
+
+        return NMAMapView.alloc().initWithFrame(CGRectZero);
     }
 
     public initNativeView(): void {
@@ -98,6 +106,15 @@ export class Here extends HereBase {
             NMAGeoCoordinates.geoCoordinatesWithLatitudeLongitude(this.latitude, this.longitude), 
             NMAMapAnimation.None
         )
+
+        this.navigationManager = NMANavigationManager.sharedNavigationManager()
+        this.navigationManager.delegate = this
+        this.navigationManager.map = nativeView
+        // NMANavigationManager.setMap(nativeView)
+
+        console.dir(nativeView)
+        // this.navigationManager.setMap(nativeView.getMap())
+        console.dir('Created: "navigationManager"')
     }
 
     public disposeNativeView(): void {
@@ -197,117 +214,163 @@ export class Here extends HereBase {
 
     calculateRoute(points): Promise<any> {
         return new Promise<any>((resolve, reject) => {
-            resolve()
+            console.dir(this.isReady)
+
+            const stops = new NSMutableArray(points.length)
+
+            points.forEach((point, index) => {
+                console.dir(`Point ${index} create`)
+                stops.addObject(
+                    NMAWaypoint.alloc().initWithGeoCoordinates(
+                        NMAGeoCoordinates.geoCoordinatesWithLatitudeLongitude(
+                            point.latitude,
+                            point.longitude
+                        )
+                    )
+                )
+                console.dir(`Point ${index} created`)
+            })
+
+            const routingMode = NMARoutingMode.alloc().initWithRoutingTypeTransportModeRoutingOptions(
+                NMARoutingType.Fastest,
+                NMATransportMode.Car,
+                NMARoutingOption.AvoidHighway
+            )
+            console.dir('Created: "routingMode"')
+
+            if(!this.router) {
+                this.router = NMACoreRouter.alloc().init()
+                console.dir('Created: "router"')
+            }
+
+            const res = this.router.calculateRouteWithStopsRoutingModeCompletionBlock(stops, routingMode, (result, error) => {
+                if(error) {
+                    console.dir(`Error: calculate route with error code: ${error}`)
+                    reject()
+                    return
+                }
+
+                if(!result && result.routes.count < 1) {
+                    console.dir(`Error: route result returned is not valid`)
+                    reject()
+                    return
+                }
+
+                this.route = result.routes[0]
+                console.log(this.route)
+
+                const mapRoute = NMAMapRoute.alloc().initWithRoute(this.route)
+
+                this.navigationRouteBoundingBox = this.route.boundingBox
+                this.nativeView.addMapObject(mapRoute)
+                
+                this.showWay()
+
+                console.dir('Calculate route done!')
+                resolve()
+            })
         })
     }
 
-    showWay(): Promise<any> {
+    showWay(): any {
+        const map = this.nativeView
+
+        map.setOrientationWithAnimation(0, NMAMapAnimation.Linear)
+        map.setTiltWithAnimation(0, NMAMapAnimation.Linear)
+        map.setBoundingBoxWithAnimation(
+            this.navigationRouteBoundingBox,
+            NMAMapAnimation.Linear
+        )
+    }
+
+    startSimulation(): Promise<any> {
         return new Promise<any>((resolve, reject) => {
+            const source = NMARoutePositionSource.alloc().initWithRoute(this.route)
+            source.movementSpeed = 60
+
+            this.navigationManager.dataSource = source
+            this.navigationManager.mapTrackingEnabled = true
+            this.navigationManager.mapTrackingAutoZoomEnabled = true
+            this.navigationManager.mapTrackingOrientation = NMAMapTrackingOrientation.Dynamic
+            this.navigationManager.speedWarningEnabled = true
+
+            this.navigationManager.startTurnByTurnNavigationWithRoute(this.route)
+
+            console.dir('Simulation Started')
             resolve()
         })
     }
     
     startNavigation(): Promise<any> {
         return new Promise<any>((resolve, reject) => {
+            const map = this.nativeView
+
+            map.positionIndicator.visible = true
+
+            this.navigationManager.mapTrackingEnabled = true
+            this.navigationManager.mapTrackingAutoZoomEnabled = true
+            this.navigationManager.mapTrackingOrientation = NMAMapTrackingOrientation.Dynamic
+            this.navigationManager.speedWarningEnabled = true
+
+            console.log(this.route)
+            const result = this.navigationManager.startTurnByTurnNavigationWithRoute(this.route)
+
+            console.dir(result)
+
+            console.dir('Navigation Started')
             resolve()
         })
     }
 
-    stopNavigation(): Promise<any> {
-        return new Promise<any>((resolve, reject) => {
-            resolve()
-        })
-    }
-
-    toNextWaypoint(): void {
-
-    }
-
-    toPrevWaypoint(): void {
-
+    stopNavigation(): void {
+        this.navigationManager.stop()
+        console.dir('Navigation Stoped')
     }
 
     setCenter(lat: number, lon: number, animated: boolean): Promise<any> {
         return new Promise<any>((resolve) => {
             if (this.nativeView) {
-                this.nativeView.setGeoCenterWithAnimation(NMAGeoCoordinates.geoCoordinatesWithLatitudeLongitude(lat, lon), animated ? NMAMapAnimation.Linear : NMAMapAnimation.None);
+                this.nativeView.setGeoCenterWithAnimation(
+                    NMAGeoCoordinates.geoCoordinatesWithLatitudeLongitude(lat, lon), 
+                    animated ? NMAMapAnimation.Linear : NMAMapAnimation.None
+                )
             }
             resolve();
         });
     }
 
-    createNavigation() {
-        return new Promise<any>((resolve, reject) => {
-            resolve()
-        })
-    }
-
-    addRoute(points) {
-        return new Promise<any>((resolve, reject) => {
-            resolve()
-        })
-    }
-
     addMarkers(markers: HereMarker[]): Promise<any> {
         return new Promise<any>((resolve, reject) => {
-            const map = this.nativeView;
-            const markerIcons = [];
+            const map = this.nativeView
+
             markers.forEach((marker) => {
                 if (marker.onTap && typeof marker.onTap === 'function') {
                     this.markersCallback.set(marker.id, marker.onTap);
                 }
 
-                const nativeMarker = NMAMapMarker.alloc().initWithGeoCoordinates(NMAGeoCoordinates.geoCoordinatesWithLatitudeLongitude(marker.latitude, marker.longitude));
+                const nativeMarker = NMAMapMarker.alloc().initWithGeoCoordinates(
+                    NMAGeoCoordinates.geoCoordinatesWithLatitudeLongitude(marker.latitude, marker.longitude)
+                );
+
+                (nativeMarker as any).draggable = !!marker.draggable
 
                 if (marker.title) {
-                    nativeMarker.title = marker.title;
+                    nativeMarker.title = marker.title
                 }
+
                 if (marker.description) {
-                    nativeMarker.textDescription = marker.description;
-                }
-                if (typeof marker.icon === 'string') {
-                    if (marker.icon.startsWith('http')) {
-                        // markerIcons.push(imageSrc.fromUrl(marker.icon));
-                    } else if (marker.icon.startsWith('res')) {
-                        const src = imageSrc.fromResource(marker.icon);
-                        const nativeImage = src ? src.ios : null;
-                        if (nativeImage) {
-                            nativeMarker.icon = nativeImage;
-                        }
-                    } else if (marker.icon.startsWith('~/')) {
-                        const path = fs.path.join(fs.knownFolders.currentApp().path, marker.icon.replace('~', ''));
-                        const src = imageSrc.fromFileOrResource(path);
-                        const nativeImage = src ? src.ios : null;
-                        if (nativeImage) {
-                            nativeMarker.icon = nativeImage;
-                        }
-                    }
-                } else {
-                    nativeMarker.icon = this._defaultMarkerIcon;
+                    nativeMarker.textDescription = marker.description
                 }
 
-                (nativeMarker as any).draggable = !!marker.draggable;
-                this.nativeMarkers.set(marker.id, nativeMarker);
-                this.markers.set(nativeMarker, marker);
-                map.addMapObjects([nativeMarker]);
-                if (!!marker.selected) {
-                    nativeMarker.showInfoBubble();
-                } else {
-                    nativeMarker.hideInfoBubble();
-                }
-            });
-            if (markerIcons.length > 0) {
-                /* Promise.all(markerIcons).then(() => {
-                     resolve();
-                 }).catch(e => {
-                     reject();
-                 });
-                 */
-                resolve();
-            } else {
-                resolve();
-            }
+                nativeMarker.icon = this._defaultMarkerIcon
+                nativeMarker.setAnchorOffsetUsingLayoutPosition(NMALayoutPosition.BottomCenter)
 
+                this.nativeMarkers.set(marker.id, nativeMarker)
+                this.markers.set(nativeMarker, marker)
+                map.addMapObject(nativeMarker)
+            })
+
+            resolve()
         });
     }
 

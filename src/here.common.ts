@@ -10,40 +10,29 @@ export abstract class HereBase extends View {
     tilt:           number;
     landmarks:      boolean;
 
+    static mapInitializedEvent: string = 'mapInitialized';
     static mapReadyEvent: string = 'mapReady';
-
     static mapClickEvent: string = 'mapClick';
-
     static mapLongClickEvent: string = 'mapLongClick';
-
     static geoPositionChange: string = 'geoPositionChange';
-
     abstract setCenter(lat: number, lon: number, animated: boolean): Promise<any>;
 
+    // Markers
     abstract addMarkers(markers: HereMarker[]): Promise<any>;
-
     abstract removeMarkers(markers?: number[]): Promise<any>;
-
     abstract updateMarkers(markers: HereMarker[]): Promise<any>;
-
     abstract updateMarker(marker: HereMarker): Promise<any>;
-
     abstract _getMarkersCount(): number;
 
+    // Navigation
     abstract _requestPremision(): Promise<any>;
-
     abstract calculateRoute(points: object[]): Promise<any>;
-
     abstract showWay(): Promise<any>;
-    
     abstract startNavigation(): Promise<any>;
+    abstract startSimulation(): Promise<any>;
+    abstract stopNavigation(): void;
 
-    abstract stopNavigation(): Promise<any>;
-
-    abstract toNextWaypoint(): void;
-
-    abstract toPrevWaypoint(): void;
-
+    // Circles
     abstract addCircle(circle): void;
 }
 

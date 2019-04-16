@@ -7,7 +7,7 @@
         <ui:Here 
             flexGrow="1"
             loaded="onLoaded" 
-            id="map" 
+            id="map"
             zoomLevel="17"  
             disableZoom="false"
             disableScroll="false"
@@ -19,6 +19,7 @@
             <Button width="33.3%" text="Simulation" tap="simulation"/>
             <Button width="33.3%" text="Stop" tap="stop"/>
             <Button width="50%" text="Show way" tap="showWay"/>
+            <Button width="50%" text="Calculate" tap="calculate"/>
         </FlexboxLayout>
     </FlexboxLayout>
 </Page>
