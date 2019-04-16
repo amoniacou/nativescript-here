@@ -1,14 +1,14 @@
 import { Property, View } from 'tns-core-modules/ui/core/view';
 
 export abstract class HereBase extends View {
-    mapStyle:       HereMapStyle;
-    latitude:       number;
-    longitude:      number;
-    disableZoom:    boolean;
-    disableScroll:  boolean;
-    zoomLevel:      number;
-    tilt:           number;
-    landmarks:      boolean;
+    mapStyle: HereMapStyle;
+    latitude: number;
+    longitude: number;
+    disableZoom: boolean;
+    disableScroll: boolean;
+    zoomLevel: number;
+    tilt: number;
+    landmarks: boolean;
 
     static mapInitializedEvent: string = 'mapInitialized';
     static mapReadyEvent: string = 'mapReady';

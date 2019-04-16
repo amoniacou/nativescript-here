@@ -103,13 +103,12 @@ export class Here extends HereBase {
         }
 
         nativeView.setGeoCenterWithAnimation(
-            NMAGeoCoordinates.geoCoordinatesWithLatitudeLongitude(this.latitude, this.longitude), 
+            NMAGeoCoordinates.geoCoordinatesWithLatitudeLongitude(this.latitude, this.longitude),
             NMAMapAnimation.None
         )
 
         this.navigationManager = NMANavigationManager.sharedNavigationManager()
         this.navigationManager.delegate = this
-        this.navigationManager.map = nativeView
         // NMANavigationManager.setMap(nativeView)
 
         console.dir(nativeView)
@@ -238,19 +237,19 @@ export class Here extends HereBase {
             )
             console.dir('Created: "routingMode"')
 
-            if(!this.router) {
+            if (!this.router) {
                 this.router = NMACoreRouter.alloc().init()
                 console.dir('Created: "router"')
             }
 
             const res = this.router.calculateRouteWithStopsRoutingModeCompletionBlock(stops, routingMode, (result, error) => {
-                if(error) {
+                if (error) {
                     console.dir(`Error: calculate route with error code: ${error}`)
                     reject()
                     return
                 }
 
-                if(!result && result.routes.count < 1) {
+                if (!result && result.routes.count < 1) {
                     console.dir(`Error: route result returned is not valid`)
                     reject()
                     return
@@ -263,7 +262,7 @@ export class Here extends HereBase {
 
                 this.navigationRouteBoundingBox = this.route.boundingBox
                 this.nativeView.addMapObject(mapRoute)
-                
+
                 this.showWay()
 
                 console.dir('Calculate route done!')
@@ -300,12 +299,14 @@ export class Here extends HereBase {
             resolve()
         })
     }
-    
+
     startNavigation(): Promise<any> {
         return new Promise<any>((resolve, reject) => {
             const map = this.nativeView
 
             map.positionIndicator.visible = true
+            this.navigationManager.map = map
+            console.dir(map)
 
             this.navigationManager.mapTrackingEnabled = true
             this.navigationManager.mapTrackingAutoZoomEnabled = true
@@ -316,7 +317,6 @@ export class Here extends HereBase {
             const result = this.navigationManager.startTurnByTurnNavigationWithRoute(this.route)
 
             console.dir(result)
-
             console.dir('Navigation Started')
             resolve()
         })
@@ -331,7 +331,7 @@ export class Here extends HereBase {
         return new Promise<any>((resolve) => {
             if (this.nativeView) {
                 this.nativeView.setGeoCenterWithAnimation(
-                    NMAGeoCoordinates.geoCoordinatesWithLatitudeLongitude(lat, lon), 
+                    NMAGeoCoordinates.geoCoordinatesWithLatitudeLongitude(lat, lon),
                     animated ? NMAMapAnimation.Linear : NMAMapAnimation.None
                 )
             }
@@ -459,7 +459,15 @@ export class Here extends HereBase {
     }
 
     addCircle(circle): void {
-        
+
+    }
+
+    navigationManagerDidFindPosition(navigationManager): void {
+        console.dir("Found position")
+    }
+
+    navigationManagerdidUpdateRouteWithResult(navigationManager, routeResult): void {
+        console.dir("NManager did update route with result")
     }
 }
 

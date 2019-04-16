@@ -43,5 +43,13 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
+	<key>NSBluetoothPeripheralUsageDescription</key>
+        <string>This is needed to determine your current location</string>
+        <key>NSCameraUsageDescription</key>
+        <string>This is needed for the Augumented Reality feature</string>
+        <key>NSLocationAlwaysUsageDescription</key>
+        <string>This is needed to determine your current location</string>
+        <key>NSLocationWhenInUseUsageDescription</key>
+        <string>Your location is used to provide accurate turn-by-turn navigation</string>
 </dict>
 </plist>

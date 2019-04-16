@@ -47,6 +47,7 @@ export class Here extends HereBase {
     private routeOptions;
     private mapRoute;
     private navigationFollow: boolean = false;
+    private routeProgress: number = 0;
 
     constructor() {
         super();
@@ -192,35 +193,35 @@ export class Here extends HereBase {
             "tns.here.MapService"
         )
 
-        console.log(`Isolate Disk Cache: ${ isolatedDiskCacheRootPathStatus ? 'OK' : 'WITH ERRORS' }`)
+        console.log(`Isolate Disk Cache: ${isolatedDiskCacheRootPathStatus ? 'OK' : 'WITH ERRORS'}`)
 
         class NavigationManagerEventListener extends com.here.android.mpa.guidance.NavigationManager.NavigationManagerEventListener {
             onRunningStateChanged() {
                 console.log("Running state changed")
                 //android.widget.Toast.makeText(this._context, "Running state changed", android.widget.Toast.LENGTH_SHORT).show();
             }
-    
+
             onNavigationModeChanged() {
                 console.log("Navigation mode changed")
                 //android.widget.Toast.makeText(this._context, "Navigation mode changed", android.widget.Toast.LENGTH_SHORT).show();
             }
-    
+
             onEnded(navigationMode) {
                 console.log(navigationMode + " was ended")
                 //android.widget.Toast.makeText(this._context, navigationMode + " was ended", android.widget.Toast.LENGTH_SHORT).show();
                 //stopForegroundService();
             }
-    
+
             onMapUpdateModeChanged(mapUpdateMode) {
                 console.log("Running state changed")
                 //android.widget.Toast.makeText(this._context, "Map update mode is changed to " + mapUpdateMode, android.widget.Toast.LENGTH_SHORT).show();
             }
-    
+
             onRouteUpdated(route) {
                 console.log("Route updated")
                 //android.widget.Toast.makeText(this._context, "Route updated", android.widget.Toast.LENGTH_SHORT).show();
             }
-            
+
             onCountryInfo(s, s1) {
                 console.log("Country info updated from " + s + " to " + s1)
                 //android.widget.Toast.makeText(this._context, "Country info updated from " + s + " to " + s1, android.widget.Toast.LENGTH_SHORT).show();
@@ -258,7 +259,7 @@ export class Here extends HereBase {
                 // owner.navigationArrow.setCenter(position)
 
                 owner.navigationArrow.setCoordinate(position)
-                
+
                 map.setCenter(
                     position,
                     com.here.android.mpa.mapping.Map.Animation.LINEAR,
@@ -303,17 +304,17 @@ export class Here extends HereBase {
                         onRerouteEnd(routeResults, routingError) {
                             if (routingError == com.here.android.mpa.routing.RoutingError.NONE) {
                                 if (routeResults.getRoute() != null) {
-    
+
                                     owner.navigationRoute = routeResults.getRoute();
                                     console.log('navigationRoute')
-    
+
                                     map.removeMapObject(this.mapRoute)
                                     this.mapRoute = new com.here.android.mpa.mapping.MapRoute(owner.navigationRoute);
                                     console.log('mapRoute')
-    
+
                                     this.mapRoute.setManeuverNumberVisible(true)
                                     map.addMapObject(this.mapRoute)
-    
+
                                     owner.navigationRouteBoundingBox = routeResults.getRoute().getBoundingBox();
                                     owner.navigationRouteBoundingBox.expand(200, 200)
                                 } else {
@@ -334,7 +335,7 @@ export class Here extends HereBase {
                     owner.navigationArrowIcon = new com.here.android.mpa.common.Image()
 
                     const decodedString = android.util.Base64.decode(navigation_arrow, android.util.Base64.DEFAULT);
-                    const decodedByte = android.graphics.BitmapFactory.decodeByteArray(decodedString, 0, decodedString.length); 
+                    const decodedByte = android.graphics.BitmapFactory.decodeByteArray(decodedString, 0, decodedString.length);
                     // console.log(decodedByte)
                     // console.dir(decodedByte)
 
@@ -348,7 +349,7 @@ export class Here extends HereBase {
                     // owner.navigationArrow = new com.here.android.mpa.mapping.MapCircle(
                     //     4, new com.here.android.mpa.common.GeoCoordinate(0, 0)
                     // )
-                    
+
                     // owner.navigationArrow.setLineColor(android.graphics.Color.rgb(255, 255, 255))
                     // owner.navigationArrow.setLineWidth(8)
 
@@ -509,14 +510,14 @@ export class Here extends HereBase {
 
     _requestPremision(): any {
         return new Promise<any>((resolve, reject) => {
-            const location_permissions = [ 
+            const location_permissions = [
                 (android as any).Manifest.permission.ACCESS_FINE_LOCATION
             ];
 
-            const activityRequestPermissionsHandler_location = function(data) {
+            const activityRequestPermissionsHandler_location = function (data) {
                 app.android.off(app.AndroidApplication.activityRequestPermissionsEvent, activityRequestPermissionsHandler_location);
 
-                if (data.requestCode === 1 ) {
+                if (data.requestCode === 1) {
                     if (data.grantResults.length > 0 && data.grantResults[0] == android.content.pm.PackageManager.PERMISSION_GRANTED) {
                         resolve();
                     } else {
@@ -525,7 +526,7 @@ export class Here extends HereBase {
                 }
             };
 
-            (android.support.v4.app.ActivityCompat as any).requestPermissions( 
+            (android.support.v4.app.ActivityCompat as any).requestPermissions(
                 app.android.foregroundActivity,
                 location_permissions, 1
             )
@@ -539,7 +540,7 @@ export class Here extends HereBase {
     }
 
     toPrevWaypoint(): void {
-        
+
     }
 
     setCenter(lat: number, lon: number, animated: boolean): Promise<any> {
@@ -549,9 +550,9 @@ export class Here extends HereBase {
                 if (map) {
                     map.setCenter(
                         new com.here.android.mpa.common.GeoCoordinate(
-                            java.lang.Double.valueOf(lat).doubleValue(), 
+                            java.lang.Double.valueOf(lat).doubleValue(),
                             java.lang.Double.valueOf(lon).doubleValue()
-                        ), 
+                        ),
                         !!animated ? com.here.android.mpa.mapping.Map.Animation.LINEAR : com.here.android.mpa.mapping.Map.Animation.NONE
                     );
                 }
@@ -567,8 +568,8 @@ export class Here extends HereBase {
             map.setOrientation(0);
             map.setTilt(0);
             map.zoomTo(
-                this.navigationRouteBoundingBox, 
-                com.here.android.mpa.mapping.Map.Animation.LINEAR, 
+                this.navigationRouteBoundingBox,
+                com.here.android.mpa.mapping.Map.Animation.LINEAR,
                 com.here.android.mpa.mapping.Map.MOVE_PRESERVE_ORIENTATION,
             );
         }
@@ -576,12 +577,12 @@ export class Here extends HereBase {
 
     calculateRoute(points): Promise<any> {
         const owner = this;
-        
+
         return new Promise<any>((resolve, reject) => {
             if (this.fragment && this.isReady) {
                 const map = this.fragment.getMap()
 
-                if(points.length < 2) {
+                if (points.length < 2) {
                     reject();
                     return;
                 }
@@ -594,7 +595,7 @@ export class Here extends HereBase {
 
                 this.routeOptions = new com.here.android.mpa.routing.RouteOptions()
 
-                this.routeOptions.setTransportMode(com.here.android.mpa.routing.RouteOptions.TransportMode.UNDEFINED)     
+                this.routeOptions.setTransportMode(com.here.android.mpa.routing.RouteOptions.TransportMode.UNDEFINED)
                 this.routeOptions.setHighwaysAllowed(false)
                 this.routeOptions.setParksAllowed(true)
                 this.routeOptions.setRouteType(com.here.android.mpa.routing.RouteOptions.Type.FASTEST)
@@ -615,8 +616,9 @@ export class Here extends HereBase {
                 console.log('Added points')
 
                 const routerListener = new com.here.android.mpa.routing.Router.Listener({
-                    onProgress(percent) {
+                    onProgress(percent): void {
                         console.log(`Calculate route: ${percent}%`)
+                        owner.routeProgress = percent;
                         //android.widget.Toast.makeText(this._context, `Calculate route: ${percent}%`, android.widget.Toast.LENGTH_SHORT).show();
                     },
                     onCalculateRouteFinished(routeResults, routingError): void {
@@ -626,10 +628,10 @@ export class Here extends HereBase {
                                 owner.navigationRoute = routeResults.get(0).getRoute();
                                 console.log('navigationRoute')
 
-                                if(this.mapRoute) {
+                                if (this.mapRoute) {
                                     map.removeMapObject(this.mapRoute)
                                 }
-                                
+
                                 this.mapRoute = new com.here.android.mpa.mapping.MapRoute(owner.navigationRoute);
                                 console.log('mapRoute')
 
@@ -641,8 +643,8 @@ export class Here extends HereBase {
 
                                 map.setOrientation(0);
                                 map.zoomTo(
-                                    owner.navigationRouteBoundingBox, 
-                                    com.here.android.mpa.mapping.Map.Animation.NONE, 
+                                    owner.navigationRouteBoundingBox,
+                                    com.here.android.mpa.mapping.Map.Animation.NONE,
                                     com.here.android.mpa.mapping.Map.MOVE_PRESERVE_ORIENTATION
                                 );
 
@@ -662,7 +664,7 @@ export class Here extends HereBase {
             } else {
                 reject();
             }
-        }) 
+        })
     }
 
     startNavigation(): Promise<any> {
@@ -724,7 +726,7 @@ export class Here extends HereBase {
                 const map = this.fragment.getMap();
 
                 markers.forEach((marker) => {
-                    
+
                     if (marker.onTap && typeof marker.onTap === 'function') {
                         this.markersCallback.set(marker.id, marker.onTap);
                     }
@@ -733,7 +735,7 @@ export class Here extends HereBase {
 
                     nativeMarker.setCoordinate(
                         new com.here.android.mpa.common.GeoCoordinate(
-                            java.lang.Double.valueOf(marker.latitude).doubleValue(), 
+                            java.lang.Double.valueOf(marker.latitude).doubleValue(),
                             java.lang.Double.valueOf(marker.longitude).doubleValue()
                         )
                     )
@@ -838,7 +840,7 @@ export class Here extends HereBase {
                 const nativeMarker = this.nativeMarkers.get(marker.id);
                 if (nativeMarker) {
                     nativeMarker.setCoordinate(new com.here.android.mpa.common.GeoCoordinate(
-                        java.lang.Double.valueOf(marker.latitude).doubleValue(), 
+                        java.lang.Double.valueOf(marker.latitude).doubleValue(),
                         java.lang.Double.valueOf(marker.longitude).doubleValue()
                     ));
                     if (marker.title) {
@@ -871,7 +873,7 @@ export class Here extends HereBase {
             const nativeObj = new com.here.android.mpa.mapping.MapCircle()
 
             this._setCircleOptions(nativeObj, circle)
-            
+
             this.nativeCircles.set(circle.id, nativeObj)
             this.circles.set(nativeObj, circle)
             map.addMapObject(nativeObj)
@@ -890,7 +892,7 @@ export class Here extends HereBase {
     _setCircleOptions(nativeObj, options) {
         nativeObj.setCenter(
             new com.here.android.mpa.common.GeoCoordinate(
-                java.lang.Double.valueOf(options.latitude).doubleValue(), 
+                java.lang.Double.valueOf(options.latitude).doubleValue(),
                 java.lang.Double.valueOf(options.longitude).doubleValue()
             )
         )
