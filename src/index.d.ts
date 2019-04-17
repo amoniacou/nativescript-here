@@ -18,7 +18,6 @@ export declare class Here extends HereBase {
   _getMarkersCount(): number;
 
   // Navigation
-  _requestPremision(): Promise<any>;
   calculateRoute(points: object[]): Promise<any>;
   showWay(): Promise<any>;
   startNavigation(): Promise<any>;

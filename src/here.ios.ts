@@ -49,6 +49,7 @@ export class Here extends HereBase {
 
     constructor() {
         super();
+        console.log('HERE initialized')
     }
 
     public static init(appId: string, appCode: string, licenseKey: string) {
@@ -108,6 +109,9 @@ export class Here extends HereBase {
         )
 
         this.navigationManager = NMANavigationManager.sharedNavigationManager()
+        NMAPositioningManager.sharedPositioningManager().dataSource = null
+        nativeView.positionIndicator.visible = true
+        this.navigationManager.map = nativeView
         this.navigationManager.delegate = this
         // NMANavigationManager.setMap(nativeView)
 
@@ -330,7 +334,6 @@ export class Here extends HereBase {
 
     stopNavigation(): void {
         this.navigationManager.stop()
-        this.navigationManager.dataSource = null
         this.navigationManager.map = null
         this.navigationManager.mapTrackingEnabled = false
         this.navigationManager.mapTrackingAutoZoomEnabled = false
@@ -343,7 +346,6 @@ export class Here extends HereBase {
             NMAMapAnimation.Linear
         )
         map.setOrientationWithAnimation(0, NMAMapAnimation.Linear)
-        this.router = null
         console.dir('Navigation Stoped')
     }
 
