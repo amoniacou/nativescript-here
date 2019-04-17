@@ -615,7 +615,7 @@ export class Here extends HereBase {
                 })
                 console.log('Added points')
 
-                const routerListener = new com.here.android.mpa.routing.Router.Listener({
+                const routerListener = new com.here.android.mpa.routing.CoreRouter.Listener({
                     onProgress(percent): void {
                         console.log(`Calculate route: ${percent}%`)
                         owner.routeProgress = percent;

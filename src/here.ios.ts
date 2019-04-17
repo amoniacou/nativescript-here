@@ -284,6 +284,12 @@ export class Here extends HereBase {
 
     startSimulation(): Promise<any> {
         return new Promise<any>((resolve, reject) => {
+            const map = this.nativeView
+
+            map.positionIndicator.visible = true
+            this.navigationManager.map = map
+            console.dir(map)
+
             const source = NMARoutePositionSource.alloc().initWithRoute(this.route)
             source.movementSpeed = 60
 
@@ -293,8 +299,8 @@ export class Here extends HereBase {
             this.navigationManager.mapTrackingOrientation = NMAMapTrackingOrientation.Dynamic
             this.navigationManager.speedWarningEnabled = true
 
-            this.navigationManager.startTurnByTurnNavigationWithRoute(this.route)
-
+            const result = this.navigationManager.startTurnByTurnNavigationWithRoute(this.route)
+            console.dir(result)
             console.dir('Simulation Started')
             resolve()
         })
