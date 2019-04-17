@@ -49,7 +49,15 @@ export function onLoaded(args) {
             .calculateRoute(points)
             .then(() => {
                 showMakers(points)
+                
             })
+
+        map.addCircles(points.map((point, index) => ({
+            id: index + '_circle',
+            latitude: point.latitude,
+            longitude: point.longitude,
+            radius: point.activationRadius
+        })))
 
         // map.addMarkers(<HereMarker[]>points.map((point, index) => ({
         //     id: index,

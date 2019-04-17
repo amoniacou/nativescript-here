@@ -9,6 +9,7 @@ import {
     tiltProperty,
     landmarksProperty
 } from './here.common';
+import { ios_icon as icon_source } from './icon-source';
 import * as app from 'tns-core-modules/application';
 import * as types from 'tns-core-modules/utils/types';
 import * as imageSrc from 'tns-core-modules/image-source';
@@ -48,6 +49,7 @@ export class Here extends HereBase {
     private mapRoute;
     private navigationFollow: boolean = false;
     private routeProgress: number = 0;
+    private navigationMarkerIcon;
 
     constructor() {
         super();
@@ -59,6 +61,8 @@ export class Here extends HereBase {
     public createNativeView(): Object {
         this.nativeMarkers = new Map<number, any>();
         this.markersCallback = new Map<number, any>();
+        this.nativeCircles = new Map<number, any>();
+        this.circles = new Map<number, any>();
         this.markers = new Map<number, HereMarker>();
         this._layoutId = android.view.View.generateViewId();
         this.FRAGMENT_ID = `here-fragment-${this._domId}`;
@@ -333,25 +337,21 @@ export class Here extends HereBase {
                     )
 
                     owner.navigationArrowIcon = new com.here.android.mpa.common.Image()
-
                     const decodedString = android.util.Base64.decode(navigation_arrow, android.util.Base64.DEFAULT);
                     const decodedByte = android.graphics.BitmapFactory.decodeByteArray(decodedString, 0, decodedString.length);
-                    // console.log(decodedByte)
-                    // console.dir(decodedByte)
-
                     owner.navigationArrowIcon.setBitmap(decodedByte)
-
                     owner.navigationArrow = new com.here.android.mpa.mapping.MapMarker(
                         new com.here.android.mpa.common.GeoCoordinate(0, 0),
                         owner.navigationArrowIcon
                     )
 
-                    // owner.navigationArrow = new com.here.android.mpa.mapping.MapCircle(
-                    //     4, new com.here.android.mpa.common.GeoCoordinate(0, 0)
-                    // )
-
-                    // owner.navigationArrow.setLineColor(android.graphics.Color.rgb(255, 255, 255))
-                    // owner.navigationArrow.setLineWidth(8)
+                    owner.navigationMarkerIcon = new com.here.android.mpa.common.Image()
+                    const decodedStringMarker = android.util.Base64.decode(
+                        icon_source.replace('data:image/png;base64,', ''), 
+                        android.util.Base64.DEFAULT
+                    )
+                    const decodedByteMarker = android.graphics.BitmapFactory.decodeByteArray(decodedStringMarker, 0, decodedStringMarker.length);
+                    owner.navigationMarkerIcon.setBitmap(decodedByteMarker)
 
                     map.addMapObject(owner.navigationArrow)
 
@@ -705,19 +705,28 @@ export class Here extends HereBase {
                 const map = this.fragment.getMap();
 
                 markers.forEach((marker) => {
-
                     if (marker.onTap && typeof marker.onTap === 'function') {
                         this.markersCallback.set(marker.id, marker.onTap);
                     }
 
-                    const nativeMarker = new com.here.android.mpa.mapping.MapMarker()
-
-                    nativeMarker.setCoordinate(
+                    const nativeMarker = new com.here.android.mpa.mapping.MapMarker(
                         new com.here.android.mpa.common.GeoCoordinate(
                             java.lang.Double.valueOf(marker.latitude).doubleValue(),
                             java.lang.Double.valueOf(marker.longitude).doubleValue()
+                        ),
+                        this.navigationMarkerIcon
+                    )
+
+                    const ancor = nativeMarker.getAnchorPoint()
+                    console.dir(ancor)
+
+                    nativeMarker.setAnchorPoint(
+                        new android.graphics.PointF(
+                            java.lang.Double.valueOf(ancor.x).doubleValue(),
+                            java.lang.Double.valueOf(ancor.y * 2).doubleValue()
                         )
                     )
+                    console.dir('setAnchorPoint')
 
                     if (marker.title) {
                         nativeMarker.setTitle(marker.title);
@@ -743,12 +752,6 @@ export class Here extends HereBase {
                     this.nativeMarkers.set(marker.id, nativeMarker);
                     this.markers.set(nativeMarker, marker);
                     map.addMapObject(nativeMarker);
-
-                    // if (!!marker.selected) {
-                    //     nativeMarker.showInfoBubble();
-                    // } else {
-                    //     nativeMarker.hideInfoBubble();
-                    // }
                 })
 
                 resolve()
@@ -763,7 +766,6 @@ export class Here extends HereBase {
             if (this.fragment && this.isReady) {
                 const map = this.fragment.getMap();
                 if (!markers) {
-                    map.removeAllMapObjects();
                     this.markers.clear();
                     this.nativeMarkers.clear();
                     this.markersCallback.clear();
@@ -807,7 +809,6 @@ export class Here extends HereBase {
 
                     this.nativeMarkers.set(marker.id, nativeMarker);
                     this.markers.set(nativeMarker, marker);
-
                 }
             });
         });
@@ -875,13 +876,12 @@ export class Here extends HereBase {
                 java.lang.Double.valueOf(options.longitude).doubleValue()
             )
         )
-
         nativeObj.setRadius(
             java.lang.Double.valueOf(options.radius).doubleValue()
         )
-        nativeObj.setFillColor(android.graphics.Color.argb(150, 5, 5, 255))
-        nativeObj.setLineColor(android.graphics.Color.rgb(5, 5, 255))
-        nativeObj.setLineWidth(5)
+        nativeObj.setFillColor(android.graphics.Color.argb(90, 0, 153, 255))
+        nativeObj.setLineColor(android.graphics.Color.rgb(0, 153, 255))
+        nativeObj.setLineWidth(4)
     }
 
     addCircles(circles): Promise<any> {
