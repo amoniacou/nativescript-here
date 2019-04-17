@@ -15,10 +15,10 @@ import * as imageSrc from 'tns-core-modules/image-source';
 import * as fs from 'tns-core-modules/file-system';
 import { Color } from 'tns-core-modules/color';
 import { navigation_arrow } from './icon-arrow';
+const permissions = require('nativescript-permissions');
 
 
 declare var com;
-
 export class Here extends HereBase {
 
     private _layoutId: number;
@@ -508,33 +508,6 @@ export class Here extends HereBase {
         return this.nativeMarkers ? this.nativeMarkers.size : 0;
     }
 
-    _requestPremision(): any {
-        return new Promise<any>((resolve, reject) => {
-            const location_permissions = [
-                (android as any).Manifest.permission.ACCESS_FINE_LOCATION
-            ];
-
-            const activityRequestPermissionsHandler_location = function (data) {
-                app.android.off(app.AndroidApplication.activityRequestPermissionsEvent, activityRequestPermissionsHandler_location);
-
-                if (data.requestCode === 1) {
-                    if (data.grantResults.length > 0 && data.grantResults[0] == android.content.pm.PackageManager.PERMISSION_GRANTED) {
-                        resolve();
-                    } else {
-                        reject();
-                    }
-                }
-            };
-
-            (android.support.v4.app.ActivityCompat as any).requestPermissions(
-                app.android.foregroundActivity,
-                location_permissions, 1
-            )
-
-            app.android.on(app.AndroidApplication.activityRequestPermissionsEvent, activityRequestPermissionsHandler_location);
-        })
-    }
-
     toNextWaypoint(): void {
 
     }
@@ -615,7 +588,7 @@ export class Here extends HereBase {
                 })
                 console.log('Added points')
 
-                const routerListener = new com.here.android.mpa.routing.CoreRouter.Listener({
+                const routerListener = new com.here.android.mpa.routing.Router.Listener({
                     onProgress(percent): void {
                         console.log(`Calculate route: ${percent}%`)
                         owner.routeProgress = percent;
@@ -671,8 +644,11 @@ export class Here extends HereBase {
         return new Promise<any>((resolve, reject) => {
             if (this.fragment && this.isReady) {
                 const map = this.fragment.getMap()
-
-                this._requestPremision()
+                permissions
+                    .requestPermission(
+                        android.Manifest.permission.ACCESS_FINE_LOCATION,
+                        "I need these permissions to get your current location"
+                    )
                     .then(() => {
                         map.setTilt(60);
                         map.setZoomLevel(18, com.here.android.mpa.mapping.Map.Animation.NONE)
@@ -681,11 +657,11 @@ export class Here extends HereBase {
 
                         console.dir(managerError)
                         resolve()
-                    })
-                    .catch(() => {
-                        console.log("permission not granted!");
+                    }).catch(() => {
+                        console.log("Uh oh, no permissions - plan B time!");
                         reject()
-                    })
+                    });
+
             }
         })
     }
@@ -693,10 +669,14 @@ export class Here extends HereBase {
     startSimulation(): Promise<any> {
         return new Promise<any>((resolve, reject) => {
             if (this.fragment && this.isReady) {
-                const map = this.fragment.getMap()
-
-                this._requestPremision()
+                permissions
+                    .requestPermission(
+                        android.Manifest.permission.ACCESS_FINE_LOCATION,
+                        "I need these permissions to get your current location"
+                    )
                     .then(() => {
+                        const map = this.fragment.getMap()
+
                         map.setTilt(60);
                         map.setZoomLevel(18, com.here.android.mpa.mapping.Map.Animation.NONE)
 
@@ -704,11 +684,10 @@ export class Here extends HereBase {
 
                         console.dir(managerError)
                         resolve()
-                    })
-                    .catch(() => {
-                        console.log("permission not granted!");
+                    }).catch(() => {
+                        console.log("Uh oh, no permissions - plan B time!");
                         reject()
-                    })
+                    });
             }
         })
     }

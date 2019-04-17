@@ -273,7 +273,6 @@ export class Here extends HereBase {
 
     showWay(): any {
         const map = this.nativeView
-
         map.setOrientationWithAnimation(0, NMAMapAnimation.Linear)
         map.setTiltWithAnimation(0, NMAMapAnimation.Linear)
         map.setBoundingBoxWithAnimation(
@@ -293,7 +292,7 @@ export class Here extends HereBase {
             const source = NMARoutePositionSource.alloc().initWithRoute(this.route)
             source.movementSpeed = 60
 
-            this.navigationManager.dataSource = source
+            NMAPositioningManager.sharedPositioningManager().dataSource = source
             this.navigationManager.mapTrackingEnabled = true
             this.navigationManager.mapTrackingAutoZoomEnabled = true
             this.navigationManager.mapTrackingOrientation = NMAMapTrackingOrientation.Dynamic
@@ -310,6 +309,7 @@ export class Here extends HereBase {
         return new Promise<any>((resolve, reject) => {
             const map = this.nativeView
 
+            NMAPositioningManager.sharedPositioningManager().dataSource = null
             map.positionIndicator.visible = true
             this.navigationManager.map = map
             console.dir(map)
@@ -318,18 +318,32 @@ export class Here extends HereBase {
             this.navigationManager.mapTrackingAutoZoomEnabled = true
             this.navigationManager.mapTrackingOrientation = NMAMapTrackingOrientation.Dynamic
             this.navigationManager.speedWarningEnabled = true
-
+            console.log("ROUTER: ")
             console.log(this.route)
             const result = this.navigationManager.startTurnByTurnNavigationWithRoute(this.route)
-
+            console.log("Result of navigation")
             console.dir(result)
-            console.dir('Navigation Started')
+            console.dir('Navigation Started 2')
             resolve()
         })
     }
 
     stopNavigation(): void {
         this.navigationManager.stop()
+        this.navigationManager.dataSource = null
+        this.navigationManager.map = null
+        this.navigationManager.mapTrackingEnabled = false
+        this.navigationManager.mapTrackingAutoZoomEnabled = false
+
+        NMAPositioningManager.sharedPositioningManager().dataSource = null
+
+        const map = this.nativeView
+        map.setBoundingBoxWithAnimation(
+            this.navigationRouteBoundingBox,
+            NMAMapAnimation.Linear
+        )
+        map.setOrientationWithAnimation(0, NMAMapAnimation.Linear)
+        this.router = null
         console.dir('Navigation Stoped')
     }
 
@@ -474,6 +488,10 @@ export class Here extends HereBase {
 
     navigationManagerdidUpdateRouteWithResult(navigationManager, routeResult): void {
         console.dir("NManager did update route with result")
+    }
+
+    navigationManagerDidLosePosition(navigationManager): void {
+        console.dir("NManager lose position")
     }
 }
 

@@ -48,33 +48,21 @@ export function onLoaded(args) {
         map
             .calculateRoute(points)
             .then(() => {
-                console.log('Hello from view!')
-
-                map
-                    .addMarkers(<HereMarker[]>points.map((point, index) => ({
-                        id: index,
-                        latitude: point.latitude,
-                        longitude: point.longitude,
-                        title: `Point ${index}`,
-                        draggable: false
-                    })))
-                    .then(() => {
-                        console.log('Markers added!')
-                    })
+                showMakers(points)
             })
 
-                // map.addMarkers(<HereMarker[]>points.map((point, index) => ({
-                //     id: index,
-                //     latitude: point.latitude,
-                //     longitude: point.longitude,
-                //     title: `Point ${index}`,
-                //     onTap: (marker) => {
-                //         const updatedMarker = Object.assign({}, marker, {
-                //             selected: !marker.selected
-                //         });
-                //         map.updateMarker(updatedMarker);
-                //     }
-                // })));
+        // map.addMarkers(<HereMarker[]>points.map((point, index) => ({
+        //     id: index,
+        //     latitude: point.latitude,
+        //     longitude: point.longitude,
+        //     title: `Point ${index}`,
+        //     onTap: (marker) => {
+        //         const updatedMarker = Object.assign({}, marker, {
+        //             selected: !marker.selected
+        //         });
+        //         map.updateMarker(updatedMarker);
+        //     }
+        // })));
     });
 }
 
@@ -83,11 +71,16 @@ export function removeMarkers() {
 }
 
 export function navigation() {
-    map.startNavigation()
+    map.calculateRoute(points).then(() => {
+        showMakers(points)
+        map.startNavigation()
+    })
 }
 
 export function calculate() {
-    map.calculateRoute(points)
+    map.calculateRoute(points).then(() => {
+        showMakers(points)
+    })
 }
 
 export function simulation() {
@@ -100,6 +93,20 @@ export function stop() {
 
 export function showWay() {
     map.showWay()
+}
+
+function showMakers(points) {
+    map
+        .addMarkers(<HereMarker[]>points.map((point, index) => ({
+            id: index,
+            latitude: point.latitude,
+            longitude: point.longitude,
+            title: `Point ${index}`,
+            draggable: false
+        })))
+        .then(() => {
+            console.log('Markers added!')
+        })
 }
 
 function onMapClick(event) {
@@ -144,5 +151,5 @@ export function updateMarker(event) {
 }
 
 function onMapReady(event) {
-   
+
 }

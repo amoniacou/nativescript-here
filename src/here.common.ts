@@ -25,7 +25,6 @@ export abstract class HereBase extends View {
     abstract _getMarkersCount(): number;
 
     // Navigation
-    abstract _requestPremision(): Promise<any>;
     abstract calculateRoute(points: object[]): Promise<any>;
     abstract showWay(): Promise<any>;
     abstract startNavigation(): Promise<any>;
