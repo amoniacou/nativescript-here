@@ -347,6 +347,32 @@ export class Here extends HereBase {
         console.dir('Navigation Stoped')
     }
 
+    navigateTo(latitude: number, longitude: number): Promise<any> {
+        return new Promise<any>((resolve, reject) => {
+            const position = NMAPositioningManager.sharedPositioningManager().currentPosition
+            if (!position) {
+                reject()
+                return
+            }
+            if (!latitude || !longitude) {
+                reject()
+                return
+            }
+            const points = [{
+                latitude: position.coordinates.latitude,
+                longitude: position.coordinates.longitude
+            }, {
+                latitude: latitude,
+                longitude: longitude
+            }]
+            this.calculateRoute(points).then(() => {
+                resolve()
+            }).catch(() => {
+                reject()
+            })
+        });
+    }
+
     setCenter(lat: number, lon: number, animated: boolean): Promise<any> {
         return new Promise<any>((resolve) => {
             if (this.nativeView) {

@@ -49,7 +49,7 @@ export function onLoaded(args) {
             .calculateRoute(points)
             .then(() => {
                 showMakers(points)
-                
+
             })
 
         map.addCircles(points.map((point, index) => ({
@@ -109,6 +109,10 @@ export function resume() {
 
 export function showWay() {
     map.showWay()
+}
+
+export function navigateto() {
+    map.navigateTo(points[0].latitude, points[0].longitude)
 }
 
 function showMakers(points) {

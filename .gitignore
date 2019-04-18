@@ -18,9 +18,15 @@ demo/*.d.ts
 !demo/references.d.ts
 demo/lib
 demo/platforms
+demo.native/*.d.ts
+!demo.native/references.d.ts
+demo.native/lib
+demo.native/platforms
 node_modules
 publish/src
 publish/package
 demo/report/report.html
 demo/report/stats.json
+demo.native/report/report.html
+demo.native/report/stats.json
 package-lock.json

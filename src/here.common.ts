@@ -32,6 +32,7 @@ export abstract class HereBase extends View {
     abstract resumeNavigation(): Promise<any>;
     abstract startSimulation(): Promise<any>;
     abstract stopNavigation(): void;
+    abstract navigateTo(latitude: number, longitude: number): Promise<any>;
 
     // Circles
     abstract addCircle(circle): void;

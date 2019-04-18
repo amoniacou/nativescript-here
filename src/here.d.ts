@@ -27,6 +27,7 @@ export declare class Here extends HereBase {
     startNavigation(): Promise<any>;
     pauseNavigation(): Promise<any>;
     resumeNavigation(): Promise<any>;
+    navigateTo(latitude: number, longitude: number): Promise<any>;
     stopNavigation(): void;
     setCenter(lat: number, lon: number, animated: boolean): Promise<any>;
     addMarkers(markers: HereMarker[]): Promise<any>;

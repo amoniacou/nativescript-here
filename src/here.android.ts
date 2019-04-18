@@ -930,4 +930,8 @@ export class Here extends HereBase {
             }
         })
     }
+
+    navigateTo(latitude: number, longitude: number): Promise<any> {
+        return new Promise<any>((resolve, reject) => { });
+    }
 }
