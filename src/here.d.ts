@@ -1,39 +1,40 @@
 import { HereBase, HereMarker } from './here.common';
 export declare class Here extends HereBase {
-    private _layoutId;
-    private fragment;
-    private listener;
-    private context;
-    private FRAGMENT_ID;
-    private isReady;
-    private dragListener;
-    private gestureListener;
-    private nativeMarkers;
-    private markersCallback;
-    private markers;
+    nativeMarkers: Map<number, any>;
+    markersCallback: Map<number, any>;
+    markers: Map<any, HereMarker>;
+    private delegate;
+    private gestureDelegate;
+    isReady: boolean;
+    private _defaultMarkerIcon;
+    private router;
+    private navigationRouteBoundingBox;
+    private navigationManager;
+    private route;
     constructor();
     static init(appId: string, appCode: string, licenseKey: string): void;
     createNativeView(): Object;
     initNativeView(): void;
     disposeNativeView(): void;
-
+    onLoaded(): void;
+    onMeasure(widthMeasureSpec: number, heightMeasureSpec: number): void;
+    toggleScroll(enable: boolean): void;
+    toggleZoom(enable: boolean): void;
+    _getMarkersCount(): number;
+    calculateRoute(points: any): Promise<any>;
+    showWay(): any;
+    startSimulation(): Promise<any>;
+    startNavigation(): Promise<any>;
+    pauseNavigation(): Promise<any>;
+    resumeNavigation(): Promise<any>;
+    stopNavigation(): void;
     setCenter(lat: number, lon: number, animated: boolean): Promise<any>;
-
-    // Markers
     addMarkers(markers: HereMarker[]): Promise<any>;
     removeMarkers(markers?: number[]): Promise<any>;
     updateMarkers(markers: HereMarker[]): Promise<any>;
     updateMarker(marker: HereMarker): Promise<any>;
-    _getMarkersCount(): number;
-
-    // Navigation
-    _requestPremision(): Promise<any>;
-    calculateRoute(points: object[]): Promise<any>;
-    showWay(): Promise<any>;
-    startNavigation(): Promise<any>;
-    startSimulation(): Promise<any>;
-    stopNavigation(): void;
-
-    // Circles
-    addCircle(circle): void;
+    addCircle(circle: any): void;
+    navigationManagerDidFindPosition(navigationManager: any): void;
+    navigationManagerdidUpdateRouteWithResult(navigationManager: any, routeResult: any): void;
+    navigationManagerDidLosePosition(navigationManager: any): void;
 }

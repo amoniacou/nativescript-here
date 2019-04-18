@@ -698,6 +698,18 @@ export class Here extends HereBase {
         }
     }
 
+    pauseNavigation(): Promise<any> {
+        return new Promise<any>((resolve, reject) => {
+            resolve()
+        })
+    }
+
+    resumeNavigation(): Promise<any> {
+        return new Promise<any>((resolve, reject) => {
+            resolve()
+        })
+    }
+
     addMarkers(markers: HereMarker[]): Promise<any> {
         return new Promise<any>((resolve, reject) => {
             const markerIcons = [];

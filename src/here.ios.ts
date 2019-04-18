@@ -10,8 +10,6 @@ import {
 } from './here.common';
 import { layout } from 'tns-core-modules/utils/utils';
 import * as types from 'tns-core-modules/utils/types';
-import * as imageSrc from 'tns-core-modules/image-source';
-import * as fs from 'tns-core-modules/file-system';
 import { ios_icon } from './icon-source';
 
 declare var NMAMapView,
@@ -45,6 +43,8 @@ export class Here extends HereBase {
     private router;
     private navigationRouteBoundingBox;
     private navigationManager;
+    private positionListener;
+    private positionObserver;
     private route;
 
     constructor() {
@@ -109,18 +109,27 @@ export class Here extends HereBase {
         )
 
         this.navigationManager = NMANavigationManager.sharedNavigationManager()
-        NMAPositioningManager.sharedPositioningManager().dataSource = null
-        nativeView.positionIndicator.visible = true
         this.navigationManager.map = nativeView
-        this.navigationManager.delegate = this
-        // NMANavigationManager.setMap(nativeView)
+        this.positionListener = NMAPositioningManager.sharedPositioningManager()
+        this.positionListener.dataSource = NMADevicePositionSource.alloc().init()
 
-        console.dir(nativeView)
-        // this.navigationManager.setMap(nativeView.getMap())
-        console.dir('Created: "navigationManager"')
+        NSNotificationCenter.defaultCenter.removeObserver(this)
+        if (this.positionListener.startPositioning()) {
+            console.log("Start observing")
+            this.positionObserver = PositionObserver.initWithOwner(new WeakRef<Here>(this))
+            NSNotificationCenter.defaultCenter.addObserverSelectorNameObject(this.positionObserver, "positionDidUpdate", "NMAPositioningManagerDidUpdatePositionNotification", this.positionListener)
+            NSNotificationCenter.defaultCenter.addObserverSelectorNameObject(this.positionObserver, "didLosePosition", "NMAPositioningManagerDidLosePositionNotification", this.positionListener)
+
+            nativeView.positionIndicator.visible = true
+        }
     }
 
     public disposeNativeView(): void {
+        console.log("stop positioning")
+        this.positionListener.stopPositioning()
+        this.navigationManager.stop()
+        NSNotificationCenter.defaultCenter.removeObserverNameObject(this.positionObserver, "NMAPositioningManagerDidUpdatePositionNotification", this.positionListener)
+        NSNotificationCenter.defaultCenter.removeObserverNameObject(this.positionObserver, "NMAPositioningManagerDidLosePositionNotification", this.positionListener)
         super.disposeNativeView();
     }
 
@@ -209,12 +218,6 @@ export class Here extends HereBase {
         return this.nativeMarkers ? this.nativeMarkers.size : 0;
     }
 
-    _requestPremision(): Promise<any> {
-        return new Promise<any>((resolve, reject) => {
-            resolve()
-        })
-    }
-
     calculateRoute(points): Promise<any> {
         return new Promise<any>((resolve, reject) => {
             console.dir(this.isReady)
@@ -287,58 +290,53 @@ export class Here extends HereBase {
 
     startSimulation(): Promise<any> {
         return new Promise<any>((resolve, reject) => {
-            const map = this.nativeView
-
-            map.positionIndicator.visible = true
-            this.navigationManager.map = map
-            console.dir(map)
-
-            const source = NMARoutePositionSource.alloc().initWithRoute(this.route)
-            source.movementSpeed = 60
-
-            NMAPositioningManager.sharedPositioningManager().dataSource = source
+            this.positionListener.dataSource = NMARoutePositionSource.alloc().initWithRoute(this.route)
+            this.positionListener.dataSource.movementSpeed = 60
             this.navigationManager.mapTrackingEnabled = true
             this.navigationManager.mapTrackingAutoZoomEnabled = true
             this.navigationManager.mapTrackingOrientation = NMAMapTrackingOrientation.Dynamic
             this.navigationManager.speedWarningEnabled = true
 
-            const result = this.navigationManager.startTurnByTurnNavigationWithRoute(this.route)
-            console.dir(result)
-            console.dir('Simulation Started')
+            this.navigationManager.startTurnByTurnNavigationWithRoute(this.route)
+            resolve()
+        })
+    }
+
+    pauseNavigation(): Promise<any> {
+        return new Promise<any>((resolve, reject) => {
+            if (this.positionListener.dataSource) {
+                this.positionListener.dataSource.movementSpeed = 0
+            }
+            resolve()
+        })
+    }
+
+    resumeNavigation(): Promise<any> {
+        return new Promise<any>((resolve, reject) => {
+            if (this.positionListener.dataSource) {
+                this.positionListener.dataSource.movementSpeed = 60
+            }
             resolve()
         })
     }
 
     startNavigation(): Promise<any> {
         return new Promise<any>((resolve, reject) => {
-            const map = this.nativeView
-
-            NMAPositioningManager.sharedPositioningManager().dataSource = null
-            map.positionIndicator.visible = true
-            this.navigationManager.map = map
-            console.dir(map)
 
             this.navigationManager.mapTrackingEnabled = true
             this.navigationManager.mapTrackingAutoZoomEnabled = true
             this.navigationManager.mapTrackingOrientation = NMAMapTrackingOrientation.Dynamic
             this.navigationManager.speedWarningEnabled = true
-            console.log("ROUTER: ")
-            console.log(this.route)
-            const result = this.navigationManager.startTurnByTurnNavigationWithRoute(this.route)
-            console.log("Result of navigation")
-            console.dir(result)
-            console.dir('Navigation Started 2')
+            this.navigationManager.startTurnByTurnNavigationWithRoute(this.route)
             resolve()
         })
     }
 
     stopNavigation(): void {
+        this.positionListener.dataSource = NMAHEREPositionSource.alloc().init()
         this.navigationManager.stop()
-        this.navigationManager.map = null
         this.navigationManager.mapTrackingEnabled = false
         this.navigationManager.mapTrackingAutoZoomEnabled = false
-
-        NMAPositioningManager.sharedPositioningManager().dataSource = null
 
         const map = this.nativeView
         map.setBoundingBoxWithAnimation(
@@ -484,17 +482,48 @@ export class Here extends HereBase {
 
     }
 
-    navigationManagerDidFindPosition(navigationManager): void {
-        console.dir("Found position")
+    addCircles(circles): Promise<any> {
+        return new Promise<any>((resolve, reject) => {
+            resolve();
+        });
+    }
+}
+
+class PositionObserver extends NSObject {
+    owner: WeakRef<Here>;
+
+    public static initWithOwner(owner: WeakRef<Here>): PositionObserver {
+        const observer = new PositionObserver();
+        observer.owner = owner;
+        return observer;
     }
 
-    navigationManagerdidUpdateRouteWithResult(navigationManager, routeResult): void {
-        console.dir("NManager did update route with result")
+    public positionDidUpdate(notification: NSNotification): void {
+        const owner = this.owner ? this.owner.get() : null;
+        if (!owner) {
+            return
+        }
+        const position = NMAPositioningManager.sharedPositioningManager().currentPosition
+        if (!position) {
+            return
+        }
+        owner.notify({
+            eventName: HereBase.geoPositionChange,
+            object: owner,
+            latitude: position.coordinates.latitude,
+            longitude: position.coordinates.longitude,
+        });
+        console.log("position update!!!!");
     }
 
-    navigationManagerDidLosePosition(navigationManager): void {
-        console.dir("NManager lose position")
+    public didLosePosition(): void {
+        console.log("position lose!!!!");
     }
+
+    public static ObjCExposedMethods = {
+        "positionDidUpdate": { returns: interop.types.void, params: [NSNotification] },
+        "didLosePosition": { returns: interop.types.void, params: [] },
+    };
 }
 
 // @ts-ignore

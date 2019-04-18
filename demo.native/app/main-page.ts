@@ -99,6 +99,14 @@ export function stop() {
     map.stopNavigation()
 }
 
+export function pause() {
+    map.pauseNavigation()
+}
+
+export function resume() {
+    map.resumeNavigation()
+}
+
 export function showWay() {
     map.showWay()
 }

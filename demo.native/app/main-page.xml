@@ -20,6 +20,8 @@
             <Button width="33.3%" text="Stop" tap="stop"/>
             <Button width="50%" text="Show way" tap="showWay"/>
             <Button width="50%" text="Calculate" tap="calculate"/>
+            <Button width="50%" text="Pause" tap="pause"/>
+            <Button width="50%" text="Resume" tap="resume"/>
         </FlexboxLayout>
     </FlexboxLayout>
 </Page>

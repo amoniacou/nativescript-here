@@ -21,6 +21,8 @@ export declare class Here extends HereBase {
   calculateRoute(points: object[]): Promise<any>;
   showWay(): Promise<any>;
   startNavigation(): Promise<any>;
+  pauseNavigation(): Promise<any>;
+  resumeNavigation(): Promise<any>;
   startSimulation(): Promise<any>;
   stopNavigation(): void;
 
