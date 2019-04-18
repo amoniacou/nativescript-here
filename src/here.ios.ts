@@ -56,6 +56,11 @@ export class Here extends HereBase {
         NMAApplicationContext.setAppIdAppCodeLicenseKey(appId, appCode, licenseKey);
     }
 
+    public updateRoute(newRoute: NMARoute): void {
+        this.route = newRoute;
+        this.navigationManager.setRoute(this.route)
+    }
+
     public createNativeView(): Object {
         this.nativeMarkers = new Map<number, any>();
         this.markers = new Map<any, HereMarker>();
@@ -110,6 +115,7 @@ export class Here extends HereBase {
 
         this.navigationManager = NMANavigationManager.sharedNavigationManager()
         this.navigationManager.map = nativeView
+        this.navigationManager.delegate = NMANavigationManagerDelegateImpl.initWithOwner(new WeakRef<Here>(this));
         this.positionListener = NMAPositioningManager.sharedPositioningManager()
         this.positionListener.dataSource = NMADevicePositionSource.alloc().init()
 
@@ -550,6 +556,62 @@ class PositionObserver extends NSObject {
         "positionDidUpdate": { returns: interop.types.void, params: [NSNotification] },
         "didLosePosition": { returns: interop.types.void, params: [] },
     };
+}
+
+
+// @ts-ignore
+@ObjCClass(NMANavigationManagerDelegate)
+class NMANavigationManagerDelegateImpl extends NSObject implements NMANavigationManagerDelegate {
+    owner: WeakRef<Here>;
+
+    public static initWithOwner(owner: WeakRef<Here>): NMANavigationManagerDelegateImpl {
+        const delegate = new NMANavigationManagerDelegateImpl();
+        delegate.owner = owner;
+        return delegate;
+    }
+
+    public navigationManagerDidUpdateRouteWithResult(navigationManager: NMANavigationManager, result: NMARouteResult): void {
+        const owner = this.owner ? this.owner.get() : null;
+        if (!owner) {
+            return
+        }
+        if (!result) {
+            return
+        }
+        if (!result.routes) {
+            return
+        }
+        console.log("New route found!!!!")
+        console.dir(result)
+        owner.updateRoute(result.routes[0]);
+    }
+
+    public navigationManagerDidReachDestination(navigationManager: NMANavigationManager): void {
+        console.log("We did reach destination!!!")
+    }
+
+    public navigationManagerWillReroute(navigationManager: NMANavigationManager): void {
+        console.log("Reroute started!!!!")
+    }
+
+    public navigationManagerDidFindAlternateRouteWithResult(navigationManager: NMANavigationManager, result: NMARouteResult): void {
+        const owner = this.owner ? this.owner.get() : null;
+        if (!owner) {
+            return
+        }
+        console.log("Found new alternatives routes!!!!")
+        if (!result) {
+            return
+        }
+        if (!result.routes) {
+            return
+        }
+        owner.updateRoute(result.routes[0]);
+    }
+
+    public navigationManagerDidReachStopover(navigationManager: NMANavigationManager, stopover: NMAWaypoint): void {
+        console.log("Waypoint reached!!!")
+    }
 }
 
 // @ts-ignore
