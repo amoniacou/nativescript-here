@@ -50,6 +50,7 @@ export class Here extends HereBase {
     private navigationFollow: boolean = false;
     private routeProgress: number = 0;
     private navigationMarkerIcon;
+    private rerouteListener;
 
     constructor() {
         super();
@@ -276,8 +277,47 @@ export class Here extends HereBase {
 
         this.positionListener = new PositionListener()
 
+        class RerouteListene extends com.here.android.mpa.guidance.NavigationManager.RerouteListener {
+            onRerouteBegin() {
+                console.dir('Reroute!!')
+            }
+
+            onRerouteEnd(routeResults, routingError) {
+                const owner = that.get();
+                if (!owner) return;
+                const mapFragment = owner.fragment
+                const map = mapFragment.getMap()
+
+                if (routingError == com.here.android.mpa.routing.RoutingError.NONE) {
+                    if (routeResults.getRoute() != null) {
+
+
+                        owner.navigationRoute = routeResults.getRoute();
+                        console.log('navigationRoute')
+
+                        map.removeMapObject(this.mapRoute)
+                        this.mapRoute = new com.here.android.mpa.mapping.MapRoute(owner.navigationRoute);
+                        console.log('mapRoute')
+
+                        this.mapRoute.setManeuverNumberVisible(true)
+                        map.addMapObject(this.mapRoute)
+
+                        owner.navigationRouteBoundingBox = routeResults.getRoute().getBoundingBox();
+                        owner.navigationRouteBoundingBox.expand(200, 200)
+                    } else {
+                        console.log('Woooops... route results returned is not valid')
+                    }
+                } else {
+                    console.log('Woooops... route calculation returned error code: ' + routingError)
+                }
+            }
+        }
+
+        this.rerouteListener = new RerouteListene()
+
         this.listener = new com.here.android.mpa.common.OnEngineInitListener({
             onEngineInitializationCompleted(error): void {
+                console.log('HERE ENGINE INIT!')
                 const owner = that.get();
                 if (!owner) return;
                 if (error === com.here.android.mpa.common.OnEngineInitListener.Error.NONE) {
@@ -300,40 +340,8 @@ export class Here extends HereBase {
                         new java.lang.ref.WeakReference(owner.positionListener)
                     )
 
-                    class RerouteListene extends com.here.android.mpa.guidance.NavigationManager.RerouteListener {
-                        onRerouteBegin() {
-                            console.dir('Reroute!!')
-                        }
-
-                        onRerouteEnd(routeResults, routingError) {
-                            if (routingError == com.here.android.mpa.routing.RoutingError.NONE) {
-                                if (routeResults.getRoute() != null) {
-
-                                    owner.navigationRoute = routeResults.getRoute();
-                                    console.log('navigationRoute')
-
-                                    map.removeMapObject(this.mapRoute)
-                                    this.mapRoute = new com.here.android.mpa.mapping.MapRoute(owner.navigationRoute);
-                                    console.log('mapRoute')
-
-                                    this.mapRoute.setManeuverNumberVisible(true)
-                                    map.addMapObject(this.mapRoute)
-
-                                    owner.navigationRouteBoundingBox = routeResults.getRoute().getBoundingBox();
-                                    owner.navigationRouteBoundingBox.expand(200, 200)
-                                } else {
-                                    console.log('Woooops... route results returned is not valid')
-                                }
-                            } else {
-                                console.log('Woooops... route calculation returned error code: ' + routingError)
-                            }
-                        }
-                    }
-
-                    const rerouteListener = new RerouteListene()
-
                     owner.navigationManager.addRerouteListener(
-                        new java.lang.ref.WeakReference(rerouteListener)
+                        new java.lang.ref.WeakReference(owner.rerouteListener)
                     )
 
                     owner.navigationArrowIcon = new com.here.android.mpa.common.Image()
@@ -347,7 +355,7 @@ export class Here extends HereBase {
 
                     owner.navigationMarkerIcon = new com.here.android.mpa.common.Image()
                     const decodedStringMarker = android.util.Base64.decode(
-                        icon_source.replace('data:image/png;base64,', ''), 
+                        icon_source.replace('data:image/png;base64,', ''),
                         android.util.Base64.DEFAULT
                     )
                     const decodedByteMarker = android.graphics.BitmapFactory.decodeByteArray(decodedStringMarker, 0, decodedStringMarker.length);
@@ -429,6 +437,11 @@ export class Here extends HereBase {
                 //this.fragment.getMapGesture().removeOnGestureListener(this.gestureListener);
             }
         }
+
+        this.navigationManager.removeNavigationManagerEventListener(this.navigationManagerListener)
+        this.navigationManager.removePositionListener(this.positionListener)
+        this.navigationManager.removeRerouteListener(this.rerouteListener)
+
         super.disposeNativeView();
     }
 
@@ -699,14 +712,18 @@ export class Here extends HereBase {
     }
 
     pauseNavigation(): Promise<any> {
-        return new Promise<any>((resolve, reject) => {
-            resolve()
+        return new Promise<any>(resolve => {
+            if (this.fragment && this.isReady) {
+                this.navigationManager.pause();
+            }
         })
     }
 
     resumeNavigation(): Promise<any> {
-        return new Promise<any>((resolve, reject) => {
-            resolve()
+        return new Promise<any>(resolve => {
+            if (this.fragment && this.isReady) {
+                this.navigationManager.resume();
+            }
         })
     }
 
