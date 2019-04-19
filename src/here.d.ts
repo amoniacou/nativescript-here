@@ -38,4 +38,5 @@ export declare class Here extends HereBase {
     navigationManagerDidFindPosition(navigationManager: any): void;
     navigationManagerdidUpdateRouteWithResult(navigationManager: any, routeResult: any): void;
     navigationManagerDidLosePosition(navigationManager: any): void;
+    setNavigationMode(mode: string): Promise<any>;
 }

@@ -25,6 +25,7 @@ export declare class Here extends HereBase {
   resumeNavigation(): Promise<any>;
   startSimulation(): Promise<any>;
   stopNavigation(): void;
+  setNavigationMode(mode: string): Promise<any>
 
   // Circles
   addCircle(circle): void;
