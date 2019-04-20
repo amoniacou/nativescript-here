@@ -15,14 +15,23 @@
             longitude="-123.0053635"
             tilt="{{ tilt }}" />
         <FlexboxLayout flexShrink="0" flexWrap="wrap" justifyContent="space-between">
-            <Button width="33.3%" text="Navigation" tap="navigation"/>
-            <Button width="33.3%" text="Simulation" tap="simulation"/>
-            <Button width="33.3%" text="Stop" tap="stop"/>
-            <Button width="50%" text="Show way" tap="showWay"/>
-            <Button width="50%" text="Calculate" tap="calculate"/>
-            <Button width="50%" text="Pause" tap="pause"/>
-            <Button width="50%" text="Resume" tap="resume"/>
-            <Button width="50%" text="Navigate to first point" tap="navigateto"/>
+            <Button width="33%" text="Navigation" tap="navigation"/>
+            <Button width="33%" text="Simulation" tap="simulation"/>
+            <Button width="33%" text="Stop" tap="stop"/>
+            
+            <Button width="33%" text="Show way" tap="showWay"/>
+            <Button width="33%" text="Calculate" tap="calculate"/>
+            <Button width="33%" text="Pause" tap="pause"/>
+
+            <Button width="33%" text="Resume" tap="resume"/>
+            <Button width="50%" text="Navigate first point" tap="navigateto"/>
+            <Button width="33%" text="Walk" tap="walk"/>
+            <Button width="33%" text="Car" tap="car"/>
+            <Button width="33%" text="Bike" tap="bike"/>
+            <Button width="33%" text="Public Transport" tap="resume"/>
+            <Button width="33%" text="Boat" tap="resume"/>
+            <Button width="33%" text="Uber" tap="resume"/>
+
         </FlexboxLayout>
     </FlexboxLayout>
 </Page>

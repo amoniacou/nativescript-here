@@ -18,10 +18,8 @@ export abstract class HereBase extends View {
     abstract setCenter(lat: number, lon: number, animated: boolean): Promise<any>;
 
     // Markers
-    abstract addMarkers(markers: HereMarker[]): Promise<any>;
-    abstract removeMarkers(markers?: number[]): Promise<any>;
-    abstract updateMarkers(markers: HereMarker[]): Promise<any>;
-    abstract updateMarker(marker: HereMarker): Promise<any>;
+    abstract addMarker(marker: HereMarker): void;
+    abstract clearMarkers(): void;
     abstract _getMarkersCount(): number;
 
     // Navigation

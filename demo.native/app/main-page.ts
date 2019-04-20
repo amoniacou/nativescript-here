@@ -39,21 +39,16 @@ export function onLoaded(args) {
     args.object.on('mapReady', args => {
         console.dir('mapReady')
         onMapReady(args);
-
         map = args.object;
+        console.log(map)
 
         // map.toggleScroll(false)
         // map.toggleZoom(false)
-
-        map
-            .calculateRoute(points)
-            .then(() => {
-                showMakers(points)
-
-            })
+        map.setStops(points, true)
+        map.calculateRoute()
 
         map.addCircles(points.map((point, index) => ({
-            id: index + '_circle',
+            id: index,
             latitude: point.latitude,
             longitude: point.longitude,
             radius: point.activationRadius
@@ -79,15 +74,13 @@ export function removeMarkers() {
 }
 
 export function navigation() {
-    map.calculateRoute(points).then(() => {
-        showMakers(points)
+    map.calculateRoute().then(() => {
         map.startNavigation()
     })
 }
 
 export function calculate() {
-    map.calculateRoute(points).then(() => {
-        showMakers(points)
+    map.calculateRoute().then(() => {
     })
 }
 
@@ -111,22 +104,26 @@ export function showWay() {
     map.showWay()
 }
 
-export function navigateto() {
-    map.navigateTo(points[0].latitude, points[0].longitude)
+export function boat() {
+    map.setNavigationMode("boat").then(() => {
+        map.calculateRoute()
+    })
 }
 
-function showMakers(points) {
-    map
-        .addMarkers(<HereMarker[]>points.map((point, index) => ({
-            id: index,
-            latitude: point.latitude,
-            longitude: point.longitude,
-            title: `Point ${index}`,
-            draggable: false
-        })))
-        .then(() => {
-            console.log('Markers added!')
-        })
+export function car() {
+    map.setNavigationMode("car").then(() => {
+        map.calculateRoute()
+    })
+}
+
+export function walk() {
+    map.setNavigationMode("walk").then(() => {
+        map.calculateRoute()
+    })
+}
+
+export function navigateto() {
+    map.navigateTo(points[0].latitude, points[0].longitude)
 }
 
 function onMapClick(event) {
