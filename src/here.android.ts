@@ -152,10 +152,16 @@ export class Here extends HereBase {
                 //this.fragment.getMapGesture().removeOnGestureListener(this.gestureListener);
             }
         }
-
+        this.clearMarkers()
+        this.clearCircles()
         this.navigationManager.removeNavigationManagerEventListener(this.navigationManagerListener)
         this.navigationManager.removePositionListener(this.positionListener)
         this.navigationManager.removeRerouteListener(this.rerouteListener)
+        this.navigationManagerListener = null;
+        this.positionListener = null;
+        this.rerouteListener = null;
+        this.navigationManager.stop()
+        this.navigationManager.setMap(null);
 
         super.disposeNativeView();
     }
@@ -528,6 +534,12 @@ export class Here extends HereBase {
             const nativeObj = this.nativeCircles.get(circle.id);
             this._setCircleOptions(nativeObj, circle)
         }
+    }
+
+    clearCircles(): void {
+        const map = this.fragment.getMap();
+        map.removeMapObjects(Array.from(this.nativeCircles.values()));
+        this.nativeCircles.clear()
     }
 
     _setCircleOptions(nativeObj, options) {
