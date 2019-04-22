@@ -183,10 +183,26 @@ export class Here extends HereBase {
     }
 
     public disposeNativeView(): void {
+        console.log("Stop positioning")
         this.positionListener.stopPositioning()
+        console.log("Stop navigation manager")
         this.navigationManager.stop()
+        console.log("Stop navigation manager delegation")
+        this.navigationManager.delegate = null
+        this.navigationManager.resetAnnouncementRules()
+        this.navigationManager.map = null
+        console.log("Remove observers")
         NSNotificationCenter.defaultCenter.removeObserverNameObject(this.positionObserver, "NMAPositioningManagerDidUpdatePositionNotification", this.positionListener)
         NSNotificationCenter.defaultCenter.removeObserverNameObject(this.positionObserver, "NMAPositioningManagerDidLosePositionNotification", this.positionListener)
+        console.log("Nullify router")
+        this.router = null;
+        console.log("Nullify maproute")
+        this.mapRoute = null;
+        console.log("clear circles")
+        this.clearCircles()
+        console.log("clear makers")
+        this.clearMarkers()
+        console.log("call dispose native view")
         super.disposeNativeView();
     }
 
@@ -286,9 +302,6 @@ export class Here extends HereBase {
                 this.router = NMACoreRouter.alloc().init()
                 console.dir('Created: "router"')
             }
-            console.log('start route:')
-            console.log(this.nativeStops)
-            console.dir(this.routingMode)
             this.router.calculateRouteWithStopsRoutingModeCompletionBlock(this.nativeStops, this.routingMode, (result, error) => {
                 if (error) {
                     console.dir(`Error: calculate route with error code: ${error}`)
@@ -301,7 +314,6 @@ export class Here extends HereBase {
                     reject()
                     return
                 }
-                console.log('Update route!')
                 this.updateRoute(result.routes[0])
                 this.showWay()
                 resolve()
