@@ -100,6 +100,10 @@ export function resume() {
     map.resumeNavigation()
 }
 
+export function remove() {
+    map.removeNavigation()
+}
+
 export function showWay() {
     map.showWay()
 }

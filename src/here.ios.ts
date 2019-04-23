@@ -112,6 +112,7 @@ export class Here extends HereBase {
 
     public createNativeView(): Object {
         this.nativeMarkers = new Map<number, any>();
+        this.nativeCircles = new Map<number, any>();
         this.markers = new Map<any, HereMarker>();
         this.markersCallback = new Map<number, any>();
         this.delegate = NMAMapViewDelegateImpl.initWithOwner(new WeakRef<Here>(this));
@@ -183,26 +184,7 @@ export class Here extends HereBase {
     }
 
     public disposeNativeView(): void {
-        console.log("Stop positioning")
-        this.positionListener.stopPositioning()
-        console.log("Stop navigation manager")
-        this.navigationManager.stop()
-        console.log("Stop navigation manager delegation")
-        this.navigationManager.delegate = null
-        this.navigationManager.resetAnnouncementRules()
-        this.navigationManager.map = null
-        console.log("Remove observers")
-        NSNotificationCenter.defaultCenter.removeObserverNameObject(this.positionObserver, "NMAPositioningManagerDidUpdatePositionNotification", this.positionListener)
-        NSNotificationCenter.defaultCenter.removeObserverNameObject(this.positionObserver, "NMAPositioningManagerDidLosePositionNotification", this.positionListener)
-        console.log("Nullify router")
-        this.router = null;
-        console.log("Nullify maproute")
-        this.mapRoute = null;
-        console.log("clear circles")
-        this.clearCircles()
-        console.log("clear makers")
-        this.clearMarkers()
-        console.log("call dispose native view")
+        this.removeNavigation()
         super.disposeNativeView();
     }
 
@@ -390,6 +372,32 @@ export class Here extends HereBase {
         console.dir('Navigation Stoped')
     }
 
+    public removeNavigation(): void {
+        this.stopNavigation();
+        console.log("Stop positioning")
+        this.positionListener.stopPositioning()
+        console.log("Stop navigation manager")
+        this.navigationManager.stop()
+        console.log("Stop navigation manager delegation")
+        //this.navigationManager.delegate = null
+        this.navigationManager.resetAnnouncementRules()
+        //this.navigationManager.map = null
+        console.log("Remove observers")
+        NSNotificationCenter.defaultCenter.removeObserverNameObject(this.positionObserver, "NMAPositioningManagerDidUpdatePositionNotification", this.positionListener)
+        NSNotificationCenter.defaultCenter.removeObserverNameObject(this.positionObserver, "NMAPositioningManagerDidLosePositionNotification", this.positionListener)
+        console.log("Nullify router")
+        //this.router = null;
+        console.log("clear circles")
+        this.clearCircles()
+        console.log("clear makers")
+        this.clearMarkers()
+        console.log("Nullify maproute")
+        if (this.mapRoute) {
+            this.nativeView.removeMapObject(this.mapRoute)
+        }
+        this.mapRoute = null;
+    }
+
     /**
      * Build navigation to specific coordinates
      * @param latitude Latitude coordinate `number`
@@ -461,11 +469,17 @@ export class Here extends HereBase {
     }
 
     clearCircles(): void {
+        if (this.nativeCircles.size == 0) {
+            return;
+        }
         this.nativeView.removeMapObjects(Array.from(this.nativeCircles.values()));
         this.nativeCircles.clear()
     }
 
     clearMarkers(): void {
+        if (this.nativeMarkers.size == 0) {
+            return;
+        }
         this.nativeView.removeMapObjects(Array.from(this.nativeMarkers.values()));
         this.markers.clear();
         this.nativeMarkers.clear();

@@ -31,6 +31,7 @@
             <Button width="33%" text="Public Transport" tap="resume"/>
             <Button width="33%" text="Boat" tap="resume"/>
             <Button width="33%" text="Uber" tap="resume"/>
+            <Button width="33%" text="Remove" tap="remove"/>
 
         </FlexboxLayout>
     </FlexboxLayout>

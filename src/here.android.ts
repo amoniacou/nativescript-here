@@ -143,6 +143,11 @@ export class Here extends HereBase {
     }
 
     public disposeNativeView(): void {
+        this.removeNavigation()
+        super.disposeNativeView();
+    }
+
+    public removeNavigation(): void {
         if (this.fragment) {
             const mapGesture = typeof this.fragment.getMapGesture === 'function' ? this.fragment.getMapGesture() : null;
             console.log('this.fragment.removeOnMapRenderListener', this.fragment.removeOnMapRenderListener);
@@ -162,8 +167,6 @@ export class Here extends HereBase {
         this.rerouteListener = null;
         this.navigationManager.stop()
         this.navigationManager.setMap(null);
-
-        super.disposeNativeView();
     }
 
     [zoomLevelProperty.setNative](zoomLevel: number) {
