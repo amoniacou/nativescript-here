@@ -530,11 +530,11 @@ export class Here extends HereBase {
         console.log('set radius')
         nativeCircle.radius = circle.radius
         console.log('set line color')
-        nativeCircle.lineColor = UIColor.alloc().initWithRedGreenBlueAlpha(0, 153, 255, 255);
+        nativeCircle.lineColor = UIColor.alloc().initWithRedGreenBlueAlpha(0, 0.5, 1, 0.7);
         console.log('set line width')
         nativeCircle.lineWidth = 4;
         console.log('set fill color')
-        nativeCircle.fillColor = UIColor.alloc().initWithRedGreenBlueAlpha(0, 153, 255, 120);
+        nativeCircle.fillColor = UIColor.alloc().initWithRedGreenBlueAlpha(0, 0.5, 1, 0.4);
         console.log('circle options done')
     }
 
