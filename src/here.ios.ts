@@ -185,6 +185,7 @@ export class Here extends HereBase {
     public disposeNativeView(): void {
         this.removeNavigation()
         super.disposeNativeView();
+        console.log('disposed native view')
     }
 
     public onLoaded(): void {
@@ -346,7 +347,7 @@ export class Here extends HereBase {
 
     startNavigation(): Promise<any> {
         return new Promise<any>((resolve, reject) => {
-
+            this.navigationManager.setMap(this.nativeView)
             this.navigationManager.mapTrackingEnabled = true
             this.navigationManager.mapTrackingAutoZoomEnabled = true
             this.navigationManager.mapTrackingOrientation = NMAMapTrackingOrientation.Dynamic
@@ -357,17 +358,16 @@ export class Here extends HereBase {
     }
 
     stopNavigation(): void {
-        this.positionListener.dataSource = NMAHEREPositionSource.alloc().init()
         this.navigationManager.stop()
-        this.navigationManager.mapTrackingEnabled = false
-        this.navigationManager.mapTrackingAutoZoomEnabled = false
-
+        this.positionListener.dataSource = null
         const map = this.nativeView
         map.setBoundingBoxWithAnimation(
             this.navigationRouteBoundingBox,
             NMAMapAnimation.Linear
         )
         map.setOrientationWithAnimation(0, NMAMapAnimation.Linear)
+        this.navigationManager.mapTrackingEnabled = false
+        this.navigationManager.mapTrackingAutoZoomEnabled = false
     }
 
     public removeNavigation(): void {
@@ -375,25 +375,24 @@ export class Here extends HereBase {
         console.log("Stop positioning")
         this.positionListener.stopPositioning()
         console.log("Stop navigation manager")
-        this.navigationManager.stop()
+        // this.navigationManager.stop()
         console.log("Stop navigation manager delegation")
-        this.navigationManager.delegate = null
+        //this.navigationManager.delegate = null
         this.navigationManager.resetAnnouncementRules()
-        this.navigationManager.map = null
+        //this.navigationManager.map = null
         console.log("Remove observers")
         NSNotificationCenter.defaultCenter.removeObserverNameObject(this.positionObserver, "NMAPositioningManagerDidUpdatePositionNotification", this.positionListener)
         NSNotificationCenter.defaultCenter.removeObserverNameObject(this.positionObserver, "NMAPositioningManagerDidLosePositionNotification", this.positionListener)
         console.log("Nullify router")
-        this.router = null;
         console.log("clear circles")
-        this.clearCircles()
+        //this.clearCircles()
         console.log("clear makers")
-        this.clearMarkers()
+        //this.clearMarkers()
         console.log("Nullify maproute")
-        if (this.mapRoute) {
-            this.nativeView.removeMapObject(this.mapRoute)
-        }
-        this.mapRoute = null;
+        //if (this.mapRoute) {
+        //    this.nativeView.removeMapObject(this.mapRoute)
+        //}
+        //this.mapRoute = null;
         console.log('Done of navigation removal')
     }
 
