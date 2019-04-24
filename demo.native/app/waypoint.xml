@@ -1,0 +1,8 @@
+<Page xmlns="http://schemas.nativescript.org/tns.xsd" loaded="pageLoaded" class="page"
+      xmlns:ui="nativescript-here">
+    <FlexboxLayout flexDirection="column" alignItems="stretch">
+        <FlexboxLayout flexShrink="0" flexWrap="wrap" justifyContent="space-between">
+            <Button width="33%" text="Back" tap="onTap"/>
+        </FlexboxLayout>
+    </FlexboxLayout>
+</Page>

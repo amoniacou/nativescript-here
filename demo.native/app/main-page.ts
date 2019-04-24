@@ -1,5 +1,7 @@
 import * as observable from 'tns-core-modules/data/observable';
 import * as pages from 'tns-core-modules/ui/page';
+import { Button } from "tns-core-modules/ui/button";
+import { Page } from "tns-core-modules/ui/page";
 import { HelloWorldModel } from './main-view-model';
 import { Here, HereMarker } from 'nativescript-here';
 
@@ -100,8 +102,14 @@ export function resume() {
     map.resumeNavigation()
 }
 
-export function remove() {
+export function remove(args) {
     map.removeNavigation()
+    const button: Button = <Button>args.object;
+    const page: Page = button.page;
+    page.frame.navigate({
+        moduleName: "login-page",
+        clearHistory: true
+    });
 }
 
 export function showWay() {
@@ -128,6 +136,14 @@ export function walk() {
 
 export function navigateto() {
     map.navigateTo(points[0].latitude, points[0].longitude)
+}
+
+export function waypoint(args: observable.EventData) {
+    const button: Button = <Button>args.object;
+    const page: Page = button.page;
+    page.frame.navigate({
+        moduleName: "waypoint",
+    });
 }
 
 function onMapClick(event) {

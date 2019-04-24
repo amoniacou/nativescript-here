@@ -28,10 +28,8 @@
             <Button width="33%" text="Walk" tap="walk"/>
             <Button width="33%" text="Car" tap="car"/>
             <Button width="33%" text="Bike" tap="bike"/>
-            <Button width="33%" text="Public Transport" tap="resume"/>
-            <Button width="33%" text="Boat" tap="resume"/>
-            <Button width="33%" text="Uber" tap="resume"/>
-            <Button width="33%" text="Remove" tap="remove"/>
+            <Button width="33%" text="To Waypoint" tap="waypoint"/>
+            <Button width="33%" text="Back" tap="remove"/>
 
         </FlexboxLayout>
     </FlexboxLayout>

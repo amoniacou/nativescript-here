@@ -171,7 +171,6 @@ export class Here extends HereBase {
         this.positionListener = NMAPositioningManager.sharedPositioningManager()
         this.positionListener.dataSource = NMADevicePositionSource.alloc().init()
         console.log("start navigation")
-        console.dir(this)
         NSNotificationCenter.defaultCenter.removeObserver(this.positionObserver)
         if (this.positionListener.startPositioning()) {
             this.positionObserver = PositionObserver.initWithOwner(new WeakRef<Here>(this))
@@ -369,7 +368,6 @@ export class Here extends HereBase {
             NMAMapAnimation.Linear
         )
         map.setOrientationWithAnimation(0, NMAMapAnimation.Linear)
-        console.dir('Navigation Stoped')
     }
 
     public removeNavigation(): void {
@@ -379,14 +377,14 @@ export class Here extends HereBase {
         console.log("Stop navigation manager")
         this.navigationManager.stop()
         console.log("Stop navigation manager delegation")
-        //this.navigationManager.delegate = null
+        this.navigationManager.delegate = null
         this.navigationManager.resetAnnouncementRules()
-        //this.navigationManager.map = null
+        this.navigationManager.map = null
         console.log("Remove observers")
         NSNotificationCenter.defaultCenter.removeObserverNameObject(this.positionObserver, "NMAPositioningManagerDidUpdatePositionNotification", this.positionListener)
         NSNotificationCenter.defaultCenter.removeObserverNameObject(this.positionObserver, "NMAPositioningManagerDidLosePositionNotification", this.positionListener)
         console.log("Nullify router")
-        //this.router = null;
+        this.router = null;
         console.log("clear circles")
         this.clearCircles()
         console.log("clear makers")
@@ -396,6 +394,7 @@ export class Here extends HereBase {
             this.nativeView.removeMapObject(this.mapRoute)
         }
         this.mapRoute = null;
+        console.log('Done of navigation removal')
     }
 
     /**
@@ -445,14 +444,12 @@ export class Here extends HereBase {
 
     public setStops(points: Array<any>, showMarkers: boolean): void {
         console.log('add points')
-        console.log(points)
         this.nativeStops = NSMutableArray.alloc().initWithCapacity(points.length);
         if (this.nativeMarkers.size > 0) {
             this.clearMarkers()
         }
 
         points.forEach((point, index) => {
-            console.dir(`Point ${index} create`)
             this.nativeStops.addObject(
                 NMAWaypoint.alloc().initWithGeoCoordinates(
                     NMAGeoCoordinates.geoCoordinatesWithLatitudeLongitude(
@@ -464,7 +461,6 @@ export class Here extends HereBase {
             if (showMarkers) {
                 this.addMarker(point)
             }
-            console.dir(`Point ${index} created`)
         })
     }
 
@@ -539,7 +535,7 @@ export class Here extends HereBase {
         console.log('set line width')
         nativeCircle.lineWidth = 4;
         console.log('set fill color')
-        nativeCircle.fillColor = UIColor.alloc().initWithRedGreenBlueAlpha(0, 153, 255, 20);
+        nativeCircle.fillColor = UIColor.alloc().initWithRedGreenBlueAlpha(0, 153, 255, 120);
         console.log('circle options done')
     }
 
@@ -636,8 +632,6 @@ class NMANavigationManagerDelegateImpl extends NSObject implements NMANavigation
         if (!result.routes) {
             return
         }
-        console.log("New route found!!!!")
-        console.dir(result)
         owner.updateRoute(result.routes[0]);
     }
 

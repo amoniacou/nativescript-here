@@ -54,6 +54,9 @@ export class Here extends HereBase {
     private navigationMode: string = 'walk'
     private nativeStops;
     private routingMode;
+    private coreRouter;
+    private routePlan;
+    private routerListener;
 
     readonly navigationModePressets = {
         walk: {
@@ -128,7 +131,7 @@ export class Here extends HereBase {
 
         console.log(`Isolate Disk Cache: ${isolatedDiskCacheRootPathStatus ? 'OK' : 'WITH ERRORS'}`)
 
-        this.navigationManagerListener = new NavigationManagerEventListener()
+        this.navigationManagerListener = this._newNavigationManagerListener(that);
         this.positionListener = this._newPositionListener(that);
         this.rerouteListener = this._newRerouteListener(that);
         this.listener = this._newEngineInitListener(that);
@@ -157,14 +160,14 @@ export class Here extends HereBase {
                 //this.fragment.getMapGesture().removeOnGestureListener(this.gestureListener);
             }
         }
-        this.clearMarkers()
-        this.clearCircles()
+        //this.clearMarkers()
+        //this.clearCircles()
         this.navigationManager.removeNavigationManagerEventListener(this.navigationManagerListener)
         this.navigationManager.removePositionListener(this.positionListener)
         this.navigationManager.removeRerouteListener(this.rerouteListener)
-        this.navigationManagerListener = null;
-        this.positionListener = null;
-        this.rerouteListener = null;
+        //this.navigationManagerListener = null;
+        //this.positionListener = null;
+        //this.rerouteListener = null;
         this.navigationManager.stop()
         this.navigationManager.setMap(null);
     }
@@ -350,10 +353,12 @@ export class Here extends HereBase {
                     return;
                 }
 
-                const coreRouter = new com.here.android.mpa.routing.CoreRouter()
-                console.log('coreRouter')
+                if (!this.coreRouter) {
+                    this.coreRouter = new com.here.android.mpa.routing.CoreRouter()
+                    console.log('coreRouter')
+                }
 
-                const routePlan = new com.here.android.mpa.routing.RoutePlan()
+                this.routePlan = new com.here.android.mpa.routing.RoutePlan()
                 console.log('routePlan')
 
                 this.routeOptions = new com.here.android.mpa.routing.RouteOptions()
@@ -368,17 +373,17 @@ export class Here extends HereBase {
 
                 console.log('Route Params')
 
-                routePlan.setRouteOptions(this.routeOptions);
+                this.routePlan.setRouteOptions(this.routeOptions);
 
                 this.nativeStops.forEach(waypoint => {
-                    routePlan.addWaypoint(waypoint)
+                    this.routePlan.addWaypoint(waypoint)
                 })
                 console.log('Added points')
 
                 const that = new WeakRef<Here>(this);
-                const routerListener = this._newRouterListener(that, resolve, reject)
+                this.routerListener = this._newRouterListener(that, resolve, reject)
 
-                coreRouter.calculateRoute(routePlan, routerListener)
+                this.coreRouter.calculateRoute(this.routePlan, this.routerListener)
             } else {
                 reject();
             }
@@ -512,7 +517,9 @@ export class Here extends HereBase {
 
     clearMarkers(): void {
         const map = this.fragment.getMap();
-        map.removeMapObjects(Array.from(this.nativeMarkers.values()));
+        if (this.nativeMarkers.size > 0) {
+            map.removeMapObjects(Array.from(this.nativeMarkers.values()));
+        }
         this.markers.clear();
         this.nativeMarkers.clear();
         this.markersCallback.clear();
@@ -665,6 +672,57 @@ export class Here extends HereBase {
         return new PositionListener()
     }
 
+    _newNavigationManagerListener(that): any {
+        class NavigationManagerEventListener extends com.here.android.mpa.guidance.NavigationManager.NavigationManagerEventListener {
+            onRunningStateChanged() {
+                console.log("Running state changed")
+                //android.widget.Toast.makeText(this._context, "Running state changed", android.widget.Toast.LENGTH_SHORT).show();
+            }
+
+            onNavigationModeChanged() {
+                console.log("Navigation mode changed")
+                //android.widget.Toast.makeText(this._context, "Navigation mode changed", android.widget.Toast.LENGTH_SHORT).show();
+            }
+
+            onEnded(navigationMode) {
+                console.log(navigationMode + " was ended")
+                //android.widget.Toast.makeText(this._context, navigationMode + " was ended", android.widget.Toast.LENGTH_SHORT).show();
+                //stopForegroundService();
+            }
+
+            onMapUpdateModeChanged(mapUpdateMode) {
+                console.log("Running state changed")
+                //android.widget.Toast.makeText(this._context, "Map update mode is changed to " + mapUpdateMode, android.widget.Toast.LENGTH_SHORT).show();
+            }
+
+            onRouteUpdated(route) {
+                console.log("Route updated")
+                //android.widget.Toast.makeText(this._context, "Route updated", android.widget.Toast.LENGTH_SHORT).show();
+            }
+
+            onCountryInfo(s, s1) {
+                console.log("Country info updated from " + s + " to " + s1)
+                //android.widget.Toast.makeText(this._context, "Country info updated from " + s + " to " + s1, android.widget.Toast.LENGTH_SHORT).show();
+            }
+
+            onStopoverReached(index) {
+                const owner = that ? that.get() : null;
+                // console.dir(geoPosition)
+                if (!owner) return;
+                const mapFragment = owner.fragment
+                const map = mapFragment.getMap()
+                const waypoint = owner.routePlan.getWaypoint(index)
+                const coordinate = waypoint.getOriginalPosition()
+                const lat = coordinate.getLatitude()
+                const lng = coordinate.getLongitude()
+                const position = new com.here.android.mpa.common.GeoCoordinate(lat, lng)
+                console.log("Stopover " + index)
+                console.dir(position)
+            }
+        }
+        return new NavigationManagerEventListener()
+    }
+
     _newEngineInitListener(that) {
         return new com.here.android.mpa.common.OnEngineInitListener({
             onEngineInitializationCompleted(error): void {
@@ -792,7 +850,6 @@ export class Here extends HereBase {
                         const map = owner.fragment.getMap();
                         console.log('navigationRoute')
 
-                        console.dir(owner.mapRoute)
                         if (owner.mapRoute) {
                             map.removeMapObject(owner.mapRoute)
                         }
@@ -937,42 +994,5 @@ export class Here extends HereBase {
                 owner.markers.set(nativeMarker, marker);
             }
         })
-    }
-}
-
-class NavigationManagerEventListener extends com.here.android.mpa.guidance.NavigationManager.NavigationManagerEventListener {
-    onRunningStateChanged() {
-        console.log("Running state changed")
-        //android.widget.Toast.makeText(this._context, "Running state changed", android.widget.Toast.LENGTH_SHORT).show();
-    }
-
-    onNavigationModeChanged() {
-        console.log("Navigation mode changed")
-        //android.widget.Toast.makeText(this._context, "Navigation mode changed", android.widget.Toast.LENGTH_SHORT).show();
-    }
-
-    onEnded(navigationMode) {
-        console.log(navigationMode + " was ended")
-        //android.widget.Toast.makeText(this._context, navigationMode + " was ended", android.widget.Toast.LENGTH_SHORT).show();
-        //stopForegroundService();
-    }
-
-    onMapUpdateModeChanged(mapUpdateMode) {
-        console.log("Running state changed")
-        //android.widget.Toast.makeText(this._context, "Map update mode is changed to " + mapUpdateMode, android.widget.Toast.LENGTH_SHORT).show();
-    }
-
-    onRouteUpdated(route) {
-        console.log("Route updated")
-        //android.widget.Toast.makeText(this._context, "Route updated", android.widget.Toast.LENGTH_SHORT).show();
-    }
-
-    onCountryInfo(s, s1) {
-        console.log("Country info updated from " + s + " to " + s1)
-        //android.widget.Toast.makeText(this._context, "Country info updated from " + s + " to " + s1, android.widget.Toast.LENGTH_SHORT).show();
-    }
-
-    onStopoverReached(index) {
-        console.log("Stopover " + index)
     }
 }

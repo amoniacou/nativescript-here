@@ -1,0 +1,8 @@
+<Page loaded="onPageLoaded" class="page">
+    <ActionBar title="Login Page ActionBar" class="action-bar"></ActionBar>
+
+    <StackLayout class="m-y-auto">
+        <Label text="Login Page" class="h2 text-center" />
+        <Button class="btn btn-primary" text="navigate('main-page')" tap="onTap" />
+    </StackLayout>
+</Page>
