@@ -100,6 +100,18 @@ export class Here extends HereBase {
     public static init(appId: string, appCode: string, licenseKey: string) {
     }
 
+    public static estimateMapDataSize(points: object[]): Promise<any> {
+        return new Promise<any>((resolve, reject) => {
+            resolve();
+        })
+    }
+
+    public static fetchMapData(points: object[]): Promise<any> {
+        return new Promise<any>((resolve, reject) => {
+            resolve();
+        })
+    }
+
     public createNativeView(): Object {
         this.nativeMarkers = new Map<number, any>();
         this.markersCallback = new Map<number, any>();

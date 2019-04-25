@@ -13,6 +13,8 @@ export declare class Here extends HereBase {
     private route;
     constructor();
     static init(appId: string, appCode: string, licenseKey: string): void;
+    static estimateMapDataSize(points: object[]): Promise<any>;
+    static fetchMapData(points: object[]): Promise<any>;
     createNativeView(): Object;
     initNativeView(): void;
     disposeNativeView(): void;
