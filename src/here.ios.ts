@@ -299,7 +299,9 @@ export class Here extends HereBase {
             this.router.calculateRouteWithStopsRoutingModeCompletionBlock(this.nativeStops, this.routingMode, (result, error) => {
                 if (error) {
                     console.dir(`Error: calculate route with error code: ${error}`)
-                    reject()
+                    reject({
+                        code: error
+                    })
                     return
                 }
 
@@ -570,7 +572,7 @@ export class Here extends HereBase {
             this.routingMode = NMARoutingMode.alloc().initWithRoutingTypeTransportModeRoutingOptions(
                 NMARoutingType[optionsPreset.routeType],
                 NMATransportMode[optionsPreset.transportMode],
-                NMARoutingOption.AvoidHighway
+                NMARoutingOption.AvoidPark
             )
             this.router = null
             if (!recalculate) return;
