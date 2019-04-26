@@ -98,13 +98,13 @@ export class Here extends HereBase {
         NMAApplicationContext.setAppIdAppCodeLicenseKey(appId, appCode, licenseKey);
     }
 
-    public static estimateMapDataSize(points: object[]): Promise<any> {
+    public static estimateMapDataSize(points: any[]): Promise<any> {
         return new Promise<any>((resolve, reject) => {
             resolve();
         })
     }
 
-    public static fetchMapData(points: object[]): Promise<any> {
+    public static fetchMapData(points: any[]): Promise<any> {
         return new Promise<any>((resolve, reject) => {
             resolve();
         })

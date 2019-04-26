@@ -98,15 +98,63 @@ export class Here extends HereBase {
     }
 
     public static init(appId: string, appCode: string, licenseKey: string) {
+
     }
 
-    public static estimateMapDataSize(points: object[]): Promise<any> {
+    public static estimateMapDataSize(points: any[]): Promise<any> {
         return new Promise<any>((resolve, reject) => {
-            resolve();
+            const mdp = com.here.android.mpa.prefetcher.MapDataPrefetcher.getInstance()
+
+            const coreRouter = new com.here.android.mpa.routing.CoreRouter()
+            const routePlan = new com.here.android.mpa.routing.RoutePlan()
+            const routeOptions = new com.here.android.mpa.routing.RouteOptions()
+
+            routeOptions.setTransportMode(com.here.android.mpa.routing.RouteOptions.TransportMode.CAR)
+            routeOptions.setHighwaysAllowed(false)
+            routeOptions.setParksAllowed(true)
+            routeOptions.setRouteType(com.here.android.mpa.routing.RouteOptions.Type.FASTEST)
+            routeOptions.setRouteCount(1)
+
+            routePlan.setRouteOptions(routeOptions);
+
+            points.forEach((point, index) => {
+                const waypoint = new com.here.android.mpa.routing.RouteWaypoint(
+                    new com.here.android.mpa.common.GeoCoordinate(
+                        java.lang.Double.valueOf(point.latitude).doubleValue(),
+                        java.lang.Double.valueOf(point.longitude).doubleValue()
+                    )
+                )
+
+                routePlan.addWaypoint(waypoint)
+            })
+
+            const routerListener = new com.here.android.mpa.routing.Router.Listener({
+                onProgress(percent): void {
+                    console.log(`Calculate route: ${percent}%`)
+                },
+    
+                onCalculateRouteFinished(routeResults, routingError): void {
+                    if (routingError == com.here.android.mpa.routing.RoutingError.NONE) {
+                        const route = routeResults.get(0).getRoute();
+
+                        if (route !== null) {
+                            const result = mdp.estimateMapDataSize(route, 500)
+
+                            resolve(result);
+                        } else {
+                            reject();
+                        }
+                    } else {
+                        reject();
+                    }
+                }
+            });
+
+            coreRouter.calculateRoute(routePlan, routerListener) 
         })
     }
 
-    public static fetchMapData(points: object[]): Promise<any> {
+    public static fetchMapData(points: any[]): Promise<any> {
         return new Promise<any>((resolve, reject) => {
             resolve();
         })
@@ -288,9 +336,11 @@ export class Here extends HereBase {
 
     public setStops(points: Array<any>, showMarkers: boolean): void {
         this.nativeStops = [];
+        console.log('set stops')
         if (this.nativeMarkers.size > 0) {
             this.clearMarkers()
         }
+        console.log('afterClear')
         points.forEach((point, index) => {
             console.dir(`Point ${index} create`)
             const waypoint = new com.here.android.mpa.routing.RouteWaypoint(
@@ -529,12 +579,22 @@ export class Here extends HereBase {
 
     clearMarkers(): void {
         const map = this.fragment.getMap();
+        console.dir('get fragment')
+        console.dir(this.nativeMarkers.size)
         if (this.nativeMarkers.size > 0) {
-            map.removeMapObjects(Array.from(this.nativeMarkers.values()));
+            const markers = Array.from(this.nativeMarkers.values())
+            markers.forEach(marker => {
+                map.removeMapObject(marker);
+            })
+            console.dir('remove objects')
         }
+        console.dir('after remove')
         this.markers.clear();
+        console.dir('markers.clear')
         this.nativeMarkers.clear();
+        console.dir('nativeMarkers.clear')
         this.markersCallback.clear();
+        console.dir('markersCallback.clear')
     }
 
     addCircle(circle): void {
