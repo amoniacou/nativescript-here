@@ -658,8 +658,8 @@ export class Here extends HereBase {
             this.navigationMode = mode;
             this.calculateRoute().then(() => {
                 resolve()
-            }).catch(() => {
-                reject()
+            }).catch((e) => {
+                reject(e)
             })
         })
     }

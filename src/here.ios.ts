@@ -578,8 +578,8 @@ export class Here extends HereBase {
             if (!recalculate) return;
             this.calculateRoute().then(() => {
                 resolve()
-            }).catch(() => {
-                reject()
+            }).catch((e) => {
+                reject(e)
             })
         })
     }
