@@ -180,7 +180,6 @@ export class Here extends HereBase {
         const that = new WeakRef<Here>(this);
 
         this.dragListener = this._newDragListener(that);
-        this.gestureListener = this._newGestureListener(that);
 
         this.fragment.setMapMarkerDragListener(this.dragListener);
 
@@ -215,7 +214,6 @@ export class Here extends HereBase {
             const mapGesture = typeof this.fragment.getMapGesture === 'function' ? this.fragment.getMapGesture() : null;
             console.log('this.fragment.removeOnMapRenderListener', this.fragment.removeOnMapRenderListener);
             //this.fragment.removeOnMapRenderListener(this.listener);
-            console.log('mapGesture', mapGesture, 'gestureListener', this.gestureListener);
             if (mapGesture) {
                 //this.fragment.getMapGesture().removeOnGestureListener(this.gestureListener);
             }
@@ -807,8 +805,6 @@ export class Here extends HereBase {
                     const mapGesture = mapFragment.getMapGesture()
 
                     owner.isReady = true;
-
-                    mapGesture.addOnGestureListener(owner.gestureListener, 1, true)
 
                     owner.navigationManager = com.here.android.mpa.guidance.NavigationManager.getInstance()
                     owner.navigationManager.setMap(map)

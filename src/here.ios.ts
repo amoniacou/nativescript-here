@@ -128,7 +128,6 @@ export class Here extends HereBase {
         this.markers = new Map<any, HereMarker>();
         this.markersCallback = new Map<number, any>();
         this.delegate = NMAMapViewDelegateImpl.initWithOwner(new WeakRef<Here>(this));
-        this.gestureDelegate = NMAMapGestureDelegateImpl.initWithOwner(new WeakRef<Here>(this));
         this.nativeStops = NSMutableArray.alloc().init();
         this.setNavigationMode('walk', false);
 
@@ -144,7 +143,6 @@ export class Here extends HereBase {
     public initNativeView(): void {
         super.initNativeView();
         this.nativeView.delegate = this.delegate;
-        this.nativeView.gestureDelegate = this.gestureDelegate;
         this.nativeView.setZoomLevelWithAnimation(this.zoomLevel, NMAMapAnimation.None);
 
         if (this.disableZoom) {
@@ -361,12 +359,23 @@ export class Here extends HereBase {
 
     startNavigation(): Promise<any> {
         return new Promise<any>((resolve, reject) => {
-            this.navigationManager.setMap(this.nativeView)
+            console.log('set map')
+            this.navigationManager.map = this.nativeView
+            console.log('set track enabled')
             this.navigationManager.mapTrackingEnabled = true
+            console.log('set autozoom enabled')
             this.navigationManager.mapTrackingAutoZoomEnabled = true
+            console.log('set track orientation enabled')
             this.navigationManager.mapTrackingOrientation = NMAMapTrackingOrientation.Dynamic
+            console.log('set track speed optimization enabled')
             this.navigationManager.speedWarningEnabled = true
-            this.navigationManager.startTurnByTurnNavigationWithRoute(this.route)
+            console.log('start TT navigation')
+            const res = this.navigationManager.startTurnByTurnNavigationWithRoute(this.route)
+            if (res) {
+                reject('error with start navigation')
+                return
+            }
+            console.log("navigation started!")
             resolve()
         })
     }
