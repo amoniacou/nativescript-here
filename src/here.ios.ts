@@ -109,7 +109,7 @@ export class Here extends HereBase {
             resolve();
         })
     }
-    
+
     public updateRoute(newRoute: NMARoute): void {
         this.route = newRoute;
         if (this.mapRoute) {
@@ -538,6 +538,7 @@ export class Here extends HereBase {
 
         this._setCircleOptions(nativeCircle, circle)
         this.nativeView.addMapObject(nativeCircle)
+        this.nativeCircles.set(circle.id, nativeCircle)
         return
     }
 

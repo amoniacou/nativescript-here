@@ -132,7 +132,7 @@ export class Here extends HereBase {
                 onProgress(percent): void {
                     console.log(`Calculate route: ${percent}%`)
                 },
-    
+
                 onCalculateRouteFinished(routeResults, routingError): void {
                     if (routingError == com.here.android.mpa.routing.RoutingError.NONE) {
                         const route = routeResults.get(0).getRoute();
@@ -150,7 +150,7 @@ export class Here extends HereBase {
                 }
             });
 
-            coreRouter.calculateRoute(routePlan, routerListener) 
+            coreRouter.calculateRoute(routePlan, routerListener)
         })
     }
 
@@ -602,10 +602,9 @@ export class Here extends HereBase {
             const nativeObj = new com.here.android.mpa.mapping.MapCircle()
 
             this._setCircleOptions(nativeObj, circle)
-
-            this.nativeCircles.set(circle.id, nativeObj)
             this.circles.set(nativeObj, circle)
             map.addMapObject(nativeObj)
+            this.nativeCircles.set(circle.id, nativeObj)
         }
     }
 
