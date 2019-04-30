@@ -39,6 +39,7 @@ export class Here extends HereBase {
     private circles: Map<any, any>;
 
     private navigationManager;
+    private positionManager;
     private navigationManagerListener;
     private positionListener;
     private navigationRoute;
@@ -190,7 +191,6 @@ export class Here extends HereBase {
 
         console.log(`Isolate Disk Cache: ${isolatedDiskCacheRootPathStatus ? 'OK' : 'WITH ERRORS'}`)
 
-        this.navigationManagerListener = this._newNavigationManagerListener(that);
         this.positionListener = this._newPositionListener(that);
         this.rerouteListener = this._newRerouteListener(that);
         this.listener = this._newEngineInitListener(that);
@@ -220,7 +220,6 @@ export class Here extends HereBase {
         }
         //this.clearMarkers()
         //this.clearCircles()
-        this.navigationManager.removeNavigationManagerEventListener(this.navigationManagerListener)
         this.navigationManager.removePositionListener(this.positionListener)
         this.navigationManager.removeRerouteListener(this.rerouteListener)
         //this.navigationManagerListener = null;
@@ -602,7 +601,6 @@ export class Here extends HereBase {
             const nativeObj = new com.here.android.mpa.mapping.MapCircle()
 
             this._setCircleOptions(nativeObj, circle)
-            this.circles.set(nativeObj, circle)
             map.addMapObject(nativeObj)
             this.nativeCircles.set(circle.id, nativeObj)
         }
@@ -727,15 +725,15 @@ export class Here extends HereBase {
 
                 // owner.navigationArrow.setCenter(position)
 
-                owner.navigationArrow.setCoordinate(position)
+                //owner.navigationArrow.setCoordinate(position)
 
-                map.setCenter(
-                    position,
-                    com.here.android.mpa.mapping.Map.Animation.LINEAR,
-                    com.here.android.mpa.mapping.Map.MOVE_PRESERVE_ZOOM_LEVEL,
-                    heading,
-                    com.here.android.mpa.mapping.Map.MOVE_PRESERVE_TILT
-                )
+                //map.setCenter(
+                //    position,
+                //    com.here.android.mpa.mapping.Map.Animation.LINEAR,
+                //    com.here.android.mpa.mapping.Map.MOVE_PRESERVE_ZOOM_LEVEL,
+                //    heading,
+                //    com.here.android.mpa.mapping.Map.MOVE_PRESERVE_TILT
+                //)
             }
         }
         return new PositionListener()
@@ -775,18 +773,7 @@ export class Here extends HereBase {
             }
 
             onStopoverReached(index) {
-                const owner = that ? that.get() : null;
-                // console.dir(geoPosition)
-                if (!owner) return;
-                const mapFragment = owner.fragment
-                const map = mapFragment.getMap()
-                const waypoint = owner.routePlan.getWaypoint(index)
-                const coordinate = waypoint.getOriginalPosition()
-                const lat = coordinate.getLatitude()
-                const lng = coordinate.getLongitude()
-                const position = new com.here.android.mpa.common.GeoCoordinate(lat, lng)
-                console.log("Stopover " + index)
-                console.dir(position)
+                console.log("stopover reached")
             }
         }
         return new NavigationManagerEventListener()
@@ -805,12 +792,16 @@ export class Here extends HereBase {
 
                     owner.isReady = true;
 
+                    owner.positionManager = com.here.android.mpa.common.PositioningManager.getInstance().start(
+                        com.here.android.mpa.common.PositioningManager.LocationMethod.GPS_NETWORK
+                    )
+
                     owner.navigationManager = com.here.android.mpa.guidance.NavigationManager.getInstance()
                     owner.navigationManager.setMap(map)
 
-                    owner.navigationManager.addNavigationManagerEventListener(
-                        new java.lang.ref.WeakReference(owner.navigationManagerListener)
-                    )
+                    //owner.navigationManager.addNavigationManagerEventListener(
+                    //    new java.lang.ref.WeakReference(owner.navigationManagerListener)
+                    //)
 
                     owner.navigationManager.addPositionListener(
                         new java.lang.ref.WeakReference(owner.positionListener)
@@ -829,8 +820,6 @@ export class Here extends HereBase {
                         owner.navigationArrowIcon
                     )
 
-                    // mapFragment.getPositionIndicator().setVisible(true);
-
                     owner.navigationMarkerIcon = new com.here.android.mpa.common.Image()
                     const decodedStringMarker = android.util.Base64.decode(
                         icon_source.replace('data:image/png;base64,', ''),
@@ -840,6 +829,7 @@ export class Here extends HereBase {
                     owner.navigationMarkerIcon.setBitmap(decodedByteMarker)
 
                     map.addMapObject(owner.navigationArrow)
+                    mapFragment.getPositionIndicator().setVisible(true);
 
                     switch (owner.mapStyle) {
                         case HereMapStyle.HYBRID_DAY:
@@ -854,18 +844,6 @@ export class Here extends HereBase {
                         default:
                             map.setMapScheme(com.here.android.mpa.mapping.Map.Scheme.NORMAL_DAY)
                             break;
-                    }
-
-                    if (owner.disableZoom) {
-                        mapGesture.setDoubleTapEnabled(false);
-                        mapGesture.setPinchEnabled(false);
-                        mapGesture.setTwoFingerTapEnabled(false);
-                        mapGesture.setKineticFlickEnabled(false);
-                    }
-
-                    if (owner.disableScroll) {
-                        mapGesture.setPanningEnabled(false);
-                        mapGesture.setTwoFingerPanningEnabled(false);
                     }
 
                     map.setZoomLevel(owner.zoomLevel, com.here.android.mpa.mapping.Map.Animation.NONE)
