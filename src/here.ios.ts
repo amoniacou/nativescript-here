@@ -364,9 +364,9 @@ export class Here extends HereBase {
             console.log('set track enabled')
             this.navigationManager.mapTrackingEnabled = true
             console.log('set autozoom enabled')
-            this.navigationManager.mapTrackingAutoZoomEnabled = true
+            this.navigationManager.mapTrackingAutoZoomEnabled = false
             console.log('set track orientation enabled')
-            this.navigationManager.mapTrackingOrientation = NMAMapTrackingOrientation.Dynamic
+            //this.navigationManager.mapTrackingOrientation = NMAMapTrackingOrientation.Dynamic
             console.log('set track speed optimization enabled')
             this.navigationManager.speedWarningEnabled = true
             console.log('start TT navigation')
