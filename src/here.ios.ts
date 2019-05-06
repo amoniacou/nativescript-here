@@ -366,7 +366,7 @@ export class Here extends HereBase {
             console.log('set autozoom enabled')
             this.navigationManager.mapTrackingAutoZoomEnabled = false
             console.log('set track orientation enabled')
-            //this.navigationManager.mapTrackingOrientation = NMAMapTrackingOrientation.Dynamic
+            this.navigationManager.mapTrackingOrientation = NMAMapTrackingOrientation.Dynamic
             console.log('set track speed optimization enabled')
             this.navigationManager.speedWarningEnabled = true
             console.log('start TT navigation')
@@ -470,14 +470,16 @@ export class Here extends HereBase {
         if (this.nativeMarkers.size > 0) {
             this.clearMarkers()
         }
-
+        console.log('Set points')
+        console.log(points)
         points.forEach((point, index) => {
             this.nativeStops.addObject(
-                NMAWaypoint.alloc().initWithGeoCoordinates(
+                NMAWaypoint.alloc().initWithGeoCoordinatesWaypointType(
                     NMAGeoCoordinates.geoCoordinatesWithLatitudeLongitude(
                         point.latitude,
                         point.longitude
-                    )
+                    ),
+                    NMAWaypointType.StopWaypoint
                 )
             )
             if (showMarkers) {

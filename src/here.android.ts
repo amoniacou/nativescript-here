@@ -123,7 +123,8 @@ export class Here extends HereBase {
                     new com.here.android.mpa.common.GeoCoordinate(
                         java.lang.Double.valueOf(point.latitude).doubleValue(),
                         java.lang.Double.valueOf(point.longitude).doubleValue()
-                    )
+                    ),
+                    com.here.android.mpa.routing.RouteWaypoint.Type.STOP_WAYPOINT
                 )
 
                 routePlan.addWaypoint(waypoint)
@@ -131,7 +132,6 @@ export class Here extends HereBase {
 
             const routerListener = new com.here.android.mpa.routing.Router.Listener({
                 onProgress(percent): void {
-                    console.log(`Calculate route: ${percent}%`)
                 },
 
                 onCalculateRouteFinished(routeResults, routingError): void {
@@ -212,7 +212,6 @@ export class Here extends HereBase {
     public removeNavigation(): void {
         if (this.fragment) {
             const mapGesture = typeof this.fragment.getMapGesture === 'function' ? this.fragment.getMapGesture() : null;
-            console.log('this.fragment.removeOnMapRenderListener', this.fragment.removeOnMapRenderListener);
             //this.fragment.removeOnMapRenderListener(this.listener);
             if (mapGesture) {
                 //this.fragment.getMapGesture().removeOnGestureListener(this.gestureListener);
@@ -461,9 +460,18 @@ export class Here extends HereBase {
                     .then(() => {
                         map.setTilt(60);
                         map.setZoomLevel(18, com.here.android.mpa.mapping.Map.Animation.NONE)
-
+                        console.log('set map update mode')
+                        this.navigationManager.setMapUpdateMode(com.here.android.mpa.guidance.NavigationManager.MapUpdateMode.ROADVIEW)
+                        console.log('set enabled audio events 1')
+                        //this.navigationManager.setEnabledAudioEvents([
+                        //    com.here.android.mpa.guidance.NavigationManager.AudioEvent.MANEUVER,
+                        //    com.here.android.mpa.guidance.NavigationManager.AudioEvent.VIBRATION
+                        //])
+                        console.log('set enabled speed warning')
+                        this.navigationManager.setSpeedWarningEnabled(true)
+                        console.log('trying to start navigation')
                         const managerError = this.navigationManager.startNavigation(this.navigationRoute)
-
+                        console.log('some manager error!')
                         console.dir(managerError)
                         resolve()
                     }).catch(() => {
@@ -680,12 +688,12 @@ export class Here extends HereBase {
                         map.removeMapObject(owner.mapRoute)
                         owner.mapRoute = new com.here.android.mpa.mapping.MapRoute(owner.navigationRoute);
                         console.log('mapRoute')
-
                         owner.mapRoute.setManeuverNumberVisible(true)
+                        console.log('add new map route on map')
                         map.addMapObject(owner.mapRoute)
 
-                        owner.navigationRouteBoundingBox = routeResults.getRoute().getBoundingBox();
-                        owner.navigationRouteBoundingBox.expand(200, 200)
+                        //owner.navigationRouteBoundingBox = routeResults.getRoute().getBoundingBox();
+                        //owner.navigationRouteBoundingBox.expand(200, 200)
                     } else {
                         console.log('Woooops... route results returned is not valid')
                     }
