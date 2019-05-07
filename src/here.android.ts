@@ -458,11 +458,11 @@ export class Here extends HereBase {
                         "I need these permissions to get your current location"
                     )
                     .then(() => {
-                        map.setTilt(60);
-                        map.setZoomLevel(18, com.here.android.mpa.mapping.Map.Animation.NONE)
+                        //map.setZoomLevel(18, com.here.android.mpa.mapping.Map.Animation.NONE)
                         console.log('set map update mode')
-                        this.navigationManager.setMapUpdateMode(com.here.android.mpa.guidance.NavigationManager.MapUpdateMode.ROADVIEW)
-                        console.log('set enabled audio events 1')
+                        this.navigationManager.setMapUpdateMode(com.here.android.mpa.guidance.NavigationManager.MapUpdateMode.ROADVIEW_NOZOOM)
+                        //console.log('set enabled audio events 1')
+                        //this.navigationManager.setRealisticViewMode(com.here.android.mpa.guidance.NavigationManager.RealisticViewMode.OFF)
                         //this.navigationManager.setEnabledAudioEvents([
                         //    com.here.android.mpa.guidance.NavigationManager.AudioEvent.MANEUVER,
                         //    com.here.android.mpa.guidance.NavigationManager.AudioEvent.VIBRATION
@@ -471,9 +471,13 @@ export class Here extends HereBase {
                         this.navigationManager.setSpeedWarningEnabled(true)
                         console.log('trying to start navigation')
                         const managerError = this.navigationManager.startNavigation(this.navigationRoute)
-                        console.log('some manager error!')
-                        console.dir(managerError)
-                        resolve()
+                        if (managerError == com.here.android.mpa.guidance.NavigationManager.Error.NONE) {
+                            map.setTilt(60);
+                            //map.setZoomLevel(18, com.here.android.mpa.mapping.Map.Animation.NONE)
+                            resolve()
+                        } else {
+                            reject(managerError)
+                        }
                     }).catch(() => {
                         console.log("Uh oh, no permissions - plan B time!");
                         reject()
@@ -733,8 +737,8 @@ export class Here extends HereBase {
 
                 // owner.navigationArrow.setCenter(position)
 
-                //owner.navigationArrow.setCoordinate(position)
-
+                // owner.navigationArrow.setCoordinate(position)
+                console.log('set map to center position')
                 //map.setCenter(
                 //    position,
                 //    com.here.android.mpa.mapping.Map.Animation.LINEAR,
@@ -742,6 +746,7 @@ export class Here extends HereBase {
                 //    heading,
                 //    com.here.android.mpa.mapping.Map.MOVE_PRESERVE_TILT
                 //)
+                console.log('done')
             }
         }
         return new PositionListener()
@@ -796,6 +801,7 @@ export class Here extends HereBase {
                 if (error === com.here.android.mpa.common.OnEngineInitListener.Error.NONE) {
                     const mapFragment = owner.fragment
                     const map = mapFragment.getMap()
+                    map.setExtrudedBuildingsVisible(false)
                     const mapGesture = mapFragment.getMapGesture()
 
                     owner.isReady = true;
@@ -818,6 +824,8 @@ export class Here extends HereBase {
                     owner.navigationManager.addRerouteListener(
                         new java.lang.ref.WeakReference(owner.rerouteListener)
                     )
+                    
+                    mapFragment.getPositionIndicator().setVisible(true);
 
                     owner.navigationArrowIcon = new com.here.android.mpa.common.Image()
                     const decodedString = android.util.Base64.decode(navigation_arrow, android.util.Base64.DEFAULT);
@@ -837,7 +845,6 @@ export class Here extends HereBase {
                     owner.navigationMarkerIcon.setBitmap(decodedByteMarker)
 
                     map.addMapObject(owner.navigationArrow)
-                    mapFragment.getPositionIndicator().setVisible(true);
 
                     switch (owner.mapStyle) {
                         case HereMapStyle.HYBRID_DAY:
@@ -854,11 +861,12 @@ export class Here extends HereBase {
                             break;
                     }
 
-                    map.setZoomLevel(owner.zoomLevel, com.here.android.mpa.mapping.Map.Animation.NONE)
+                    map.setZoomLevel( (map.getMaxZoomLevel() + map.getMinZoomLevel()) / 2 )
 
-                    map.setTilt(owner.tilt)
+                    //map.setTilt(owner.tilt)
 
-                    map.setLandmarksVisible(owner.landmarks)
+                    //map.setLandmarksVisible(owner.landmarks)
+                    map.setExtrudedBuildingsVisible(false)
 
                     if (types.isNumber(+owner.latitude) && types.isNumber(+owner.longitude)) {
                         map.setCenter(
@@ -887,7 +895,6 @@ export class Here extends HereBase {
         return new com.here.android.mpa.routing.Router.Listener({
             onProgress(percent): void {
                 const owner = that ? that.get() : null;
-                console.log(`Calculate route: ${percent}%`)
                 owner.routeProgress = percent;
                 //android.widget.Toast.makeText(this._context, `Calculate route: ${percent}%`, android.widget.Toast.LENGTH_SHORT).show();
             },
