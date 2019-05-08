@@ -47,7 +47,6 @@ export class Here extends HereBase {
     private router;
     private navigationRouteBoundingBox;
     private navigationManager;
-    private positionListener;
     private positionObserver;
     private route;
     private nativeStops;
@@ -178,14 +177,13 @@ export class Here extends HereBase {
         this.navigationManager = NMANavigationManager.sharedNavigationManager()
         this.navigationManager.map = this.nativeView
         this.navigationManager.delegate = NMANavigationManagerDelegateImpl.initWithOwner(new WeakRef<Here>(this));
-        this.positionListener = NMAPositioningManager.sharedPositioningManager()
-        this.positionListener.dataSource = NMADevicePositionSource.alloc().init()
+        NMAPositioningManager.sharedPositioningManager().dataSource = NMADevicePositionSource.alloc().init()
         console.log("start navigation")
         NSNotificationCenter.defaultCenter.removeObserver(this.positionObserver)
-        if (this.positionListener.startPositioning()) {
+        if (NMAPositioningManager.sharedPositioningManager().startPositioning()) {
             this.positionObserver = PositionObserver.initWithOwner(new WeakRef<Here>(this))
-            NSNotificationCenter.defaultCenter.addObserverSelectorNameObject(this.positionObserver, "positionDidUpdate", "NMAPositioningManagerDidUpdatePositionNotification", this.positionListener)
-            NSNotificationCenter.defaultCenter.addObserverSelectorNameObject(this.positionObserver, "didLosePosition", "NMAPositioningManagerDidLosePositionNotification", this.positionListener)
+            NSNotificationCenter.defaultCenter.addObserverSelectorNameObject(this.positionObserver, "positionDidUpdate", "NMAPositioningManagerDidUpdatePositionNotification", null)
+            NSNotificationCenter.defaultCenter.addObserverSelectorNameObject(this.positionObserver, "didLosePosition", "NMAPositioningManagerDidLosePositionNotification", null)
 
             this.nativeView.positionIndicator.visible = true
         }
@@ -327,8 +325,6 @@ export class Here extends HereBase {
 
     startSimulation(): Promise<any> {
         return new Promise<any>((resolve, reject) => {
-            this.positionListener.dataSource = NMARoutePositionSource.alloc().initWithRoute(this.route)
-            this.positionListener.dataSource.movementSpeed = 60
             this.navigationManager.mapTrackingEnabled = true
             this.navigationManager.mapTrackingAutoZoomEnabled = true
             this.navigationManager.mapTrackingOrientation = NMAMapTrackingOrientation.Dynamic
@@ -341,19 +337,30 @@ export class Here extends HereBase {
 
     pauseNavigation(): Promise<any> {
         return new Promise<any>((resolve, reject) => {
-            if (this.positionListener.dataSource) {
-                this.positionListener.dataSource.movementSpeed = 0
-            }
             resolve()
         })
     }
 
     resumeNavigation(): Promise<any> {
         return new Promise<any>((resolve, reject) => {
-            if (this.positionListener.dataSource) {
-                this.positionListener.dataSource.movementSpeed = 60
-            }
             resolve()
+        })
+    }
+
+    getCurrentPosition(): Promise<any> {
+        return new Promise<any>((resolve, reject) => {
+            console.log('get current position')
+            const position = NMAPositioningManager.sharedPositioningManager().currentPosition;
+            if (position) {
+                console.log('return coordinates')
+                const coords = {
+                    latitude: position.coordinates.latitude,
+                    longitude: position.coordinates.longitude
+                }
+                resolve(coords)
+            } else {
+                reject('unable to get current position from position manager')
+            }
         })
     }
 
@@ -382,7 +389,6 @@ export class Here extends HereBase {
 
     stopNavigation(): void {
         this.navigationManager.stop()
-        this.positionListener.dataSource = null
         const map = this.nativeView
         map.setBoundingBoxWithAnimation(
             this.navigationRouteBoundingBox,
@@ -396,7 +402,7 @@ export class Here extends HereBase {
     public removeNavigation(): void {
         this.stopNavigation();
         console.log("Stop positioning")
-        this.positionListener.stopPositioning()
+        //this.positionListener.stopPositioning()
         console.log("Stop navigation manager")
         // this.navigationManager.stop()
         console.log("Stop navigation manager delegation")
@@ -404,8 +410,8 @@ export class Here extends HereBase {
         this.navigationManager.resetAnnouncementRules()
         //this.navigationManager.map = null
         console.log("Remove observers")
-        NSNotificationCenter.defaultCenter.removeObserverNameObject(this.positionObserver, "NMAPositioningManagerDidUpdatePositionNotification", this.positionListener)
-        NSNotificationCenter.defaultCenter.removeObserverNameObject(this.positionObserver, "NMAPositioningManagerDidLosePositionNotification", this.positionListener)
+        NSNotificationCenter.defaultCenter.removeObserverNameObject(this.positionObserver, "NMAPositioningManagerDidUpdatePositionNotification", null)
+        NSNotificationCenter.defaultCenter.removeObserverNameObject(this.positionObserver, "NMAPositioningManagerDidLosePositionNotification", null)
         console.log("Nullify router")
         console.log("clear circles")
         //this.clearCircles()

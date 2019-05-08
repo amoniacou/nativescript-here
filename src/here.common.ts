@@ -25,6 +25,7 @@ export abstract class HereBase extends View {
     // Navigation
     abstract calculateRoute(points: object[]): Promise<any>;
     abstract showWay(): Promise<any>;
+    abstract getCurrentPosition(): Promise<any>;
     abstract startNavigation(): Promise<any>;
     abstract pauseNavigation(): Promise<any>;
     abstract resumeNavigation(): Promise<any>;

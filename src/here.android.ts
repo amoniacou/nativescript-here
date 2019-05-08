@@ -181,6 +181,7 @@ export class Here extends HereBase {
         const that = new WeakRef<Here>(this);
 
         this.dragListener = this._newDragListener(that);
+        this.gestureListener = this._newGestureListener(that);
 
         this.fragment.setMapMarkerDragListener(this.dragListener);
 
@@ -448,6 +449,20 @@ export class Here extends HereBase {
         })
     }
 
+    getCurrentPosition(): Promise<any> {
+        return new Promise<any>((resolve, reject) => {
+            const position = com.here.android.mpa.common.PositioningManager.getInstance().getPosition()
+            if (position) {
+                resolve({
+                    latitude: position.coordinates.latitude,
+                    longitude: position.coordinates.longitude,
+                })
+            } else {
+                reject('unable to get current position from position manager')
+            }
+        })
+    }
+
     startNavigation(): Promise<any> {
         return new Promise<any>((resolve, reject) => {
             if (this.fragment && this.isReady) {
@@ -458,9 +473,8 @@ export class Here extends HereBase {
                         "I need these permissions to get your current location"
                     )
                     .then(() => {
-                        //map.setZoomLevel(18, com.here.android.mpa.mapping.Map.Animation.NONE)
-                        console.log('set map update mode')
-                        this.navigationManager.setMapUpdateMode(com.here.android.mpa.guidance.NavigationManager.MapUpdateMode.ROADVIEW_NOZOOM)
+                        //map.setZoomLevel(map.getMinZoomLevel() + 1)
+
                         //console.log('set enabled audio events 1')
                         //this.navigationManager.setRealisticViewMode(com.here.android.mpa.guidance.NavigationManager.RealisticViewMode.OFF)
                         //this.navigationManager.setEnabledAudioEvents([
@@ -472,8 +486,10 @@ export class Here extends HereBase {
                         console.log('trying to start navigation')
                         const managerError = this.navigationManager.startNavigation(this.navigationRoute)
                         if (managerError == com.here.android.mpa.guidance.NavigationManager.Error.NONE) {
+                            map.setZoomLevel(map.getMinZoomLevel() + 1, com.here.android.mpa.mapping.Map.Animation.NONE)
                             map.setTilt(60);
-                            //map.setZoomLevel(18, com.here.android.mpa.mapping.Map.Animation.NONE)
+                            console.log('set map update mode')
+                            this.navigationManager.setMapUpdateMode(com.here.android.mpa.guidance.NavigationManager.MapUpdateMode.ROADVIEW)
                             resolve()
                         } else {
                             reject(managerError)
@@ -550,7 +566,6 @@ export class Here extends HereBase {
         )
 
         const ancor = nativeMarker.getAnchorPoint()
-        console.dir(ancor)
 
         nativeMarker.setAnchorPoint(
             new android.graphics.PointF(
@@ -558,8 +573,6 @@ export class Here extends HereBase {
                 java.lang.Double.valueOf(ancor.y * 2).doubleValue()
             )
         )
-        console.dir('setAnchorPoint')
-
         if (marker.title) {
             nativeMarker.setTitle(marker.title);
         }
@@ -714,6 +727,7 @@ export class Here extends HereBase {
             onPositionUpdated(geoPosition) {
                 const owner = that ? that.get() : null;
                 // console.dir(geoPosition)
+                console.log('position listener touched')
                 if (!owner) return;
                 const mapFragment = owner.fragment
                 const map = mapFragment.getMap()
@@ -725,6 +739,20 @@ export class Here extends HereBase {
 
                 // const routeElement = geoPosition.getRoadElement();
 
+                console.dir(`Navigation: lat: ${lat}, lng: ${lng}, heading: ${heading}`)
+
+                // owner.navigationArrow.setCenter(position)
+
+                //owner.navigationArrow.setCoordinate(position)
+                console.log('set map to center position')
+                map.setCenter(
+                    position,
+                    com.here.android.mpa.mapping.Map.Animation.LINEAR,
+                    com.here.android.mpa.mapping.Map.MOVE_PRESERVE_ZOOM_LEVEL,
+                    heading,
+                    com.here.android.mpa.mapping.Map.MOVE_PRESERVE_TILT
+                )
+                console.log('done')
                 owner.notify({
                     eventName: HereBase.geoPositionChange,
                     object: owner,
@@ -733,20 +761,7 @@ export class Here extends HereBase {
                     heading
                 });
 
-                console.dir(`Navigation: lat: ${lat}, lng: ${lng}, heading: ${heading}`)
-
-                // owner.navigationArrow.setCenter(position)
-
-                // owner.navigationArrow.setCoordinate(position)
-                console.log('set map to center position')
-                //map.setCenter(
-                //    position,
-                //    com.here.android.mpa.mapping.Map.Animation.LINEAR,
-                //    com.here.android.mpa.mapping.Map.MOVE_PRESERVE_ZOOM_LEVEL,
-                //    heading,
-                //    com.here.android.mpa.mapping.Map.MOVE_PRESERVE_TILT
-                //)
-                console.log('done')
+                return
             }
         }
         return new PositionListener()
@@ -806,6 +821,10 @@ export class Here extends HereBase {
 
                     owner.isReady = true;
 
+                    if (mapGesture) {
+                        mapGesture.addOnGestureListener(owner.gestureListener, 1, true)
+                    }
+
                     owner.positionManager = com.here.android.mpa.common.PositioningManager.getInstance().start(
                         com.here.android.mpa.common.PositioningManager.LocationMethod.GPS_NETWORK
                     )
@@ -824,17 +843,17 @@ export class Here extends HereBase {
                     owner.navigationManager.addRerouteListener(
                         new java.lang.ref.WeakReference(owner.rerouteListener)
                     )
-                    
-                    mapFragment.getPositionIndicator().setVisible(true);
+
+                    // mapFragment.getPositionIndicator().setVisible(false);
 
                     owner.navigationArrowIcon = new com.here.android.mpa.common.Image()
                     const decodedString = android.util.Base64.decode(navigation_arrow, android.util.Base64.DEFAULT);
                     const decodedByte = android.graphics.BitmapFactory.decodeByteArray(decodedString, 0, decodedString.length);
                     owner.navigationArrowIcon.setBitmap(decodedByte)
-                    owner.navigationArrow = new com.here.android.mpa.mapping.MapMarker(
-                        new com.here.android.mpa.common.GeoCoordinate(0, 0),
-                        owner.navigationArrowIcon
-                    )
+                    //owner.navigationArrow = new com.here.android.mpa.mapping.MapMarker(
+                    //    new com.here.android.mpa.common.GeoCoordinate(0, 0),
+                    //    owner.navigationArrowIcon
+                    //)
 
                     owner.navigationMarkerIcon = new com.here.android.mpa.common.Image()
                     const decodedStringMarker = android.util.Base64.decode(
@@ -844,7 +863,9 @@ export class Here extends HereBase {
                     const decodedByteMarker = android.graphics.BitmapFactory.decodeByteArray(decodedStringMarker, 0, decodedStringMarker.length);
                     owner.navigationMarkerIcon.setBitmap(decodedByteMarker)
 
-                    map.addMapObject(owner.navigationArrow)
+                    mapFragment.getPositionIndicator().setMarker(owner.navigationArrowIcon)
+                    mapFragment.getPositionIndicator().setVisible(true);
+                    //map.addMapObject(owner.navigationArrow)
 
                     switch (owner.mapStyle) {
                         case HereMapStyle.HYBRID_DAY:
@@ -861,11 +882,11 @@ export class Here extends HereBase {
                             break;
                     }
 
-                    map.setZoomLevel( (map.getMaxZoomLevel() + map.getMinZoomLevel()) / 2 )
+                    map.setZoomLevel((map.getMaxZoomLevel() - map.getMinZoomLevel()) / 2)
 
-                    //map.setTilt(owner.tilt)
+                    map.setTilt(owner.tilt)
 
-                    //map.setLandmarksVisible(owner.landmarks)
+                    map.setLandmarksVisible(owner.landmarks)
                     map.setExtrudedBuildingsVisible(false)
 
                     if (types.isNumber(+owner.latitude) && types.isNumber(+owner.longitude)) {
