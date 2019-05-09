@@ -777,9 +777,6 @@ export class Here extends HereBase {
                 const heading = geoPosition.getHeading()
                 const position = new com.here.android.mpa.common.GeoCoordinate(lat, lng)
 
-                // const routeElement = geoPosition.getRoadElement();
-                // owner.navigationArrow.setCenter(position)
-                //owner.navigationArrow.setCoordinate(position)
                 console.log('set center in position update!')
                 map.setCenter(
                     position,

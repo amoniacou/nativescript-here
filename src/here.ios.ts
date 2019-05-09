@@ -177,7 +177,7 @@ export class Here extends HereBase {
         this.navigationManager = NMANavigationManager.sharedNavigationManager()
         this.navigationManager.map = this.nativeView
         this.navigationManager.delegate = NMANavigationManagerDelegateImpl.initWithOwner(new WeakRef<Here>(this));
-        NMAPositioningManager.sharedPositioningManager().dataSource = NMADevicePositionSource.alloc().init()
+        //NMAPositioningManager.sharedPositioningManager().dataSource = NMADevicePositionSource.alloc().init()
         console.log("start navigation")
         NSNotificationCenter.defaultCenter.removeObserver(this.positionObserver)
         if (NMAPositioningManager.sharedPositioningManager().startPositioning()) {
@@ -185,7 +185,7 @@ export class Here extends HereBase {
             NSNotificationCenter.defaultCenter.addObserverSelectorNameObject(this.positionObserver, "positionDidUpdate", "NMAPositioningManagerDidUpdatePositionNotification", null)
             NSNotificationCenter.defaultCenter.addObserverSelectorNameObject(this.positionObserver, "didLosePosition", "NMAPositioningManagerDidLosePositionNotification", null)
 
-            this.nativeView.positionIndicator.visible = true
+            //this.nativeView.positionIndicator.visible = true
         }
         console.log('inited')
     }
@@ -292,6 +292,8 @@ export class Here extends HereBase {
                 this.router = NMACoreRouter.alloc().init()
                 console.dir('Created: "router"')
             }
+            console.log("router mode: ", this.routingMode)
+            console.log("")
             this.router.calculateRouteWithStopsRoutingModeCompletionBlock(this.nativeStops, this.routingMode, (result, error) => {
                 if (error) {
                     console.dir(`Error: calculate route with error code: ${error}`)
@@ -377,6 +379,7 @@ export class Here extends HereBase {
             console.log('set track speed optimization enabled')
             this.navigationManager.speedWarningEnabled = true
             console.log('start TT navigation')
+            this.nativeView.positionIndicator.visible = true
             const res = this.navigationManager.startTurnByTurnNavigationWithRoute(this.route)
             if (res) {
                 reject('error with start navigation')
@@ -406,22 +409,25 @@ export class Here extends HereBase {
         console.log("Stop positioning")
         //this.positionListener.stopPositioning()
         console.log("Stop navigation manager")
-        // this.navigationManager.stop()
+        this.navigationManager.stop()
         console.log("Stop navigation manager delegation")
         //this.navigationManager.delegate = null
         this.navigationManager.resetAnnouncementRules()
-        //this.navigationManager.map = null
+        this.navigationManager.map = null
         console.log("Remove observers")
         NSNotificationCenter.defaultCenter.removeObserverNameObject(this.positionObserver, "NMAPositioningManagerDidUpdatePositionNotification", null)
         NSNotificationCenter.defaultCenter.removeObserverNameObject(this.positionObserver, "NMAPositioningManagerDidLosePositionNotification", null)
         console.log("Nullify router")
+        this.router = null
         console.log("clear circles")
+        this.clearCircles()
         console.log("clear makers")
+        this.clearMarkers()
         console.log("Nullify maproute")
-        //if (this.mapRoute) {
-        //    this.nativeView.removeMapObject(this.mapRoute)
-        //}
-        //this.mapRoute = null;
+        if (this.mapRoute) {
+            this.nativeView.removeMapObject(this.mapRoute)
+        }
+        this.mapRoute = null;
         console.log('Done of navigation removal')
     }
 
@@ -476,11 +482,10 @@ export class Here extends HereBase {
         if (this.nativeMarkers.size > 0) {
             this.clearMarkers()
         }
-        console.log('Set points')
-        console.log(points)
         points.forEach((point, index) => {
             let wtype = NMAWaypointType.ViaWaypoint
             if (index == 0 || index == points.length - 1) {
+                console.log('stop waypoint')
                 wtype = NMAWaypointType.StopWaypoint
             }
             this.nativeStops.addObject(
@@ -499,18 +504,24 @@ export class Here extends HereBase {
     }
 
     clearCircles(): void {
-        if (this.nativeCircles.size == 0) {
-            return;
+        if (this.nativeCircles.size > 0) {
+            const circles = Array.from(this.nativeCircles.values())
+            circles.forEach(circle => {
+                this.nativeView.removeMapObject(circle);
+            })
+            console.dir('remove objects')
         }
-        this.nativeView.removeMapObjects(Array.from(this.nativeCircles.values()));
         this.nativeCircles.clear()
     }
 
     clearMarkers(): void {
-        if (this.nativeMarkers.size == 0) {
-            return;
+        if (this.nativeMarkers.size > 0) {
+            const markers = Array.from(this.nativeMarkers.values())
+            markers.forEach(marker => {
+                this.nativeView.removeMapObject(marker);
+            })
+            console.dir('remove objects')
         }
-        this.nativeView.removeMapObjects(Array.from(this.nativeMarkers.values()));
         this.markers.clear();
         this.nativeMarkers.clear();
         this.markersCallback.clear();
@@ -561,17 +572,11 @@ export class Here extends HereBase {
     }
 
     _setCircleOptions(nativeCircle, circle): void {
-        console.log('set center')
         nativeCircle.center = NMAGeoCoordinates.geoCoordinatesWithLatitudeLongitude(circle.latitude, circle.longitude)
-        console.log('set radius')
         nativeCircle.radius = circle.radius
-        console.log('set line color')
         nativeCircle.lineColor = UIColor.alloc().initWithRedGreenBlueAlpha(0, 0.5, 1, 0.7);
-        console.log('set line width')
         nativeCircle.lineWidth = 4;
-        console.log('set fill color')
         nativeCircle.fillColor = UIColor.alloc().initWithRedGreenBlueAlpha(0, 0.5, 1, 0.4);
-        console.log('circle options done')
     }
 
     addCircles(circles): Promise<any> {
@@ -580,7 +585,6 @@ export class Here extends HereBase {
                 reject()
                 return
             }
-            console.log('Add circles')
             circles.forEach((circle) => {
                 this.addCircle(circle)
             })
@@ -594,9 +598,9 @@ export class Here extends HereBase {
             this.routingMode = NMARoutingMode.alloc().initWithRoutingTypeTransportModeRoutingOptions(
                 NMARoutingType[optionsPreset.routeType],
                 NMATransportMode[optionsPreset.transportMode],
-                NMARoutingOption.AvoidPark
+                NMARoutingOption.AvoidHighway
             )
-            this.router = null
+            // this.router = null
             if (!recalculate) return;
             this.calculateRoute().then(() => {
                 resolve()
