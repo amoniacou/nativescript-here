@@ -397,6 +397,8 @@ export class Here extends HereBase {
         map.setOrientationWithAnimation(0, NMAMapAnimation.Linear)
         this.navigationManager.mapTrackingEnabled = false
         this.navigationManager.mapTrackingAutoZoomEnabled = false
+        this.clearCircles()
+        this.clearMarkers()
     }
 
     public removeNavigation(): void {
@@ -414,9 +416,7 @@ export class Here extends HereBase {
         NSNotificationCenter.defaultCenter.removeObserverNameObject(this.positionObserver, "NMAPositioningManagerDidLosePositionNotification", null)
         console.log("Nullify router")
         console.log("clear circles")
-        //this.clearCircles()
         console.log("clear makers")
-        //this.clearMarkers()
         console.log("Nullify maproute")
         //if (this.mapRoute) {
         //    this.nativeView.removeMapObject(this.mapRoute)
@@ -479,13 +479,17 @@ export class Here extends HereBase {
         console.log('Set points')
         console.log(points)
         points.forEach((point, index) => {
+            let wtype = NMAWaypointType.ViaWaypoint
+            if (index == 0 || index == points.length - 1) {
+                wtype = NMAWaypointType.StopWaypoint
+            }
             this.nativeStops.addObject(
                 NMAWaypoint.alloc().initWithGeoCoordinatesWaypointType(
                     NMAGeoCoordinates.geoCoordinatesWithLatitudeLongitude(
                         point.latitude,
                         point.longitude
                     ),
-                    NMAWaypointType.StopWaypoint
+                    wtype
                 )
             )
             if (showMarkers) {
@@ -621,11 +625,13 @@ class PositionObserver extends NSObject {
         if (!position) {
             return
         }
-        owner.notify({
-            eventName: HereBase.geoPositionChange,
-            object: owner,
-            latitude: position.coordinates.latitude,
-            longitude: position.coordinates.longitude,
+        new Promise((resolve, reject) => {
+            owner.notify({
+                eventName: HereBase.geoPositionChange,
+                object: owner,
+                latitude: position.coordinates.latitude,
+                longitude: position.coordinates.longitude,
+            });
         });
         console.log("position update!!!!");
     }

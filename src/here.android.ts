@@ -215,18 +215,24 @@ export class Here extends HereBase {
             const mapGesture = typeof this.fragment.getMapGesture === 'function' ? this.fragment.getMapGesture() : null;
             //this.fragment.removeOnMapRenderListener(this.listener);
             if (mapGesture) {
-                //this.fragment.getMapGesture().removeOnGestureListener(this.gestureListener);
+                this.fragment.getMapGesture().removeOnGestureListener(this.gestureListener);
             }
         }
-        //this.clearMarkers()
-        //this.clearCircles()
+        this.clearMarkers()
+        this.clearCircles()
         this.navigationManager.removePositionListener(this.positionListener)
         this.navigationManager.removeRerouteListener(this.rerouteListener)
-        //this.navigationManagerListener = null;
-        //this.positionListener = null;
-        //this.rerouteListener = null;
+        if (this.navigationManagerListener) {
+            this.navigationManager.removeNavigationManagerEventListener(this.navigationManagerListener)
+            this.navigationManagerListener = null;
+        }
+        this.positionListener = null;
+        this.rerouteListener = null;
+        console.log('stop navigation manager!!!!')
         this.navigationManager.stop()
+        console.log('nullify map')
         this.navigationManager.setMap(null);
+        console.log('navigation removal finished')
     }
 
     [zoomLevelProperty.setNative](zoomLevel: number) {
@@ -340,11 +346,16 @@ export class Here extends HereBase {
         console.log('afterClear')
         points.forEach((point, index) => {
             console.dir(`Point ${index} create`)
+            let wtype = com.here.android.mpa.routing.RouteWaypoint.Type.VIA_WAYPOINT
+            if (index == 0 || index == points.length - 1) {
+                wtype = com.here.android.mpa.routing.RouteWaypoint.Type.STOP_WAYPOINT
+            }
             const waypoint = new com.here.android.mpa.routing.RouteWaypoint(
                 new com.here.android.mpa.common.GeoCoordinate(
                     java.lang.Double.valueOf(point.latitude).doubleValue(),
                     java.lang.Double.valueOf(point.longitude).doubleValue()
-                )
+                ),
+                wtype
             )
             this.nativeStops.push(waypoint)
             if (showMarkers) {
@@ -372,8 +383,6 @@ export class Here extends HereBase {
         console.dir('Position object!')
         return new Promise<any>((resolve, reject) => {
             const position = com.here.android.mpa.common.PositioningManager.getInstance().getPosition()
-            console.dir(position)
-            console.dir('Position object!')
 
             if (!position) {
                 reject()
@@ -486,9 +495,18 @@ export class Here extends HereBase {
                         console.log('trying to start navigation')
                         const managerError = this.navigationManager.startNavigation(this.navigationRoute)
                         if (managerError == com.here.android.mpa.guidance.NavigationManager.Error.NONE) {
-                            map.setZoomLevel(map.getMinZoomLevel() + 1, com.here.android.mpa.mapping.Map.Animation.NONE)
+                            map.setZoomLevel(map.getMaxZoomLevel() - 1, com.here.android.mpa.mapping.Map.Animation.NONE)
                             map.setTilt(60);
                             console.log('set map update mode')
+                            const that = new WeakRef<Here>(this);
+                            if (this.navigationManagerListener) {
+                                this.navigationManager.removeNavigationManagerEventListener(this.navigationManagerListener)
+                                this.navigationManagerListener = null;
+                            }
+                            this.navigationManagerListener = this._newNavigationManagerListener(that);
+                            this.navigationManager.addNavigationManagerEventListener(
+                                new java.lang.ref.WeakReference(this.navigationManagerListener)
+                            )
                             this.navigationManager.setMapUpdateMode(com.here.android.mpa.guidance.NavigationManager.MapUpdateMode.ROADVIEW)
                             resolve()
                         } else {
@@ -530,9 +548,16 @@ export class Here extends HereBase {
     }
 
     stopNavigation(): void {
-        if (this.fragment && this.isReady) {
-            this.navigationManager.stop();
+        if (this.fragment) {
+            const mapGesture = typeof this.fragment.getMapGesture === 'function' ? this.fragment.getMapGesture() : null;
+            //this.fragment.removeOnMapRenderListener(this.listener);
+            if (mapGesture) {
+                this.fragment.getMapGesture().removeOnGestureListener(this.gestureListener);
+            }
         }
+        this.clearMarkers()
+        this.clearCircles()
+        this.navigationManager.stop()
     }
 
     pauseNavigation(): Promise<any> {
@@ -634,13 +659,20 @@ export class Here extends HereBase {
     updateCircle(circle): void {
         if (this.fragment && this.isReady) {
             const nativeObj = this.nativeCircles.get(circle.id);
+            if (!nativeObj) return
             this._setCircleOptions(nativeObj, circle)
         }
     }
 
     clearCircles(): void {
         const map = this.fragment.getMap();
-        map.removeMapObjects(Array.from(this.nativeCircles.values()));
+        if (this.nativeCircles.size > 0) {
+            const circles = Array.from(this.nativeCircles.values())
+            circles.forEach(circle => {
+                map.removeMapObject(circle);
+            })
+            console.dir('remove objects')
+        }
         this.nativeCircles.clear()
     }
 
@@ -687,7 +719,7 @@ export class Here extends HereBase {
     _newRerouteListener(that): any {
         class RerouteListener extends com.here.android.mpa.guidance.NavigationManager.RerouteListener {
             onRerouteBegin() {
-                console.dir('Reroute!!')
+                console.dir('Reroute started!!')
             }
 
             onRerouteEnd(routeResults, routingError) {
@@ -702,12 +734,14 @@ export class Here extends HereBase {
                         owner.navigationRoute = routeResults.getRoute();
                         console.log('navigationRoute')
 
-                        map.removeMapObject(owner.mapRoute)
-                        owner.mapRoute = new com.here.android.mpa.mapping.MapRoute(owner.navigationRoute);
-                        console.log('mapRoute')
-                        owner.mapRoute.setManeuverNumberVisible(true)
-                        console.log('add new map route on map')
-                        map.addMapObject(owner.mapRoute)
+                        const newRoute = new com.here.android.mpa.mapping.MapRoute(owner.navigationRoute);
+                        if (newRoute) {
+                            map.removeMapObject(owner.mapRoute)
+                            owner.mapRoute = newRoute
+                            console.log('add new map route on map')
+                            map.addMapObject(owner.mapRoute)
+                        }
+                        //owner.mapRoute.setManeuverNumberVisible(true)
 
                         //owner.navigationRouteBoundingBox = routeResults.getRoute().getBoundingBox();
                         //owner.navigationRouteBoundingBox.expand(200, 200)
@@ -727,24 +761,26 @@ export class Here extends HereBase {
             onPositionUpdated(geoPosition) {
                 const owner = that ? that.get() : null;
                 // console.dir(geoPosition)
-                console.log('position listener touched')
+                console.log('get owner in position update!')
                 if (!owner) return;
+                console.log('get fragment in position update!')
                 const mapFragment = owner.fragment
+                if (!mapFragment) return;
+                console.log('get map in position update!')
                 const map = mapFragment.getMap()
+                if (!map) return
+                console.log('get coordinate in position update!')
                 const coordinate = geoPosition.getCoordinate()
+                if (!coordinate) return
                 const lat = coordinate.getLatitude()
                 const lng = coordinate.getLongitude()
                 const heading = geoPosition.getHeading()
                 const position = new com.here.android.mpa.common.GeoCoordinate(lat, lng)
 
                 // const routeElement = geoPosition.getRoadElement();
-
-                console.dir(`Navigation: lat: ${lat}, lng: ${lng}, heading: ${heading}`)
-
                 // owner.navigationArrow.setCenter(position)
-
                 //owner.navigationArrow.setCoordinate(position)
-                console.log('set map to center position')
+                console.log('set center in position update!')
                 map.setCenter(
                     position,
                     com.here.android.mpa.mapping.Map.Animation.LINEAR,
@@ -752,14 +788,17 @@ export class Here extends HereBase {
                     heading,
                     com.here.android.mpa.mapping.Map.MOVE_PRESERVE_TILT
                 )
-                console.log('done')
-                owner.notify({
-                    eventName: HereBase.geoPositionChange,
-                    object: owner,
-                    latitude: lat,
-                    longitude: lng,
-                    heading
-                });
+                console.log('notify about position update!')
+                new Promise((resolve, reject) => {
+                    owner.notify({
+                        eventName: HereBase.geoPositionChange,
+                        object: owner,
+                        latitude: lat,
+                        longitude: lng,
+                        heading
+                    });
+                })
+                console.dir(`Navigation: lat: ${lat}, lng: ${lng}, heading: ${heading}`)
 
                 return
             }
@@ -771,6 +810,14 @@ export class Here extends HereBase {
         class NavigationManagerEventListener extends com.here.android.mpa.guidance.NavigationManager.NavigationManagerEventListener {
             onRunningStateChanged() {
                 console.log("Running state changed")
+                const owner = that ? that.get() : null;
+                if (!owner) return;
+                if (owner.navigationManager.getNavigationMode() == com.here.android.mpa.guidance.NavigationManager.NavigationMode.NONE) {
+                    owner.notify({
+                        eventName: HereBase.navigationStopped,
+                        object: owner,
+                    });
+                }
                 //android.widget.Toast.makeText(this._context, "Running state changed", android.widget.Toast.LENGTH_SHORT).show();
             }
 
@@ -780,13 +827,49 @@ export class Here extends HereBase {
             }
 
             onEnded(navigationMode) {
-                console.log(navigationMode + " was ended")
+                const owner = that ? that.get() : null;
+                if (!owner) return;
+                const mapFragment = owner.fragment
+                if (!mapFragment) return;
+                const map = mapFragment.getMap()
+                if (!map) return
+                const geoPosition = com.here.android.mpa.common.PositioningManager.getInstance().getPosition()
+                const coordinate = geoPosition.getCoordinate()
+                const lat = coordinate.getLatitude()
+                const lng = coordinate.getLongitude()
+                const heading = geoPosition.getHeading()
+                const position = new com.here.android.mpa.common.GeoCoordinate(lat, lng)
+                map.setCenter(
+                    position,
+                    com.here.android.mpa.mapping.Map.Animation.LINEAR,
+                    com.here.android.mpa.mapping.Map.MOVE_PRESERVE_ZOOM_LEVEL,
+                    heading,
+                    com.here.android.mpa.mapping.Map.MOVE_PRESERVE_TILT
+                )
+                new Promise((resolve, reject) => {
+                    owner.notify({
+                        eventName: HereBase.geoPositionChange,
+                        object: owner,
+                        latitude: lat,
+                        longitude: lng,
+                        heading
+                    });
+                })
+                console.dir(`Navigation: lat: ${lat}, lng: ${lng}, heading: ${heading}`)
                 //android.widget.Toast.makeText(this._context, navigationMode + " was ended", android.widget.Toast.LENGTH_SHORT).show();
                 //stopForegroundService();
             }
 
             onMapUpdateModeChanged(mapUpdateMode) {
-                console.log("Running state changed")
+                console.log("Running state changed in onMapUpdateModeChanged")
+                const owner = that ? that.get() : null;
+                if (!owner) return;
+                if (mapUpdateMode == com.here.android.mpa.guidance.NavigationManager.MapUpdateMode.NONE) {
+                    owner.notify({
+                        eventName: HereBase.navigationStopped,
+                        object: owner,
+                    });
+                }
                 //android.widget.Toast.makeText(this._context, "Map update mode is changed to " + mapUpdateMode, android.widget.Toast.LENGTH_SHORT).show();
             }
 
@@ -802,6 +885,33 @@ export class Here extends HereBase {
 
             onStopoverReached(index) {
                 console.log("stopover reached")
+                const owner = that ? that.get() : null;
+                if (!owner) return;
+                const mapFragment = owner.fragment
+                if (!mapFragment) return;
+                const map = mapFragment.getMap()
+                if (!map) return
+                const geoPosition = com.here.android.mpa.common.PositioningManager.getInstance().getPosition()
+                const coordinate = geoPosition.getCoordinate()
+                const lat = coordinate.getLatitude()
+                const lng = coordinate.getLongitude()
+                const heading = geoPosition.getHeading()
+                const position = new com.here.android.mpa.common.GeoCoordinate(lat, lng)
+                map.setCenter(
+                    position,
+                    com.here.android.mpa.mapping.Map.Animation.LINEAR,
+                    com.here.android.mpa.mapping.Map.MOVE_PRESERVE_ZOOM_LEVEL,
+                    heading,
+                    com.here.android.mpa.mapping.Map.MOVE_PRESERVE_TILT
+                )
+                owner.notify({
+                    eventName: HereBase.geoPositionChange,
+                    object: owner,
+                    latitude: lat,
+                    longitude: lng,
+                    heading
+                });
+                console.dir(`Navigation: lat: ${lat}, lng: ${lng}, heading: ${heading}`)
             }
         }
         return new NavigationManagerEventListener()
@@ -831,10 +941,6 @@ export class Here extends HereBase {
 
                     owner.navigationManager = com.here.android.mpa.guidance.NavigationManager.getInstance()
                     owner.navigationManager.setMap(map)
-
-                    //owner.navigationManager.addNavigationManagerEventListener(
-                    //    new java.lang.ref.WeakReference(owner.navigationManagerListener)
-                    //)
 
                     owner.navigationManager.addPositionListener(
                         new java.lang.ref.WeakReference(owner.positionListener)
@@ -882,7 +988,7 @@ export class Here extends HereBase {
                             break;
                     }
 
-                    map.setZoomLevel((map.getMaxZoomLevel() - map.getMinZoomLevel()) / 2)
+                    map.setZoomLevel((map.getMaxZoomLevel() + map.getMinZoomLevel()) / 2)
 
                     map.setTilt(owner.tilt)
 
@@ -929,27 +1035,37 @@ export class Here extends HereBase {
                         owner.navigationRoute = routeResults.get(0).getRoute();
 
                         const map = owner.fragment.getMap();
-                        console.log('navigationRoute')
+                        console.log('navigationRoute calculation finished')
 
                         if (owner.mapRoute) {
+                            console.log('remove map route if exist')
                             map.removeMapObject(owner.mapRoute)
                         }
 
                         owner.mapRoute = new com.here.android.mpa.mapping.MapRoute(owner.navigationRoute);
+                        if (!owner.mapRoute) {
+                            reject("no route!!!")
+                            return
+                        }
                         console.log('mapRoute')
 
                         owner.mapRoute.setManeuverNumberVisible(true)
+                        console.log('add new map route to map')
                         map.addMapObject(owner.mapRoute)
 
+                        console.log('set route bounding boxes')
                         owner.navigationRouteBoundingBox = routeResults.get(0).getRoute().getBoundingBox();
                         owner.navigationRouteBoundingBox.expand(200, 200)
 
+                        console.log('set orientation')
                         map.setOrientation(0);
+                        console.log('set zoom')
                         map.zoomTo(
                             owner.navigationRouteBoundingBox,
                             com.here.android.mpa.mapping.Map.Animation.NONE,
                             com.here.android.mpa.mapping.Map.MOVE_PRESERVE_ORIENTATION
                         );
+                        console.log('calculation finished and added')
                         resolve()
                     } else {
                         console.log('Woooops... route results returned is not valid')
@@ -978,34 +1094,37 @@ export class Here extends HereBase {
             }
             ,
             onMapObjectsSelected(objects: java.util.List<any>): boolean {
-                const owner = that ? that.get() : null;
-                if (!owner) return false;
-                const size = objects.size();
-                for (let i = 0; i < size; i++) {
-                    const nativeMarker = objects.get(i);
-                    const marker = owner.markers.get(nativeMarker);
-                    if (marker) {
-                        const callback = owner.markersCallback.get(marker.id);
-                        if (callback) {
-                            callback(marker);
-                        }
-                    }
-                }
+                //const owner = that ? that.get() : null;
+                //if (!owner) return false;
+                //const size = objects.size();
+                //for (let i = 0; i < size; i++) {
+                //    const nativeMarker = objects.get(i);
+                //    const marker = owner.markers.get(nativeMarker);
+                //    if (marker) {
+                //        const callback = owner.markersCallback.get(marker.id);
+                //        if (callback) {
+                //            callback(marker);
+                //        }
+                //    }
+                //}
                 return false;
             }
             ,
             onTapEvent(point: globalAndroid.graphics.PointF): boolean {
-                const owner = that ? that.get() : null;
-                if (!owner) return false;
-                const map = owner.fragment ? owner.fragment.getMap() : null;
-                if (!map) return false;
-                const cord = map.pixelToGeo(point);
-                owner.notify({
-                    eventName: HereBase.mapClickEvent,
-                    object: owner,
-                    latitude: cord.getLatitude(),
-                    longitude: cord.getLongitude()
-                });
+                //const owner = that ? that.get() : null;
+                //if (!owner) return false;
+                //const map = owner.fragment ? owner.fragment.getMap() : null;
+                //if (!map) return false;
+                //const cord = map.pixelToGeo(point);
+                //if (!cord) {
+                //    return false
+                //}
+                //owner.notify({
+                //    eventName: HereBase.mapClickEvent,
+                //    object: owner,
+                //    latitude: cord.getLatitude(),
+                //    longitude: cord.getLongitude()
+                //});
                 return false;
             }
             ,
@@ -1032,17 +1151,17 @@ export class Here extends HereBase {
             }
             ,
             onLongPressEvent(point: globalAndroid.graphics.PointF): boolean {
-                const owner = that ? that.get() : null;
-                if (!owner) return false;
-                const map = owner.fragment ? owner.fragment.getMap() : null;
-                if (!map) return false;
-                const cord = map.pixelToGeo(point);
-                owner.notify({
-                    eventName: HereBase.mapLongClickEvent,
-                    object: owner,
-                    latitude: cord.getLatitude(),
-                    longitude: cord.getLongitude()
-                });
+                //const owner = that ? that.get() : null;
+                //if (!owner) return false;
+                //const map = owner.fragment ? owner.fragment.getMap() : null;
+                //if (!map) return false;
+                //const cord = map.pixelToGeo(point);
+                //owner.notify({
+                //    eventName: HereBase.mapLongClickEvent,
+                //    object: owner,
+                //    latitude: cord.getLatitude(),
+                //    longitude: cord.getLongitude()
+                //});
                 return false;
             }
             ,
@@ -1065,14 +1184,14 @@ export class Here extends HereBase {
 
             },
             onMarkerDragEnd(nativeMarker) {
-                const owner = that ? that.get() : null;
-                if (!owner) return;
-                const marker = owner.markers.get(nativeMarker);
-                owner.nativeMarkers.set(marker.id, nativeMarker);
-                const cord = nativeMarker.getCoordinate();
-                marker.longitude = cord.getLongitude();
-                marker.latitude = cord.getLatitude();
-                owner.markers.set(nativeMarker, marker);
+                //const owner = that ? that.get() : null;
+                //if (!owner) return;
+                //const marker = owner.markers.get(nativeMarker);
+                //owner.nativeMarkers.set(marker.id, nativeMarker);
+                //const cord = nativeMarker.getCoordinate();
+                //marker.longitude = cord.getLongitude();
+                //marker.latitude = cord.getLatitude();
+                //owner.markers.set(nativeMarker, marker);
             }
         })
     }
