@@ -786,15 +786,13 @@ export class Here extends HereBase {
                     com.here.android.mpa.mapping.Map.MOVE_PRESERVE_TILT
                 )
                 console.log('notify about position update!')
-                new Promise((resolve, reject) => {
-                    owner.notify({
-                        eventName: HereBase.geoPositionChange,
-                        object: owner,
-                        latitude: lat,
-                        longitude: lng,
-                        heading
-                    });
-                })
+                owner.notify({
+                    eventName: HereBase.geoPositionChange,
+                    object: owner,
+                    latitude: lat,
+                    longitude: lng,
+                    heading
+                });
                 console.dir(`Navigation: lat: ${lat}, lng: ${lng}, heading: ${heading}`)
 
                 return
@@ -843,15 +841,13 @@ export class Here extends HereBase {
                     heading,
                     com.here.android.mpa.mapping.Map.MOVE_PRESERVE_TILT
                 )
-                new Promise((resolve, reject) => {
-                    owner.notify({
-                        eventName: HereBase.geoPositionChange,
-                        object: owner,
-                        latitude: lat,
-                        longitude: lng,
-                        heading
-                    });
-                })
+                owner.notify({
+                    eventName: HereBase.geoPositionChange,
+                    object: owner,
+                    latitude: lat,
+                    longitude: lng,
+                    heading
+                });
                 console.dir(`Navigation: lat: ${lat}, lng: ${lng}, heading: ${heading}`)
                 //android.widget.Toast.makeText(this._context, navigationMode + " was ended", android.widget.Toast.LENGTH_SHORT).show();
                 //stopForegroundService();

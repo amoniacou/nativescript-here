@@ -185,7 +185,7 @@ export class Here extends HereBase {
             NSNotificationCenter.defaultCenter.addObserverSelectorNameObject(this.positionObserver, "positionDidUpdate", "NMAPositioningManagerDidUpdatePositionNotification", null)
             NSNotificationCenter.defaultCenter.addObserverSelectorNameObject(this.positionObserver, "didLosePosition", "NMAPositioningManagerDidLosePositionNotification", null)
 
-            //this.nativeView.positionIndicator.visible = true
+            this.nativeView.positionIndicator.visible = true
         }
         console.log('inited')
     }
@@ -282,7 +282,7 @@ export class Here extends HereBase {
                 reject();
                 return
             }
-            if (this.nativeStops.length < 2) {
+            if (this.nativeStops.count < 2) {
                 console.log('empty stops')
                 reject();
                 return;
@@ -292,8 +292,6 @@ export class Here extends HereBase {
                 this.router = NMACoreRouter.alloc().init()
                 console.dir('Created: "router"')
             }
-            console.log("router mode: ", this.routingMode)
-            console.log("")
             this.router.calculateRouteWithStopsRoutingModeCompletionBlock(this.nativeStops, this.routingMode, (result, error) => {
                 if (error) {
                     console.dir(`Error: calculate route with error code: ${error}`)
@@ -311,6 +309,7 @@ export class Here extends HereBase {
                 this.updateRoute(result.routes[0])
                 this.showWay()
                 resolve()
+                console.log('route finished')
             })
         })
     }
@@ -478,23 +477,18 @@ export class Here extends HereBase {
 
     public setStops(points: Array<any>, showMarkers: boolean): void {
         console.log('add points')
-        this.nativeStops = NSMutableArray.alloc().initWithCapacity(points.length);
+        this.nativeStops = NSMutableArray.alloc().init();
         if (this.nativeMarkers.size > 0) {
             this.clearMarkers()
         }
         points.forEach((point, index) => {
-            let wtype = NMAWaypointType.ViaWaypoint
-            if (index == 0 || index == points.length - 1) {
-                console.log('stop waypoint')
-                wtype = NMAWaypointType.StopWaypoint
-            }
             this.nativeStops.addObject(
                 NMAWaypoint.alloc().initWithGeoCoordinatesWaypointType(
                     NMAGeoCoordinates.geoCoordinatesWithLatitudeLongitude(
                         point.latitude,
                         point.longitude
                     ),
-                    wtype
+                    NMAWaypointType.StopWaypoint
                 )
             )
             if (showMarkers) {
@@ -629,13 +623,11 @@ class PositionObserver extends NSObject {
         if (!position) {
             return
         }
-        new Promise((resolve, reject) => {
-            owner.notify({
-                eventName: HereBase.geoPositionChange,
-                object: owner,
-                latitude: position.coordinates.latitude,
-                longitude: position.coordinates.longitude,
-            });
+        owner.notify({
+            eventName: HereBase.geoPositionChange,
+            object: owner,
+            latitude: position.coordinates.latitude,
+            longitude: position.coordinates.longitude,
         });
         console.log("position update!!!!");
     }
