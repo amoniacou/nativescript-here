@@ -14,8 +14,8 @@ import * as app from 'tns-core-modules/application';
 import * as types from 'tns-core-modules/utils/types';
 import * as imageSrc from 'tns-core-modules/image-source';
 import * as fs from 'tns-core-modules/file-system';
-import { Color } from 'tns-core-modules/color';
-import { navigation_arrow } from './icon-arrow';
+//import { Color } from 'tns-core-modules/color';
+//import { navigation_arrow } from './icon-arrow';
 const permissions = require('nativescript-permissions');
 
 declare var com: any;
@@ -206,28 +206,36 @@ export class Here extends HereBase {
     }
 
     public disposeNativeView(): void {
+        console.log('free memory')
         this.removeNavigation()
         super.disposeNativeView();
     }
 
     public removeNavigation(): void {
+        console.log('remove navigation')
         if (this.fragment) {
             const mapGesture = typeof this.fragment.getMapGesture === 'function' ? this.fragment.getMapGesture() : null;
             //this.fragment.removeOnMapRenderListener(this.listener);
             if (mapGesture) {
+                console.log('remove gesture listener')
                 this.fragment.getMapGesture().removeOnGestureListener(this.gestureListener);
             }
         }
+        console.log('clear markers')
         this.clearMarkers()
+        console.log('clear circles')
         this.clearCircles()
+        console.log('remove position manager')
         this.navigationManager.removePositionListener(this.positionListener)
+        console.log('remove reroute listener')
         this.navigationManager.removeRerouteListener(this.rerouteListener)
         if (this.navigationManagerListener) {
+            console.log('remove navigation manager listener')
             this.navigationManager.removeNavigationManagerEventListener(this.navigationManagerListener)
-            this.navigationManagerListener = null;
+            //this.navigationManagerListener = null;
         }
-        this.positionListener = null;
-        this.rerouteListener = null;
+        //this.positionListener = null;
+        //this.rerouteListener = null;
         console.log('stop navigation manager!!!!')
         this.navigationManager.stop()
         console.log('nullify map')
@@ -550,7 +558,7 @@ export class Here extends HereBase {
     stopNavigation(): void {
         if (this.fragment) {
             const mapGesture = typeof this.fragment.getMapGesture === 'function' ? this.fragment.getMapGesture() : null;
-            //this.fragment.removeOnMapRenderListener(this.listener);
+            this.fragment.removeOnMapRenderListener(this.listener);
             if (mapGesture) {
                 this.fragment.getMapGesture().removeOnGestureListener(this.gestureListener);
             }
@@ -805,14 +813,6 @@ export class Here extends HereBase {
         class NavigationManagerEventListener extends com.here.android.mpa.guidance.NavigationManager.NavigationManagerEventListener {
             onRunningStateChanged() {
                 console.log("Running state changed")
-                const owner = that ? that.get() : null;
-                if (!owner) return;
-                if (owner.navigationManager.getNavigationMode() == com.here.android.mpa.guidance.NavigationManager.NavigationMode.NONE) {
-                    owner.notify({
-                        eventName: HereBase.navigationStopped,
-                        object: owner,
-                    });
-                }
                 //android.widget.Toast.makeText(this._context, "Running state changed", android.widget.Toast.LENGTH_SHORT).show();
             }
 
@@ -822,47 +822,12 @@ export class Here extends HereBase {
             }
 
             onEnded(navigationMode) {
-                const owner = that ? that.get() : null;
-                if (!owner) return;
-                const mapFragment = owner.fragment
-                if (!mapFragment) return;
-                const map = mapFragment.getMap()
-                if (!map) return
-                const geoPosition = com.here.android.mpa.common.PositioningManager.getInstance().getPosition()
-                const coordinate = geoPosition.getCoordinate()
-                const lat = coordinate.getLatitude()
-                const lng = coordinate.getLongitude()
-                const heading = geoPosition.getHeading()
-                const position = new com.here.android.mpa.common.GeoCoordinate(lat, lng)
-                map.setCenter(
-                    position,
-                    com.here.android.mpa.mapping.Map.Animation.LINEAR,
-                    com.here.android.mpa.mapping.Map.MOVE_PRESERVE_ZOOM_LEVEL,
-                    heading,
-                    com.here.android.mpa.mapping.Map.MOVE_PRESERVE_TILT
-                )
-                owner.notify({
-                    eventName: HereBase.geoPositionChange,
-                    object: owner,
-                    latitude: lat,
-                    longitude: lng,
-                    heading
-                });
-                console.dir(`Navigation: lat: ${lat}, lng: ${lng}, heading: ${heading}`)
                 //android.widget.Toast.makeText(this._context, navigationMode + " was ended", android.widget.Toast.LENGTH_SHORT).show();
                 //stopForegroundService();
             }
 
             onMapUpdateModeChanged(mapUpdateMode) {
                 console.log("Running state changed in onMapUpdateModeChanged")
-                const owner = that ? that.get() : null;
-                if (!owner) return;
-                if (mapUpdateMode == com.here.android.mpa.guidance.NavigationManager.MapUpdateMode.NONE) {
-                    owner.notify({
-                        eventName: HereBase.navigationStopped,
-                        object: owner,
-                    });
-                }
                 //android.widget.Toast.makeText(this._context, "Map update mode is changed to " + mapUpdateMode, android.widget.Toast.LENGTH_SHORT).show();
             }
 
@@ -944,11 +909,10 @@ export class Here extends HereBase {
                     )
 
                     // mapFragment.getPositionIndicator().setVisible(false);
-
-                    owner.navigationArrowIcon = new com.here.android.mpa.common.Image()
-                    const decodedString = android.util.Base64.decode(navigation_arrow, android.util.Base64.DEFAULT);
-                    const decodedByte = android.graphics.BitmapFactory.decodeByteArray(decodedString, 0, decodedString.length);
-                    owner.navigationArrowIcon.setBitmap(decodedByte)
+                    //owner.navigationArrowIcon = new com.here.android.mpa.common.Image()
+                    //const decodedString = android.util.Base64.decode(navigation_arrow, android.util.Base64.DEFAULT);
+                    //const decodedByte = android.graphics.BitmapFactory.decodeByteArray(decodedString, 0, decodedString.length);
+                    //owner.navigationArrowIcon.setBitmap(decodedByte)
                     //owner.navigationArrow = new com.here.android.mpa.mapping.MapMarker(
                     //    new com.here.android.mpa.common.GeoCoordinate(0, 0),
                     //    owner.navigationArrowIcon
@@ -962,7 +926,7 @@ export class Here extends HereBase {
                     const decodedByteMarker = android.graphics.BitmapFactory.decodeByteArray(decodedStringMarker, 0, decodedStringMarker.length);
                     owner.navigationMarkerIcon.setBitmap(decodedByteMarker)
 
-                    mapFragment.getPositionIndicator().setMarker(owner.navigationArrowIcon)
+                    //mapFragment.getPositionIndicator().setMarker(owner.navigationArrowIcon)
                     mapFragment.getPositionIndicator().setVisible(true);
                     //map.addMapObject(owner.navigationArrow)
 
