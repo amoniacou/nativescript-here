@@ -178,16 +178,8 @@ export class Here extends HereBase {
         this.navigationManager.map = this.nativeView
         this.navigationManager.delegate = NMANavigationManagerDelegateImpl.initWithOwner(new WeakRef<Here>(this));
         //NMAPositioningManager.sharedPositioningManager().dataSource = NMADevicePositionSource.alloc().init()
-        console.log("start navigation")
-        NSNotificationCenter.defaultCenter.removeObserver(this.positionObserver)
-        if (NMAPositioningManager.sharedPositioningManager().startPositioning()) {
-            this.positionObserver = PositionObserver.initWithOwner(new WeakRef<Here>(this))
-            NSNotificationCenter.defaultCenter.addObserverSelectorNameObject(this.positionObserver, "positionDidUpdate", "NMAPositioningManagerDidUpdatePositionNotification", null)
-            NSNotificationCenter.defaultCenter.addObserverSelectorNameObject(this.positionObserver, "didLosePosition", "NMAPositioningManagerDidLosePositionNotification", null)
-
-            this.nativeView.positionIndicator.visible = true
-        }
         console.log('inited')
+        return
     }
 
     public disposeNativeView(): void {
@@ -199,6 +191,7 @@ export class Here extends HereBase {
     public onLoaded(): void {
         super.onLoaded();
         this.isReady = true;
+        console.log('MAP READY!!!!!')
         this.notify({
             eventName: HereBase.mapReadyEvent,
             object: this,
@@ -367,6 +360,17 @@ export class Here extends HereBase {
 
     startNavigation(): Promise<any> {
         return new Promise<any>((resolve, reject) => {
+            if (this.positionObserver) {
+                NSNotificationCenter.defaultCenter.removeObserver(this.positionObserver)
+            }
+            if (NMAPositioningManager.sharedPositioningManager().startPositioning()) {
+                console.log('subscribe to events')
+                this.positionObserver = PositionObserver.initWithOwner(new WeakRef<Here>(this))
+                NSNotificationCenter.defaultCenter.addObserverSelectorNameObject(this.positionObserver, "positionDidUpdate", "NMAPositioningManagerDidUpdatePositionNotification", null)
+                NSNotificationCenter.defaultCenter.addObserverSelectorNameObject(this.positionObserver, "didLosePosition", "NMAPositioningManagerDidLosePositionNotification", null)
+
+                this.nativeView.positionIndicator.visible = true
+            }
             console.log('set map')
             this.navigationManager.map = this.nativeView
             console.log('set track enabled')
@@ -381,6 +385,20 @@ export class Here extends HereBase {
             this.nativeView.positionIndicator.visible = true
             const res = this.navigationManager.startTurnByTurnNavigationWithRoute(this.route)
             if (res) {
+                switch (res) {
+                    case NMANavigationError.InvalidOperation:
+                        console.log("Invalid operation")
+                        break;
+                    case NMANavigationError.InvalidParameters:
+                        console.log('Invalid parameters')
+                        break;
+                    case NMANavigationError.OperationNotAllowed:
+                        console.log('Operation not allowed')
+                        break;
+                }
+                console.log("error with start navigation!!!!!!!!!!!!!!!!!!")
+                console.dir(res)
+                console.dir(this.route)
                 reject('error with start navigation')
                 return
             }
@@ -390,6 +408,10 @@ export class Here extends HereBase {
     }
 
     stopNavigation(): void {
+        // remove observers!
+        if (this.positionObserver) {
+            NSNotificationCenter.defaultCenter.removeObserver(this.positionObserver)
+        }
         this.navigationManager.stop()
         const map = this.nativeView
         map.setBoundingBoxWithAnimation(
@@ -410,7 +432,7 @@ export class Here extends HereBase {
         console.log("Stop navigation manager")
         this.navigationManager.stop()
         console.log("Stop navigation manager delegation")
-        //this.navigationManager.delegate = null
+        this.navigationManager.delegate = null
         this.navigationManager.resetAnnouncementRules()
         this.navigationManager.map = null
         console.log("Remove observers")
@@ -562,7 +584,11 @@ export class Here extends HereBase {
     updateCircle(circle): void {
         if (!this.isReady) return;
         const nativeObj = this.nativeCircles.get(circle.id);
-        this._setCircleOptions(nativeObj, circle)
+        if (nativeObj) {
+            this._setCircleOptions(nativeObj, circle)
+        } else {
+            this.addCircle(circle)
+        }
     }
 
     _setCircleOptions(nativeCircle, circle): void {

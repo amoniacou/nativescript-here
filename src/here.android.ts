@@ -556,16 +556,20 @@ export class Here extends HereBase {
     }
 
     stopNavigation(): void {
-        if (this.fragment) {
+        /*if (this.fragment) {
             const mapGesture = typeof this.fragment.getMapGesture === 'function' ? this.fragment.getMapGesture() : null;
             this.fragment.removeOnMapRenderListener(this.listener);
             if (mapGesture) {
                 this.fragment.getMapGesture().removeOnGestureListener(this.gestureListener);
             }
-        }
+        }*/
+        console.log('clear markers')
         this.clearMarkers()
+        console.log('clear circles')
         this.clearCircles()
+        console.log('stop navigation manager')
         this.navigationManager.stop()
+        console.log('navigation manager stopped')
     }
 
     pauseNavigation(): Promise<any> {
@@ -667,7 +671,7 @@ export class Here extends HereBase {
     updateCircle(circle): void {
         if (this.fragment && this.isReady) {
             const nativeObj = this.nativeCircles.get(circle.id);
-            if (!nativeObj) return
+            if (!nativeObj) return this.addCircle(circle);
             this._setCircleOptions(nativeObj, circle)
         }
     }
