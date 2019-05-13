@@ -1,6 +1,6 @@
 {
     "name": "nativescript-here",
-    "version": "0.1.5",
+    "version": "0.1.6",
     "description": "NativeScript sdk for Here Maps",
     "main": "here",
     "typings": "index.d.ts",
