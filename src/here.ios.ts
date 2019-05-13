@@ -396,10 +396,9 @@ export class Here extends HereBase {
                         console.log('Operation not allowed')
                         break;
                 }
-                console.log("error with start navigation!!!!!!!!!!!!!!!!!!")
-                console.dir(res)
-                console.dir(this.route)
-                reject('error with start navigation')
+                reject({
+                    code: res
+                })
                 return
             }
             console.log("navigation started!")
