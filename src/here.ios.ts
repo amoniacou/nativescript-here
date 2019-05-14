@@ -174,6 +174,9 @@ export class Here extends HereBase {
             NMAMapAnimation.None
         )
 
+        this.nativeView.landmarksVisible = true
+        this.nativeView.extrudedBuildingsVisible = true
+
         this.navigationManager = NMANavigationManager.sharedNavigationManager()
         this.navigationManager.map = this.nativeView
         this.navigationManager.delegate = NMANavigationManagerDelegateImpl.initWithOwner(new WeakRef<Here>(this));

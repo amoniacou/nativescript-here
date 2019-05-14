@@ -953,8 +953,8 @@ export class Here extends HereBase {
 
                     map.setTilt(owner.tilt)
 
-                    map.setLandmarksVisible(owner.landmarks)
-                    map.setExtrudedBuildingsVisible(false)
+                    map.setLandmarksVisible(true)
+                    map.setExtrudedBuildingsVisible(true)
 
                     if (types.isNumber(+owner.latitude) && types.isNumber(+owner.longitude)) {
                         map.setCenter(
