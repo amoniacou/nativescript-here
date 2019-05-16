@@ -515,7 +515,7 @@ export class Here extends HereBase {
                             this.navigationManager.addNavigationManagerEventListener(
                                 new java.lang.ref.WeakReference(this.navigationManagerListener)
                             )
-                            this.navigationManager.setMapUpdateMode(com.here.android.mpa.guidance.NavigationManager.MapUpdateMode.ROADVIEW)
+                            this.navigationManager.setMapUpdateMode(com.here.android.mpa.guidance.NavigationManager.MapUpdateMode.ROADVIEW_NOZOOM)
                             resolve()
                         } else {
                             reject(managerError)
@@ -822,11 +822,48 @@ export class Here extends HereBase {
 
             onNavigationModeChanged() {
                 console.log("Navigation mode changed")
+                if (com.here.android.mpa.guidance.NavigationManager.getInstance().getNavigationMode() != com.here.android.mpa.guidance.NavigationManager.NavigationMode.NAVIGATION) {
+                    const owner = that ? that.get() : null;
+                    if (!owner) return;
+                    console.log('notify about end of navigation')
+                    owner.notify({
+                        eventName: HereBase.geoPositionChange,
+                        object: owner,
+                        ended: true
+                    });
+                }
                 //android.widget.Toast.makeText(this._context, "Navigation mode changed", android.widget.Toast.LENGTH_SHORT).show();
             }
 
             onEnded(navigationMode) {
                 //android.widget.Toast.makeText(this._context, navigationMode + " was ended", android.widget.Toast.LENGTH_SHORT).show();
+                const owner = that ? that.get() : null;
+                if (!owner) return;
+                const mapFragment = owner.fragment
+                if (!mapFragment) return;
+                const map = mapFragment.getMap()
+                if (!map) return
+                const geoPosition = com.here.android.mpa.common.PositioningManager.getInstance().getPosition()
+                const coordinate = geoPosition.getCoordinate()
+                const lat = coordinate.getLatitude()
+                const lng = coordinate.getLongitude()
+                const heading = geoPosition.getHeading()
+                const position = new com.here.android.mpa.common.GeoCoordinate(lat, lng)
+                map.setCenter(
+                    position,
+                    com.here.android.mpa.mapping.Map.Animation.LINEAR,
+                    com.here.android.mpa.mapping.Map.MOVE_PRESERVE_ZOOM_LEVEL,
+                    heading,
+                    com.here.android.mpa.mapping.Map.MOVE_PRESERVE_TILT
+                )
+
+                owner.notify({
+                    eventName: HereBase.geoPositionChange,
+                    object: owner,
+                    ended: true
+                });
+
+                console.dir(`Navigation: lat: ${lat}, lng: ${lng}, heading: ${heading}`)
                 //stopForegroundService();
             }
 
@@ -866,13 +903,15 @@ export class Here extends HereBase {
                     heading,
                     com.here.android.mpa.mapping.Map.MOVE_PRESERVE_TILT
                 )
+
                 owner.notify({
                     eventName: HereBase.geoPositionChange,
                     object: owner,
                     latitude: lat,
                     longitude: lng,
                     heading
-                });
+                })
+
                 console.dir(`Navigation: lat: ${lat}, lng: ${lng}, heading: ${heading}`)
             }
         }
