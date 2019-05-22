@@ -37,7 +37,7 @@ export class Here extends HereBase {
 
     private nativeCircles: Map<number, any>;
     private circles: Map<any, any>;
-
+    private positionListenerKlass;
     private navigationManager;
     private positionManager;
     private navigationManagerListener;
@@ -92,10 +92,6 @@ export class Here extends HereBase {
             transportMode: 'PEDESTRIAN',
             routeType: 'FASTEST'
         }
-    }
-
-    constructor() {
-        super();
     }
 
     public static init(appId: string, appCode: string, licenseKey: string) {
@@ -162,6 +158,7 @@ export class Here extends HereBase {
     }
 
     public createNativeView(): Object {
+        console.log('create a new native view')
         this.nativeMarkers = new Map<number, any>();
         this.markersCallback = new Map<number, any>();
         this.nativeCircles = new Map<number, any>();
@@ -179,6 +176,8 @@ export class Here extends HereBase {
             .commitAllowingStateLoss();
 
         const that = new WeakRef<Here>(this);
+        //const owner = this;
+        console.log("current object is: ", this._layoutId);
 
         this.dragListener = this._newDragListener(that);
         this.gestureListener = this._newGestureListener(that);
@@ -191,18 +190,18 @@ export class Here extends HereBase {
         )
 
         console.log(`Isolate Disk Cache: ${isolatedDiskCacheRootPathStatus ? 'OK' : 'WITH ERRORS'}`)
-
-        this.positionListener = this._newPositionListener(that);
-        this.rerouteListener = this._newRerouteListener(that);
+        
+        //this.positionListenerKlass = PositionListenerImpl
         this.listener = this._newEngineInitListener(that);
 
         return nativeView;
     }
 
     public initNativeView(): void {
-        super.initNativeView();
+        (<any>this.nativeView).owner = this;
         this.context = new com.here.android.mpa.common.ApplicationContext(this._context)
         this.fragment.init(this.context, this.listener);
+        super.initNativeView();
     }
 
     public disposeNativeView(): void {
@@ -226,13 +225,18 @@ export class Here extends HereBase {
         console.log('clear circles')
         this.clearCircles()
         console.log('remove position manager')
-        this.navigationManager.removePositionListener(this.positionListener)
+        const navigationManager = com.here.android.mpa.guidance.NavigationManager.getInstance()
+        navigationManager.removePositionListener(this.positionListener)
+        //this.positionListener.setOwner(null);
+        this.positionListener = null;
         console.log('remove reroute listener')
-        this.navigationManager.removeRerouteListener(this.rerouteListener)
+        navigationManager.removeRerouteListener(this.rerouteListener)
+        //this.rerouteListener.setOwner(null)
+        this.rerouteListener = null;
         if (this.navigationManagerListener) {
             console.log('remove navigation manager listener')
-            this.navigationManager.removeNavigationManagerEventListener(this.navigationManagerListener)
-            //this.navigationManagerListener = null;
+            navigationManager.removeNavigationManagerEventListener(this.navigationManagerListener)
+            this.navigationManagerListener = null;
         }
         //this.positionListener = null;
         //this.rerouteListener = null;
@@ -545,7 +549,7 @@ export class Here extends HereBase {
 
                         const managerError = this.navigationManager.simulate(this.navigationRoute, 45);
 
-                        console.dir(managerError)
+                        //console.dir(managerError)
                         resolve()
                     }).catch(() => {
                         console.log("Uh oh, no permissions - plan B time!");
@@ -638,22 +642,22 @@ export class Here extends HereBase {
 
     clearMarkers(): void {
         const map = this.fragment.getMap();
-        console.dir('get fragment')
-        console.dir(this.nativeMarkers.size)
+        //console.dir('get fragment')
+        //console.dir(this.nativeMarkers.size)
         if (this.nativeMarkers.size > 0) {
             const markers = Array.from(this.nativeMarkers.values())
             markers.forEach(marker => {
                 map.removeMapObject(marker);
             })
-            console.dir('remove objects')
+            //console.dir('remove objects')
         }
-        console.dir('after remove')
+        //console.dir('after remove')
         this.markers.clear();
-        console.dir('markers.clear')
+        //console.dir('markers.clear')
         this.nativeMarkers.clear();
-        console.dir('nativeMarkers.clear')
+        //console.dir('nativeMarkers.clear')
         this.markersCallback.clear();
-        console.dir('markersCallback.clear')
+        //console.dir('markersCallback.clear')
     }
 
     addCircle(circle): void {
@@ -769,13 +773,20 @@ export class Here extends HereBase {
     }
 
     _newPositionListener(that): any {
-        class PositionListener extends com.here.android.mpa.guidance.NavigationManager.PositionListener {
+        class PositionListenerImpl extends com.here.android.mpa.guidance.NavigationManager.PositionListener {
+            static ownerLink;
+
+            setOwner(thatLink) {
+                this.ownerLink = thatLink;
+            }
+
             onPositionUpdated(geoPosition) {
-                const owner = that ? that.get() : null;
+                const owner = this.ownerLink ? this.ownerLink.get() : null;
                 // console.dir(geoPosition)
                 console.log('get owner in position update!')
                 if (!owner) return;
                 console.log('get fragment in position update!')
+                console.log("current object owner is: ", owner._layoutId);
                 const mapFragment = owner.fragment
                 if (!mapFragment) return;
                 console.log('get map in position update!')
@@ -810,11 +821,19 @@ export class Here extends HereBase {
                 return
             }
         }
-        return new PositionListener()
+        const listener = new PositionListenerImpl()
+        listener.setOwner(that)
+        return listener;
     }
 
     _newNavigationManagerListener(that): any {
         class NavigationManagerEventListener extends com.here.android.mpa.guidance.NavigationManager.NavigationManagerEventListener {
+            static ownerLink;
+
+            setOwner(thatLink) {
+                this.ownerLink = thatLink;
+            }
+
             onRunningStateChanged() {
                 console.log("Running state changed")
                 //android.widget.Toast.makeText(this._context, "Running state changed", android.widget.Toast.LENGTH_SHORT).show();
@@ -823,7 +842,7 @@ export class Here extends HereBase {
             onNavigationModeChanged() {
                 console.log("Navigation mode changed")
                 if (com.here.android.mpa.guidance.NavigationManager.getInstance().getNavigationMode() != com.here.android.mpa.guidance.NavigationManager.NavigationMode.NAVIGATION) {
-                    const owner = that ? that.get() : null;
+                    const owner = this.ownerLink ? this.ownerLink.get() : null;
                     if (!owner) return;
                     console.log('notify about end of navigation')
                     owner.notify({
@@ -837,7 +856,7 @@ export class Here extends HereBase {
 
             onEnded(navigationMode) {
                 //android.widget.Toast.makeText(this._context, navigationMode + " was ended", android.widget.Toast.LENGTH_SHORT).show();
-                const owner = that ? that.get() : null;
+                const owner = this.ownerLink ? this.ownerLink.get() : null;
                 if (!owner) return;
                 const mapFragment = owner.fragment
                 if (!mapFragment) return;
@@ -884,7 +903,7 @@ export class Here extends HereBase {
 
             onStopoverReached(index) {
                 console.log("stopover reached")
-                const owner = that ? that.get() : null;
+                const owner = this.ownerLink ? this.ownerLink.get() : null;
                 if (!owner) return;
                 const mapFragment = owner.fragment
                 if (!mapFragment) return;
@@ -915,7 +934,9 @@ export class Here extends HereBase {
                 console.dir(`Navigation: lat: ${lat}, lng: ${lng}, heading: ${heading}`)
             }
         }
-        return new NavigationManagerEventListener()
+        const listener = new NavigationManagerEventListener()
+        listener.setOwner(that)
+        return listener
     }
 
     _newEngineInitListener(that) {
@@ -942,6 +963,9 @@ export class Here extends HereBase {
 
                     owner.navigationManager = com.here.android.mpa.guidance.NavigationManager.getInstance()
                     owner.navigationManager.setMap(map)
+
+                    owner.positionListener = owner._newPositionListener(that);
+                    owner.rerouteListener = owner._newRerouteListener(that);
 
                     owner.navigationManager.addPositionListener(
                         new java.lang.ref.WeakReference(owner.positionListener)

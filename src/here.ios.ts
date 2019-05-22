@@ -110,14 +110,18 @@ export class Here extends HereBase {
     }
 
     public updateRoute(newRoute: NMARoute): void {
-        this.route = newRoute;
+        console.log('update route')
         if (this.mapRoute) {
+            console.log('remove current map')
             this.nativeView.removeMapObject(this.mapRoute)
         }
-        this.navigationManager.setRoute(this.route)
+        console.log('set new route')
+        this.route = newRoute;
+        console.log('set new map route')
+        //this.navigationManager.setRoute(this.route)
         this.mapRoute = NMAMapRoute.alloc().initWithRoute(this.route)
-
         this.navigationRouteBoundingBox = this.route.boundingBox
+        console.log('redraw route')
         this.nativeView.addMapObject(this.mapRoute)
     }
 
@@ -180,7 +184,11 @@ export class Here extends HereBase {
         this.navigationManager = NMANavigationManager.sharedNavigationManager()
         this.navigationManager.map = this.nativeView
         this.navigationManager.delegate = NMANavigationManagerDelegateImpl.initWithOwner(new WeakRef<Here>(this));
-        //NMAPositioningManager.sharedPositioningManager().dataSource = NMADevicePositionSource.alloc().init()
+        NMAPositioningManager.sharedPositioningManager().dataSource = NMADevicePositionSource.alloc().init()
+        NMAPositioningManager.sharedPositioningManager().startPositioning()
+        if (NMAPositioningManager.sharedPositioningManager().dataSource) {
+            NMAPositioningManager.sharedPositioningManager().dataSource.setBackgroundUpdatesEnabled(true)
+        }
         console.log('inited')
         return
     }
@@ -322,11 +330,11 @@ export class Here extends HereBase {
 
     startSimulation(): Promise<any> {
         return new Promise<any>((resolve, reject) => {
+
             this.navigationManager.mapTrackingEnabled = true
             this.navigationManager.mapTrackingAutoZoomEnabled = true
             this.navigationManager.mapTrackingOrientation = NMAMapTrackingOrientation.Dynamic
             this.navigationManager.speedWarningEnabled = true
-
             this.navigationManager.startTurnByTurnNavigationWithRoute(this.route)
             resolve()
         })
@@ -365,6 +373,16 @@ export class Here extends HereBase {
         return new Promise<any>((resolve, reject) => {
             if (this.positionObserver) {
                 NSNotificationCenter.defaultCenter.removeObserver(this.positionObserver)
+            }
+            this.navigationManager.backgroundNavigationEnabled = true
+            this.navigationManager.backgroundNavigationStartEnabled = true
+            console.log("NavigationManager.backgroundNavigationEnabled: ", this.navigationManager.backgroundNavigationEnabled)
+            console.log("NavigationManager.backgroundNavigationStartEnabled: ", this.navigationManager.backgroundNavigationStartEnabled)
+            console.log("NavigationManager.backgroundNavigationStartEnabled: ", this.navigationManager.backgroundNavigationStartEnabled)
+            console.log("PositioningManager active: ", NMAPositioningManager.sharedPositioningManager().active)
+            if (NMAPositioningManager.sharedPositioningManager().dataSource) {
+                console.log("NMAPositioningManager.sharedPositioningManager().dataSource.backgroundUpdatesEnabled: ", NMAPositioningManager.sharedPositioningManager().dataSource.backgroundUpdatesEnabled())
+                NMAPositioningManager.sharedPositioningManager().dataSource.setBackgroundUpdatesEnabled(true)
             }
             if (NMAPositioningManager.sharedPositioningManager().startPositioning()) {
                 console.log('subscribe to events')
@@ -661,6 +679,15 @@ class PositionObserver extends NSObject {
     }
 
     public didLosePosition(): void {
+
+        console.log("NavigationManager.backgroundNavigationEnabled: ", NMANavigationManager.sharedNavigationManager().backgroundNavigationEnabled)
+        console.log("NavigationManager.backgroundNavigationStartEnabled: ", NMANavigationManager.sharedNavigationManager().backgroundNavigationStartEnabled)
+        console.log("NavigationManager.backgroundNavigationStartEnabled: ", NMANavigationManager.sharedNavigationManager().backgroundNavigationStartEnabled)
+        console.log("PositioningManager active: ", NMAPositioningManager.sharedPositioningManager().active)
+        if (NMAPositioningManager.sharedPositioningManager().dataSource) {
+            console.log("NMAPositioningManager.sharedPositioningManager().dataSource.backgroundUpdatesEnabled: ", NMAPositioningManager.sharedPositioningManager().dataSource.backgroundUpdatesEnabled())
+            NMAPositioningManager.sharedPositioningManager().dataSource.setBackgroundUpdatesEnabled(true)
+        }
         console.log("position lose!!!!");
     }
 
@@ -702,6 +729,18 @@ class NMANavigationManagerDelegateImpl extends NSObject implements NMANavigation
 
     public navigationManagerWillReroute(navigationManager: NMANavigationManager): void {
         console.log("Reroute started!!!!")
+    }
+
+    public navigationManagerDidRerouteWithError(navigationManager: NMANavigationManager, error: NMARoutingError): void {
+        const owner = this.owner ? this.owner.get() : null;
+        if (!owner) {
+            return
+        }
+        if (error === NMARoutingError.None) {
+            console.log('rerouted successfully!!!')
+        } else {
+            console.log("error with rerouting!!!")
+        }
     }
 
     public navigationManagerDidFindAlternateRouteWithResult(navigationManager: NMANavigationManager, result: NMARouteResult): void {
