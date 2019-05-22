@@ -39,7 +39,6 @@ export class Here extends HereBase {
     private circles: Map<any, any>;
     private positionListenerKlass;
     private navigationManager;
-    private positionManager;
     private navigationManagerListener;
     private positionListener;
     private navigationRoute;
@@ -190,7 +189,7 @@ export class Here extends HereBase {
         )
 
         console.log(`Isolate Disk Cache: ${isolatedDiskCacheRootPathStatus ? 'OK' : 'WITH ERRORS'}`)
-        
+
         //this.positionListenerKlass = PositionListenerImpl
         this.listener = this._newEngineInitListener(that);
 
@@ -241,9 +240,11 @@ export class Here extends HereBase {
         //this.positionListener = null;
         //this.rerouteListener = null;
         console.log('stop navigation manager!!!!')
-        this.navigationManager.stop()
+        navigationManager.stop()
         console.log('nullify map')
-        this.navigationManager.setMap(null);
+        navigationManager.setMap(null);
+        console.log('stoppping positioning manager');
+        com.here.android.mpa.common.PositioningManager.getInstance().stop()
         console.log('navigation removal finished')
     }
 
@@ -957,7 +958,7 @@ export class Here extends HereBase {
                         mapGesture.addOnGestureListener(owner.gestureListener, 1, true)
                     }
 
-                    owner.positionManager = com.here.android.mpa.common.PositioningManager.getInstance().start(
+                    com.here.android.mpa.common.PositioningManager.getInstance().start(
                         com.here.android.mpa.common.PositioningManager.LocationMethod.GPS_NETWORK
                     )
 
@@ -1027,19 +1028,114 @@ export class Here extends HereBase {
                             com.here.android.mpa.mapping.Map.MOVE_PRESERVE_ORIENTATION,
                             com.here.android.mpa.mapping.Map.MOVE_PRESERVE_TILT);
                     }
+                    console.log('check voice catalog')
+                    const voiceCatalog = com.here.android.mpa.guidance.VoiceCatalog.getInstance()
+                    console.log('get eng voice id')
+                    let id = owner.engVoiceId();
+                    // Need to download
+                    if (id === -1) {
+                        console.log('download voice catalog')
+                        voiceCatalog.downloadCatalog(new com.here.android.mpa.guidance.VoiceCatalog.OnDownloadDoneListener({
+                            onDownloadDone(error) {
+                                if (error == com.here.android.mpa.guidance.VoiceCatalog.Error.NONE) {
+                                    let vid = owner.engVoiceId()
+                                    console.log('catalog downloaded. ID: ', vid)
+                                    owner.downloadVoiceAndNotify(vid, owner.fragment);
+                                } else {
+                                    console.log('Error in download catalog: ', error)
+                                    owner.downloadVoiceAndNotify(-1, owner.fragment);
+                                }
+                            }
+                        }))
 
-                    owner.notify({
-                        eventName: HereBase.mapReadyEvent,
-                        object: owner,
-                        android: owner.fragment,
-                        ios: null
-                    });
+                    } else {
+                        console.log('no need to download catalog')
+                        owner.downloadVoiceAndNotify(id, owner.fragment)
+                    }
+
+
                 } else {
                     console.dir('ERROR')
                     console.log(error.getDetails());
                 }
             }
         })
+    }
+
+    downloadVoiceAndNotify(id, fragment) {
+        if (id === -1) {
+            this.notify({
+                eventName: HereBase.mapReadyEvent,
+                object: this,
+                android: fragment,
+                ios: null
+            });
+            return;
+        }
+        const voiceCatalog = com.here.android.mpa.guidance.VoiceCatalog.getInstance()
+        const owner = this;
+        console.log('is local voice skin?')
+        if (!voiceCatalog.isLocalVoiceSkin(id)) {
+            console.log('need to download voice skin')
+            voiceCatalog.downloadVoice(id, new com.here.android.mpa.guidance.VoiceCatalog.OnDownloadDoneListener({
+                onDownloadDone(error) {
+                    if (error == com.here.android.mpa.guidance.VoiceCatalog.Error.NONE) {
+                        console.log('skin downloaded')
+                        const navigationManager = com.here.android.mpa.guidance.NavigationManager.getInstance();
+                        const voiceGuidanceOptions = navigationManager.getVoiceGuidanceOptions();
+                        voiceGuidanceOptions.setVoiceSkin(voiceCatalog.getLocalVoiceSkin(id))
+                        owner.notify({
+                            eventName: HereBase.mapReadyEvent,
+                            object: owner,
+                            android: fragment,
+                            ios: null
+                        });
+                        return
+                    } else {
+                        console.log('skin not downloaded:')
+                        console.dir(error == com.here.android.mpa.guidance.VoiceCatalog.Error.NOT_ENOUGH_DISK_SPACE ? "no disk space" : "unknown")
+                        owner.notify({
+                            eventName: HereBase.mapReadyEvent,
+                            object: owner,
+                            android: fragment,
+                            ios: null
+                        });
+                    }
+                }
+            }))
+        } else {
+            console.log("set voice language to :", id)
+            const navigationManager = com.here.android.mpa.guidance.NavigationManager.getInstance();
+            const voiceGuidanceOptions = navigationManager.getVoiceGuidanceOptions();
+            voiceGuidanceOptions.setVoiceSkin(voiceCatalog.getLocalVoiceSkin(id))
+            owner.notify({
+                eventName: HereBase.mapReadyEvent,
+                object: owner,
+                android: fragment,
+                ios: null
+            });
+        }
+    }
+
+    engVoiceId() {
+        let id = -1;
+        const voicePackages = com.here.android.mpa.guidance.VoiceCatalog.getInstance().getCatalogList()
+        //console.dir(voicePackages)
+        //voicePackages
+        for (let i = 0, len = voicePackages.size(); i < len; i++) {
+            const vPackage = voicePackages.get(i);
+            //console.dir(vPackage)
+            if (vPackage) {
+                console.log("voice: ", vPackage.getMarcCode(), vPackage.getId(), vPackage.isTts())
+            }
+            if (vPackage.getMarcCode() == "eng" || vPackage.getMarcCode() == "ENG") {
+                if (vPackage.isTts()) {
+                    id = vPackage.getId()
+                    break;
+                }
+            }
+        }
+        return id;
     }
 
     _newRouterListener(that, resolve, reject) {
