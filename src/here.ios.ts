@@ -376,12 +376,8 @@ export class Here extends HereBase {
             }
             this.navigationManager.backgroundNavigationEnabled = true
             this.navigationManager.backgroundNavigationStartEnabled = true
-            console.log("NavigationManager.backgroundNavigationEnabled: ", this.navigationManager.backgroundNavigationEnabled)
-            console.log("NavigationManager.backgroundNavigationStartEnabled: ", this.navigationManager.backgroundNavigationStartEnabled)
-            console.log("NavigationManager.backgroundNavigationStartEnabled: ", this.navigationManager.backgroundNavigationStartEnabled)
-            console.log("PositioningManager active: ", NMAPositioningManager.sharedPositioningManager().active)
             if (NMAPositioningManager.sharedPositioningManager().dataSource) {
-                console.log("NMAPositioningManager.sharedPositioningManager().dataSource.backgroundUpdatesEnabled: ", NMAPositioningManager.sharedPositioningManager().dataSource.backgroundUpdatesEnabled())
+                //console.log("NMAPositioningManager.sharedPositioningManager().dataSource.backgroundUpdatesEnabled: ", NMAPositioningManager.sharedPositioningManager().dataSource.backgroundUpdatesEnabled())
                 NMAPositioningManager.sharedPositioningManager().dataSource.setBackgroundUpdatesEnabled(true)
             }
             if (NMAPositioningManager.sharedPositioningManager().startPositioning()) {
@@ -450,11 +446,19 @@ export class Here extends HereBase {
         console.log("Stop positioning")
         //this.positionListener.stopPositioning()
         console.log("Stop navigation manager")
-        this.navigationManager.stop()
+        const navigationManager = NMANavigationManager.sharedNavigationManager()
+        navigationManager.backgroundNavigationEnabled = false
+        navigationManager.backgroundNavigationStartEnabled = false
+        if (NMAPositioningManager.sharedPositioningManager().dataSource) {
+            console.log('disable background position updates')
+            NMAPositioningManager.sharedPositioningManager().dataSource.setBackgroundUpdatesEnabled(false)
+            //NMAPositioningManager.sharedPositioningManager().dataSource = NMADevicePositionSource.alloc().init()
+        }
+        navigationManager.stop()
         console.log("Stop navigation manager delegation")
-        this.navigationManager.delegate = null
-        this.navigationManager.resetAnnouncementRules()
-        this.navigationManager.map = null
+        navigationManager.delegate = null
+        navigationManager.resetAnnouncementRules()
+        navigationManager.map = null
         console.log("Remove observers")
         NSNotificationCenter.defaultCenter.removeObserverNameObject(this.positionObserver, "NMAPositioningManagerDidUpdatePositionNotification", null)
         NSNotificationCenter.defaultCenter.removeObserverNameObject(this.positionObserver, "NMAPositioningManagerDidLosePositionNotification", null)
@@ -469,6 +473,8 @@ export class Here extends HereBase {
             this.nativeView.removeMapObject(this.mapRoute)
         }
         this.mapRoute = null;
+        console.log('stop positioning')
+        NMAPositioningManager.sharedPositioningManager().stopPositioning()
         console.log('Done of navigation removal')
     }
 
@@ -679,15 +685,6 @@ class PositionObserver extends NSObject {
     }
 
     public didLosePosition(): void {
-
-        console.log("NavigationManager.backgroundNavigationEnabled: ", NMANavigationManager.sharedNavigationManager().backgroundNavigationEnabled)
-        console.log("NavigationManager.backgroundNavigationStartEnabled: ", NMANavigationManager.sharedNavigationManager().backgroundNavigationStartEnabled)
-        console.log("NavigationManager.backgroundNavigationStartEnabled: ", NMANavigationManager.sharedNavigationManager().backgroundNavigationStartEnabled)
-        console.log("PositioningManager active: ", NMAPositioningManager.sharedPositioningManager().active)
-        if (NMAPositioningManager.sharedPositioningManager().dataSource) {
-            console.log("NMAPositioningManager.sharedPositioningManager().dataSource.backgroundUpdatesEnabled: ", NMAPositioningManager.sharedPositioningManager().dataSource.backgroundUpdatesEnabled())
-            NMAPositioningManager.sharedPositioningManager().dataSource.setBackgroundUpdatesEnabled(true)
-        }
         console.log("position lose!!!!");
     }
 
