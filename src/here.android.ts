@@ -842,16 +842,6 @@ export class Here extends HereBase {
 
             onNavigationModeChanged() {
                 console.log("Navigation mode changed")
-                if (com.here.android.mpa.guidance.NavigationManager.getInstance().getNavigationMode() != com.here.android.mpa.guidance.NavigationManager.NavigationMode.NAVIGATION) {
-                    const owner = this.ownerLink ? this.ownerLink.get() : null;
-                    if (!owner) return;
-                    console.log('notify about end of navigation')
-                    owner.notify({
-                        eventName: HereBase.geoPositionChange,
-                        object: owner,
-                        ended: true
-                    });
-                }
                 //android.widget.Toast.makeText(this._context, "Navigation mode changed", android.widget.Toast.LENGTH_SHORT).show();
             }
 
