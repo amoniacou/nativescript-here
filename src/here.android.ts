@@ -245,6 +245,7 @@ export class Here extends HereBase {
         navigationManager.setMap(null);
         console.log('stoppping positioning manager');
         com.here.android.mpa.common.PositioningManager.getInstance().stop()
+        com.here.android.mpa.guidance.NavigationManager.getInstance().getAudioPlayer().stop()
         console.log('navigation removal finished')
     }
 
@@ -575,7 +576,7 @@ export class Here extends HereBase {
         console.log('stop navigation manager')
         this.navigationManager.stop()
         console.log('navigation manager stopped')
-        com.here.android.mpa.guidance.NavigationManager.getInstance().getAudioPLayer().stop()
+        com.here.android.mpa.guidance.NavigationManager.getInstance().getAudioPlayer().stop()
         console.log('stopped audio player')
     }
 
@@ -849,33 +850,6 @@ export class Here extends HereBase {
 
             onEnded(navigationMode) {
                 //android.widget.Toast.makeText(this._context, navigationMode + " was ended", android.widget.Toast.LENGTH_SHORT).show();
-                const owner = this.ownerLink ? this.ownerLink.get() : null;
-                if (!owner) return;
-                const mapFragment = owner.fragment
-                if (!mapFragment) return;
-                const map = mapFragment.getMap()
-                if (!map) return
-                const geoPosition = com.here.android.mpa.common.PositioningManager.getInstance().getPosition()
-                const coordinate = geoPosition.getCoordinate()
-                const lat = coordinate.getLatitude()
-                const lng = coordinate.getLongitude()
-                const heading = geoPosition.getHeading()
-                const position = new com.here.android.mpa.common.GeoCoordinate(lat, lng)
-                map.setCenter(
-                    position,
-                    com.here.android.mpa.mapping.Map.Animation.LINEAR,
-                    com.here.android.mpa.mapping.Map.MOVE_PRESERVE_ZOOM_LEVEL,
-                    heading,
-                    com.here.android.mpa.mapping.Map.MOVE_PRESERVE_TILT
-                )
-
-                owner.notify({
-                    eventName: HereBase.geoPositionChange,
-                    object: owner,
-                    ended: true
-                });
-
-                console.dir(`Navigation: lat: ${lat}, lng: ${lng}, heading: ${heading}`)
                 //stopForegroundService();
             }
 
