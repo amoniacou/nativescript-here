@@ -496,38 +496,32 @@ export class Here extends HereBase {
                         "I need these permissions to get your current location"
                     )
                     .then(() => {
-                        //map.setZoomLevel(map.getMinZoomLevel() + 1)
-
-                        //console.log('set enabled audio events 1')
-                        //this.navigationManager.setRealisticViewMode(com.here.android.mpa.guidance.NavigationManager.RealisticViewMode.OFF)
-                        //this.navigationManager.setEnabledAudioEvents([
-                        //    com.here.android.mpa.guidance.NavigationManager.AudioEvent.MANEUVER,
-                        //    com.here.android.mpa.guidance.NavigationManager.AudioEvent.VIBRATION
-                        //])
                         console.log('set enabled speed warning')
-                        this.navigationManager.setSpeedWarningEnabled(true)
+                        const navigationManager = com.here.android.mpa.guidance.NavigationManager.getInstance()
+                        navigationManager.setSpeedWarningEnabled(true)
                         console.log('trying to start navigation')
-                        const managerError = this.navigationManager.startNavigation(this.navigationRoute)
+                        const managerError = navigationManager.startNavigation(this.navigationRoute)
                         if (managerError == com.here.android.mpa.guidance.NavigationManager.Error.NONE) {
-                            map.setZoomLevel(map.getMaxZoomLevel() - 1, com.here.android.mpa.mapping.Map.Animation.NONE)
+                            map.setZoomLevel(map.getMaxZoomLevel(), com.here.android.mpa.mapping.Map.Animation.NONE)
                             map.setTilt(60);
                             console.log('set map update mode')
                             const that = new WeakRef<Here>(this);
                             if (this.navigationManagerListener) {
-                                this.navigationManager.removeNavigationManagerEventListener(this.navigationManagerListener)
+                                navigationManager.removeNavigationManagerEventListener(this.navigationManagerListener)
                                 this.navigationManagerListener = null;
                             }
                             this.navigationManagerListener = this._newNavigationManagerListener(that);
-                            this.navigationManager.addNavigationManagerEventListener(
+                            navigationManager.addNavigationManagerEventListener(
                                 new java.lang.ref.WeakReference(this.navigationManagerListener)
                             )
-                            this.navigationManager.setMapUpdateMode(com.here.android.mpa.guidance.NavigationManager.MapUpdateMode.ROADVIEW_NOZOOM)
+                            navigationManager.setMapUpdateMode(com.here.android.mpa.guidance.NavigationManager.MapUpdateMode.ROADVIEW_NOZOOM)
                             resolve()
                         } else {
                             reject(managerError)
                         }
-                    }).catch(() => {
+                    }).catch((e) => {
                         console.log("Uh oh, no permissions - plan B time!");
+                        console.dir(e)
                         reject()
                     });
 
@@ -574,7 +568,7 @@ export class Here extends HereBase {
         console.log('clear circles')
         this.clearCircles()
         console.log('stop navigation manager')
-        this.navigationManager.stop()
+        com.here.android.mpa.guidance.NavigationManager.getInstance().stop()
         console.log('navigation manager stopped')
         com.here.android.mpa.guidance.NavigationManager.getInstance().getAudioPlayer().stop()
         console.log('stopped audio player')
@@ -738,29 +732,28 @@ export class Here extends HereBase {
 
     _newRerouteListener(that): any {
         class RerouteListener extends com.here.android.mpa.guidance.NavigationManager.RerouteListener {
+            static ownerLink;
+
+            setOwner(thatLink) {
+                this.ownerLink = thatLink;
+            }
+
             onRerouteBegin() {
                 console.dir('Reroute started!!')
             }
 
             onRerouteEnd(routeResults, routingError) {
-                const owner = that ? that.get() : null;
+                const owner = this.ownerLink ? this.ownerLink.get() : null;
                 if (!owner) return;
                 const mapFragment = owner.fragment
                 const map = mapFragment.getMap()
 
                 if (routingError == com.here.android.mpa.routing.RoutingError.NONE) {
-                    if (routeResults.getRoute() != null) {
-
-                        owner.navigationRoute = routeResults.getRoute();
-                        console.log('navigationRoute')
-
-                        const newRoute = new com.here.android.mpa.mapping.MapRoute(owner.navigationRoute);
-                        if (newRoute) {
-                            map.removeMapObject(owner.mapRoute)
-                            owner.mapRoute = newRoute
-                            console.log('add new map route on map')
-                            map.addMapObject(owner.mapRoute)
-                        }
+                    const route = routeResults.getRoute()
+                    if (route) {
+                        map.removeMapObject(owner.mapRoute)
+                        owner.mapRoute.setRoute(route)
+                        map.addMapObject(owner.mapRoute)
                         //owner.mapRoute.setManeuverNumberVisible(true)
 
                         //owner.navigationRouteBoundingBox = routeResults.getRoute().getBoundingBox();
@@ -773,7 +766,9 @@ export class Here extends HereBase {
                 }
             }
         }
-        return new RerouteListener()
+        const listener = new RerouteListener();
+        listener.setOwner(that)
+        return listener;
     }
 
     _newPositionListener(that): any {
@@ -928,29 +923,19 @@ export class Here extends HereBase {
                         com.here.android.mpa.common.PositioningManager.LocationMethod.GPS_NETWORK
                     )
 
-                    owner.navigationManager = com.here.android.mpa.guidance.NavigationManager.getInstance()
-                    owner.navigationManager.setMap(map)
+                    const navigationManager = com.here.android.mpa.guidance.NavigationManager.getInstance()
+                    navigationManager.setMap(map)
 
                     owner.positionListener = owner._newPositionListener(that);
                     owner.rerouteListener = owner._newRerouteListener(that);
 
-                    owner.navigationManager.addPositionListener(
+                    navigationManager.addPositionListener(
                         new java.lang.ref.WeakReference(owner.positionListener)
                     )
 
-                    owner.navigationManager.addRerouteListener(
+                    navigationManager.addRerouteListener(
                         new java.lang.ref.WeakReference(owner.rerouteListener)
                     )
-
-                    // mapFragment.getPositionIndicator().setVisible(false);
-                    //owner.navigationArrowIcon = new com.here.android.mpa.common.Image()
-                    //const decodedString = android.util.Base64.decode(navigation_arrow, android.util.Base64.DEFAULT);
-                    //const decodedByte = android.graphics.BitmapFactory.decodeByteArray(decodedString, 0, decodedString.length);
-                    //owner.navigationArrowIcon.setBitmap(decodedByte)
-                    //owner.navigationArrow = new com.here.android.mpa.mapping.MapMarker(
-                    //    new com.here.android.mpa.common.GeoCoordinate(0, 0),
-                    //    owner.navigationArrowIcon
-                    //)
 
                     owner.navigationMarkerIcon = new com.here.android.mpa.common.Image()
                     const decodedStringMarker = android.util.Base64.decode(
@@ -985,6 +970,7 @@ export class Here extends HereBase {
 
                     map.setLandmarksVisible(true)
                     map.setExtrudedBuildingsVisible(true)
+                    owner.navigationManager = navigationManager;
 
                     if (types.isNumber(+owner.latitude) && types.isNumber(+owner.longitude)) {
                         map.setCenter(
