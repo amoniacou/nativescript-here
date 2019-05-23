@@ -575,6 +575,8 @@ export class Here extends HereBase {
         console.log('stop navigation manager')
         this.navigationManager.stop()
         console.log('navigation manager stopped')
+        com.here.android.mpa.guidance.NavigationManager.getInstance().getAudioPLayer().stop()
+        console.log('stopped audio player')
     }
 
     pauseNavigation(): Promise<any> {
