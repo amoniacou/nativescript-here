@@ -397,7 +397,7 @@ export class Here extends HereBase {
             console.log('set track orientation enabled')
             this.navigationManager.mapTrackingOrientation = NMAMapTrackingOrientation.Dynamic
             console.log('set track speed optimization enabled')
-            this.navigationManager.speedWarningEnabled = true
+            this.navigationManager.speedWarningEnabled = false
             console.log('start TT navigation')
             this.nativeView.positionIndicator.visible = true
             const res = this.navigationManager.startTurnByTurnNavigationWithRoute(this.route)
@@ -694,11 +694,8 @@ class PositionObserver extends NSObject {
     };
 }
 
-
-// @ts-ignore
-@ObjCClass(NMANavigationManagerDelegate)
 class NMANavigationManagerDelegateImpl extends NSObject implements NMANavigationManagerDelegate {
-    owner: WeakRef<Here>;
+    public owner: WeakRef<Here>;
 
     public static initWithOwner(owner: WeakRef<Here>): NMANavigationManagerDelegateImpl {
         const delegate = new NMANavigationManagerDelegateImpl();
@@ -706,7 +703,7 @@ class NMANavigationManagerDelegateImpl extends NSObject implements NMANavigation
         return delegate;
     }
 
-    public navigationManagerDidUpdateRouteWithResult(navigationManager: NMANavigationManager, result: NMARouteResult): void {
+    public "navigationManager:didUpdateRouteWithResult:"(navigationManager: NMANavigationManager, result: NMARouteResult): void {
         const owner = this.owner ? this.owner.get() : null;
         if (!owner) {
             return
@@ -720,27 +717,11 @@ class NMANavigationManagerDelegateImpl extends NSObject implements NMANavigation
         owner.updateRoute(result.routes[0]);
     }
 
-    public navigationManagerDidReachDestination(navigationManager: NMANavigationManager): void {
-        console.log("We did reach destination!!!")
+    public "navigationManagerWillReroute:"(navigationManager: NMANavigationManager): void {
+        alert("navigationManagerWillReroute: called!");
     }
 
-    public navigationManagerWillReroute(navigationManager: NMANavigationManager): void {
-        console.log("Reroute started!!!!")
-    }
-
-    public navigationManagerDidRerouteWithError(navigationManager: NMANavigationManager, error: NMARoutingError): void {
-        const owner = this.owner ? this.owner.get() : null;
-        if (!owner) {
-            return
-        }
-        if (error === NMARoutingError.None) {
-            console.log('rerouted successfully!!!')
-        } else {
-            console.log("error with rerouting!!!")
-        }
-    }
-
-    public navigationManagerDidFindAlternateRouteWithResult(navigationManager: NMANavigationManager, result: NMARouteResult): void {
+    public "navigationManager:didFindAlternateRouteWithResult:"(navigationManager: NMANavigationManager, result: NMARouteResult): void {
         const owner = this.owner ? this.owner.get() : null;
         if (!owner) {
             return
@@ -755,8 +736,12 @@ class NMANavigationManagerDelegateImpl extends NSObject implements NMANavigation
         owner.updateRoute(result.routes[0]);
     }
 
-    public navigationManagerDidReachStopover(navigationManager: NMANavigationManager, stopover: NMAWaypoint): void {
-        console.log("Waypoint reached!!!")
+    public static ObjCProtocols = [NMANavigationManagerDelegate];
+
+    public static ObjCExposedMethods = {
+        "navigationManager:didUpdateRouteWithResult:": { returns: interop.types.void, params: [NMANavigationManager, NMARouteResult] },
+        "navigationManager:didFindAlternateRouteWithResult:": { returns: interop.types.void, params: [NMANavigationManager, NMARouteResult] },
+        "navigationManagerWillReroute:": { returns: interop.types.void, params: [NMANavigationManager] }
     }
 }
 

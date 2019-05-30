@@ -240,9 +240,11 @@ export class Here extends HereBase {
         //this.positionListener = null;
         //this.rerouteListener = null;
         console.log('stop navigation manager!!!!')
-        navigationManager.stop()
-        console.log('nullify map')
-        navigationManager.setMap(null);
+        if (navigationManager) {
+            navigationManager.stop()
+            console.log('nullify map')
+            navigationManager.setMap(null);
+        }
         console.log('stoppping positioning manager');
         com.here.android.mpa.common.PositioningManager.getInstance().stop()
         com.here.android.mpa.guidance.NavigationManager.getInstance().getAudioPlayer().stop()
@@ -498,7 +500,7 @@ export class Here extends HereBase {
                     .then(() => {
                         console.log('set enabled speed warning')
                         const navigationManager = com.here.android.mpa.guidance.NavigationManager.getInstance()
-                        navigationManager.setSpeedWarningEnabled(true)
+                        navigationManager.setSpeedWarningEnabled(false)
                         console.log('trying to start navigation')
                         const managerError = navigationManager.startNavigation(this.navigationRoute)
                         if (managerError == com.here.android.mpa.guidance.NavigationManager.Error.NONE) {
