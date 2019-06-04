@@ -362,16 +362,12 @@ export class Here extends HereBase {
         console.log('afterClear')
         points.forEach((point, index) => {
             console.dir(`Point ${index} create`)
-            let wtype = com.here.android.mpa.routing.RouteWaypoint.Type.VIA_WAYPOINT
-            if (index == 0 || index == points.length - 1) {
-                wtype = com.here.android.mpa.routing.RouteWaypoint.Type.STOP_WAYPOINT
-            }
             const waypoint = new com.here.android.mpa.routing.RouteWaypoint(
                 new com.here.android.mpa.common.GeoCoordinate(
                     java.lang.Double.valueOf(point.latitude).doubleValue(),
                     java.lang.Double.valueOf(point.longitude).doubleValue()
                 ),
-                wtype
+                com.here.android.mpa.routing.RouteWaypoint.Type.STOP_WAYPOINT
             )
             this.nativeStops.push(waypoint)
             if (showMarkers) {
