@@ -52,6 +52,7 @@ export class Here extends HereBase {
     private nativeStops;
     private routingMode;
     private mapRoute;
+    private navigationManagerDelegate;
 
     readonly navigationModePressets = {
         walk: {
@@ -110,7 +111,11 @@ export class Here extends HereBase {
     }
 
     public updateRoute(newRoute: NMARoute): void {
+        if (!newRoute) {
+            return;
+        }
         console.log('update route')
+        console.log('newRoute:', newRoute)
         if (this.mapRoute) {
             console.log('remove current map')
             this.nativeView.removeMapObject(this.mapRoute)
@@ -118,11 +123,20 @@ export class Here extends HereBase {
         console.log('set new route')
         this.route = newRoute;
         console.log('set new map route')
+        try {
+            console.log('print new route');
+            console.log(this.route);
+        } catch(e) {
+            console.log(e)
+            return
+        }
+        console.log('generate new mapRoute');
         //this.navigationManager.setRoute(this.route)
         this.mapRoute = NMAMapRoute.alloc().initWithRoute(this.route)
         this.navigationRouteBoundingBox = this.route.boundingBox
         console.log('redraw route')
         this.nativeView.addMapObject(this.mapRoute)
+        console.log('done')
     }
 
     public createNativeView(): Object {
@@ -183,7 +197,6 @@ export class Here extends HereBase {
 
         this.navigationManager = NMANavigationManager.sharedNavigationManager()
         this.navigationManager.map = this.nativeView
-        this.navigationManager.delegate = NMANavigationManagerDelegateImpl.initWithOwner(new WeakRef<Here>(this));
         NMAPositioningManager.sharedPositioningManager().dataSource = NMADevicePositionSource.alloc().init()
         NMAPositioningManager.sharedPositioningManager().startPositioning()
         if (NMAPositioningManager.sharedPositioningManager().dataSource) {
@@ -209,6 +222,8 @@ export class Here extends HereBase {
             android: null,
             ios: this.nativeView
         });
+        this.navigationManagerDelegate = NMANavigationManagerDelegateImpl.initWithOwner(new WeakRef<Here>(this));
+        this.navigationManager.delegate = this.navigationManagerDelegate;
     }
 
     public onMeasure(widthMeasureSpec: number, heightMeasureSpec: number) {
@@ -331,12 +346,50 @@ export class Here extends HereBase {
     startSimulation(): Promise<any> {
         return new Promise<any>((resolve, reject) => {
 
-            this.navigationManager.mapTrackingEnabled = true
-            this.navigationManager.mapTrackingAutoZoomEnabled = true
-            this.navigationManager.mapTrackingOrientation = NMAMapTrackingOrientation.Dynamic
-            this.navigationManager.speedWarningEnabled = true
-            this.navigationManager.startTurnByTurnNavigationWithRoute(this.route)
-            resolve()
+        console.log('start simulation')
+        const additionalPoints = NSMutableArray.alloc().init()
+       console.log('get position')
+        const position = NMAPositioningManager.sharedPositioningManager().currentPosition
+        if (!position) {
+            return
+        }
+        console.log('add current position to route')
+        additionalPoints.addObject(NMAWaypoint.alloc().initWithGeoCoordinatesWaypointType(
+            NMAGeoCoordinates.geoCoordinatesWithLatitudeLongitude(
+                position.coordinates.latitude,
+                position.coordinates.longitude
+            ),
+            NMAWaypointType.StopWaypoint
+        ))
+        console.log('add coordinate to route')
+        additionalPoints.addObject(NMAWaypoint.alloc().initWithGeoCoordinatesWaypointType(
+            NMAGeoCoordinates.geoCoordinatesWithLatitudeLongitude(
+                59.438599,
+               24.791812
+            ),
+            NMAWaypointType.StopWaypoint
+        ))
+        console.log('start calculation')
+        const route = this.route;
+        this.router.calculateRouteWithStopsRoutingModeCompletionBlock(additionalPoints, this.routingMode, (result, error) => {
+            try {
+                const source = NMARoutePositionSource.alloc().initWithRoute(result.routes[0])
+                source.movementSpeed = 60
+                NMAPositioningManager.sharedPositioningManager().dataSource = source
+                this.navigationManager.mapTrackingEnabled = true
+                this.navigationManager.mapTrackingAutoZoomEnabled = true
+                this.navigationManager.mapTrackingOrientation = NMAMapTrackingOrientation.Dynamic
+                this.navigationManager.speedWarningEnabled = true
+                console.log('current delegate:')
+                console.dir(this.navigationManager.delegate)
+                this.navigationManager.startTurnByTurnNavigationWithRoute(this.route)
+                resolve()
+            } catch(e) {
+                console.log('error')
+                console.log(e)
+                reject()
+            }
+        }) 
         })
     }
 
@@ -657,17 +710,10 @@ export class Here extends HereBase {
     }
 }
 
-class PositionObserver extends NSObject {
-    owner: WeakRef<Here>;
-
-    public static initWithOwner(owner: WeakRef<Here>): PositionObserver {
-        const observer = new PositionObserver();
-        observer.owner = owner;
-        return observer;
-    }
-
-    public positionDidUpdate(notification: NSNotification): void {
-        const owner = this.owner ? this.owner.get() : null;
+const PositionObserver = (NSObject as any).extend({
+    _owner: null,
+    positionDidUpdate: function(notification) {
+        const owner = this._owner ? this._owner.get() : null;
         if (!owner) {
             return
         }
@@ -682,67 +728,157 @@ class PositionObserver extends NSObject {
             longitude: position.coordinates.longitude,
         });
         console.log("position update!!!!");
-    }
+    },
 
-    public didLosePosition(): void {
+    didLosePosition: function() {
         console.log("position lose!!!!");
     }
+}, {
+    name: "PositionObserver",
+    exposedMethods: {
+        positionDidUpdate: { returns: interop.types.void, params: [] },
+        didLosePosition: { returns: interop.types.void, params: [] },
+    }
+})
 
-    public static ObjCExposedMethods = {
-        "positionDidUpdate": { returns: interop.types.void, params: [NSNotification] },
-        "didLosePosition": { returns: interop.types.void, params: [] },
-    };
+PositionObserver.initWithOwner = function(owner) {
+    const delegate = PositionObserver.new();
+    delegate._owner = owner;
+    return delegate; 
 }
 
-class NMANavigationManagerDelegateImpl extends NSObject implements NMANavigationManagerDelegate {
-    public owner: WeakRef<Here>;
+const NMANavigationManagerDelegateImpl = (NSObject as any).extend({
+    _owner: null,
 
-    public static initWithOwner(owner: WeakRef<Here>): NMANavigationManagerDelegateImpl {
-        const delegate = new NMANavigationManagerDelegateImpl();
-        delegate.owner = owner;
-        return delegate;
-    }
+    navigationManagerDidChangeRoutingState: function(navigationManager, state) {
+        console.log('navigationManagerDidChangeRoutingState')
+    },
 
-    public "navigationManager:didUpdateRouteWithResult:"(navigationManager: NMANavigationManager, result: NMARouteResult): void {
-        const owner = this.owner ? this.owner.get() : null;
+	navigationManagerDidFindAlternateRouteWithResult: function(navigationManager, routeResult) {
+        console.log('navigationManagerDidFindAlternateRouteWithResult')
+    },
+
+	navigationManagerDidFindPosition: function(navigationManager) {
+        console.log('navigationManagerDidFindPosition')
+    },
+
+	navigationManagerDidInvalidateRealisticViews: function(navigationManager) {
+        console.log('navigationManagerDidInvalidateRealisticViews')
+    },
+
+	navigationManagerDidLosePosition: function(navigationManager) {
+        console.log('navigationManagerDidLosePosition')
+    },
+
+	navigationManagerDidPlayVoiceFeedbackWithText: function(navigationManager, text) {
+        console.log('navigationManagerDidPlayVoiceFeedbackWithText:', text);
+    },
+
+	navigationManagerDidReachDestination: function(navigationManager) {
+        console.log('navigationManagerDidReachDestination')
+    },
+
+	navigationManagerDidReachStopover: function(navigationManager, stopover) {
+        console.log('navigationManagerDidReachStopover');
+    },
+
+	navigationManagerDidReroute: function(navigationManager) {
+        console.log('navigationManagerDidReroute');
+    },
+
+	navigationManagerDidResumeDueToMapDataAvailability: function(navigationManager) {
+        console.log('navigationManagerDidResumeDueToMapDataAvailability');
+    },
+
+	navigationManagerDidSuspendDueToInsufficientMapData: function(navigationManager) {
+        console.log('navigationManagerDidSuspendDueToInsufficientMapData');
+    },
+
+	navigationManagerDidUpdateLaneInformationRoadElement: function(navigationManager, laneInformations, roadElement) {
+        console.log('navigationManagerDidUpdateLaneInformationRoadElement')
+    },
+
+	navigationManagerDidUpdateRealisticViewsForCurrentManeuver: function(navigationManager, realisticViews) {
+        console.log('navigationManagerDidUpdateRealisticViewsForCurrentManeuver');
+    },
+
+	navigationManagerDidUpdateRealisticViewsForNextManeuver: function(navigationManager, realisticViews) {
+        console.log('navigationManagerDidUpdateRealisticViewsForNextManeuver');
+    },
+
+	navigationManagerDidUpdateRouteWithResult: function(navigationManager, routeResult) {
+        console.log('navigationManagerDidUpdateRouteWithResult');
+    },
+
+    'navigationManager:didUpdateRouteWithResult:': function(navigationManager, result) {
+        const owner = this._owner ? this._owner.get() : null;
         if (!owner) {
             return
         }
-        if (!result) {
+        if (!result && result.routes.count < 1) {
             return
         }
-        if (!result.routes) {
-            return
-        }
-        owner.updateRoute(result.routes[0]);
-    }
+        owner.updateRoute(result.routes[0])
+        console.log('navigationManager:didUpdateRouteWithResult:')
+    },
 
-    public "navigationManagerWillReroute:"(navigationManager: NMANavigationManager): void {
-        alert("navigationManagerWillReroute: called!");
-    }
+	navigationManagerDidUpdateSpeedingStatusForCurrentSpeedSpeedLimit: function(navigationManager, isSpeeding, speed, speedLimit) {
+        console.log('navigationManagerDidUpdateSpeedingStatusForCurrentSpeedSpeedLimit')
+    },
 
-    public "navigationManager:didFindAlternateRouteWithResult:"(navigationManager: NMANavigationManager, result: NMARouteResult): void {
-        const owner = this.owner ? this.owner.get() : null;
-        if (!owner) {
-            return
-        }
-        console.log("Found new alternatives routes!!!!")
-        if (!result) {
-            return
-        }
-        if (!result.routes) {
-            return
-        }
-        owner.updateRoute(result.routes[0]);
-    }
+	navigationManagerHasCurrentManeuverNextManeuver: function(navigationManager, currentManeuver, nextManeuver) {
+        console.log('navigationManagerHasCurrentManeuverNextManeuver')
+    },
 
-    public static ObjCProtocols = [NMANavigationManagerDelegate];
+	navigationManagerShouldPlayVoiceFeedbackWithText: function(navigationManager, text) {
+        console.log('navigationManagerShouldPlayVoiceFeedbackWithText')
+    },
 
-    public static ObjCExposedMethods = {
-        "navigationManager:didUpdateRouteWithResult:": { returns: interop.types.void, params: [NMANavigationManager, NMARouteResult] },
-        "navigationManager:didFindAlternateRouteWithResult:": { returns: interop.types.void, params: [NMANavigationManager, NMARouteResult] },
-        "navigationManagerWillReroute:": { returns: interop.types.void, params: [NMANavigationManager] }
+	navigationManagerWillPlayVoiceFeedbackWithText: function(navigationManager, text) {
+        console.log('navigationManagerWillPlayVoiceFeedbackWithText')
+    },
+
+	navigationManagerWillReroute: function(navigationManager) {
+        console.log('navigationManagerWillReroute')
+    },
+
+    'navigationManager:hasCurrentManeuver:nextManeuver:': function(navigationManager, currentManeuver, nextManeuver) {
+        console.log('navigationManager:hasCurrentManeuver:nextManeuver:')
     }
+    
+}, {
+    protocols: [NMANavigationManagerDelegate],
+    exposedMethods: {
+        navigationManagerDidChangeRoutingState: { returns: interop.types.void, params: [NMANavigationManager, interop.types.uint8] },
+        navigationManagerDidFindAlternateRouteWithResult: { returns: interop.types.void, params: [NMANavigationManager, NMARouteResult] },
+        navigationManagerDidFindPosition: { returns: interop.types.void, params: [NMANavigationManager] },
+        navigationManagerDidInvalidateRealisticViews: { returns: interop.types.void, params: [NMANavigationManager] },
+        navigationManagerDidLosePosition: { returns: interop.types.void, params: [NMANavigationManager] },
+        navigationManagerDidPlayVoiceFeedbackWithText: { returns: interop.types.void, params: [NMANavigationManager, interop.types.UTF8CString] },
+        navigationManagerDidReachDestination: { returns: interop.types.void, params: [NMANavigationManager] },
+        navigationManagerDidReachStopover:  { returns: interop.types.void, params: [NMANavigationManager, NMAWaypoint] },
+        navigationManagerDidReroute: { returns: interop.types.void, params: [NMANavigationManager] },
+        navigationManagerDidResumeDueToMapDataAvailability: { returns: interop.types.void, params: [NMANavigationManager] },
+        navigationManagerDidSuspendDueToInsufficientMapData: { returns: interop.types.void, params: [NMANavigationManager] },
+        navigationManagerDidUpdateLaneInformationRoadElement: { returns: interop.types.void, params: [NMANavigationManager, NSArray, NMARoadElement] },
+        navigationManagerDidUpdateRealisticViewsForCurrentManeuver: { returns: interop.types.void, params: [NMANavigationManager, NSDictionary] },
+        navigationManagerDidUpdateRealisticViewsForNextManeuver: { returns: interop.types.void, params: [NMANavigationManager, NSDictionary] },
+        navigationManagerDidUpdateRouteWithResult: { returns: interop.types.void, params: [NMANavigationManager,NMARouteResult] },
+        'navigationManager:didUpdateRouteWithResult:': { returns: interop.types.void, params: [NMANavigationManager,NMARouteResult] },
+        navigationManagerDidUpdateSpeedingStatusForCurrentSpeedSpeedLimit: { returns: interop.types.void, params: [NMANavigationManager, interop.types.bool, interop.types.uint8, interop.types.uint8] },
+        navigationManagerHasCurrentManeuverNextManeuver: { returns: interop.types.void, params: [NMANavigationManager, NMAManeuver, NMAManeuver] },
+        'navigationManager:hasCurrentManeuver:nextManeuver:': { returns: interop.types.void, params: [NMANavigationManager, NMAManeuver, NMAManeuver] },
+
+        navigationManagerShouldPlayVoiceFeedbackWithText: { returns: interop.types.void, params: [NMANavigationManager, interop.types.UTF8CString] },
+        navigationManagerWillPlayVoiceFeedbackWithText: { returns: interop.types.void, params: [NMANavigationManager, interop.types.UTF8CString] },
+        navigationManagerWillReroute: { returns: interop.types.void, params: [NMANavigationManager] }
+    }
+});
+
+NMANavigationManagerDelegateImpl.initWithOwner = function(owner) {
+    const delegate = NMANavigationManagerDelegateImpl.new();
+    delegate._owner = owner;
+    return delegate; 
 }
 
 // @ts-ignore
