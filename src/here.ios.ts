@@ -222,8 +222,6 @@ export class Here extends HereBase {
             android: null,
             ios: this.nativeView
         });
-        this.navigationManagerDelegate = NMANavigationManagerDelegateImpl.initWithOwner(new WeakRef<Here>(this));
-        this.navigationManager.delegate = this.navigationManagerDelegate;
     }
 
     public onMeasure(widthMeasureSpec: number, heightMeasureSpec: number) {
@@ -320,7 +318,7 @@ export class Here extends HereBase {
                     return
                 }
 
-                if (!result && result.routes.count < 1) {
+                if (!result || !result.routes || result.routes.count < 1) {
                     console.dir(`Error: route result returned is not valid`)
                     reject()
                     return
@@ -427,6 +425,11 @@ export class Here extends HereBase {
             if (this.positionObserver) {
                 NSNotificationCenter.defaultCenter.removeObserver(this.positionObserver)
             }
+            if (this.navigationManagerDelegate) {
+                this.navigationManager.delegate = null
+            }
+            this.navigationManagerDelegate = NMANavigationManagerDelegateImpl.initWithOwner(new WeakRef<Here>(this));
+            this.navigationManager.delegate = this.navigationManagerDelegate;
             this.navigationManager.backgroundNavigationEnabled = true
             this.navigationManager.backgroundNavigationStartEnabled = true
             if (NMAPositioningManager.sharedPositioningManager().dataSource) {
@@ -480,6 +483,10 @@ export class Here extends HereBase {
         // remove observers!
         if (this.positionObserver) {
             NSNotificationCenter.defaultCenter.removeObserver(this.positionObserver)
+        }
+        if (this.navigationManagerDelegate) {
+            this.navigationManager.delegate = null
+            this.navigationManagerDelegate = null
         }
         this.navigationManager.stop()
         const map = this.nativeView
@@ -750,128 +757,22 @@ class PositionObserver extends NSObject {
 const NMANavigationManagerDelegateImpl = (NSObject as any).extend({
     _owner: null,
 
-    navigationManagerDidChangeRoutingState: function (navigationManager, state) {
-        console.log('navigationManagerDidChangeRoutingState')
-    },
-
-    navigationManagerDidFindAlternateRouteWithResult: function (navigationManager, routeResult) {
-        console.log('navigationManagerDidFindAlternateRouteWithResult')
-    },
-
-    navigationManagerDidFindPosition: function (navigationManager) {
-        console.log('navigationManagerDidFindPosition')
-    },
-
-    navigationManagerDidInvalidateRealisticViews: function (navigationManager) {
-        console.log('navigationManagerDidInvalidateRealisticViews')
-    },
-
-    navigationManagerDidLosePosition: function (navigationManager) {
-        console.log('navigationManagerDidLosePosition')
-    },
-
-    navigationManagerDidPlayVoiceFeedbackWithText: function (navigationManager, text) {
-        console.log('navigationManagerDidPlayVoiceFeedbackWithText:', text);
-    },
-
-    navigationManagerDidReachDestination: function (navigationManager) {
-        console.log('navigationManagerDidReachDestination')
-    },
-
-    navigationManagerDidReachStopover: function (navigationManager, stopover) {
-        console.log('navigationManagerDidReachStopover');
-    },
-
-    navigationManagerDidReroute: function (navigationManager) {
-        console.log('navigationManagerDidReroute');
-    },
-
-    navigationManagerDidResumeDueToMapDataAvailability: function (navigationManager) {
-        console.log('navigationManagerDidResumeDueToMapDataAvailability');
-    },
-
-    navigationManagerDidSuspendDueToInsufficientMapData: function (navigationManager) {
-        console.log('navigationManagerDidSuspendDueToInsufficientMapData');
-    },
-
-    navigationManagerDidUpdateLaneInformationRoadElement: function (navigationManager, laneInformations, roadElement) {
-        console.log('navigationManagerDidUpdateLaneInformationRoadElement')
-    },
-
-    navigationManagerDidUpdateRealisticViewsForCurrentManeuver: function (navigationManager, realisticViews) {
-        console.log('navigationManagerDidUpdateRealisticViewsForCurrentManeuver');
-    },
-
-    navigationManagerDidUpdateRealisticViewsForNextManeuver: function (navigationManager, realisticViews) {
-        console.log('navigationManagerDidUpdateRealisticViewsForNextManeuver');
-    },
-
-    navigationManagerDidUpdateRouteWithResult: function (navigationManager, routeResult) {
-        console.log('navigationManagerDidUpdateRouteWithResult');
-    },
-
     'navigationManager:didUpdateRouteWithResult:': function (navigationManager, result) {
         const owner = this._owner ? this._owner.get() : null;
         if (!owner) {
             return
         }
-        if (!result && result.routes.count < 1) {
+        if (!result || !result.routes || result.routes.count < 1) {
             return
         }
         owner.updateRoute(result.routes[0])
         console.log('navigationManager:didUpdateRouteWithResult:')
     },
 
-    navigationManagerDidUpdateSpeedingStatusForCurrentSpeedSpeedLimit: function (navigationManager, isSpeeding, speed, speedLimit) {
-        console.log('navigationManagerDidUpdateSpeedingStatusForCurrentSpeedSpeedLimit')
-    },
-
-    navigationManagerHasCurrentManeuverNextManeuver: function (navigationManager, currentManeuver, nextManeuver) {
-        console.log('navigationManagerHasCurrentManeuverNextManeuver')
-    },
-
-    navigationManagerShouldPlayVoiceFeedbackWithText: function (navigationManager, text) {
-        console.log('navigationManagerShouldPlayVoiceFeedbackWithText')
-    },
-
-    navigationManagerWillPlayVoiceFeedbackWithText: function (navigationManager, text) {
-        console.log('navigationManagerWillPlayVoiceFeedbackWithText')
-    },
-
-    navigationManagerWillReroute: function (navigationManager) {
-        console.log('navigationManagerWillReroute')
-    },
-
-    'navigationManager:hasCurrentManeuver:nextManeuver:': function (navigationManager, currentManeuver, nextManeuver) {
-        console.log('navigationManager:hasCurrentManeuver:nextManeuver:')
-    }
-
 }, {
         protocols: [NMANavigationManagerDelegate],
         exposedMethods: {
-            navigationManagerDidChangeRoutingState: { returns: interop.types.void, params: [NMANavigationManager, interop.types.uint8] },
-            navigationManagerDidFindAlternateRouteWithResult: { returns: interop.types.void, params: [NMANavigationManager, NMARouteResult] },
-            navigationManagerDidFindPosition: { returns: interop.types.void, params: [NMANavigationManager] },
-            navigationManagerDidInvalidateRealisticViews: { returns: interop.types.void, params: [NMANavigationManager] },
-            navigationManagerDidLosePosition: { returns: interop.types.void, params: [NMANavigationManager] },
-            navigationManagerDidPlayVoiceFeedbackWithText: { returns: interop.types.void, params: [NMANavigationManager, interop.types.UTF8CString] },
-            navigationManagerDidReachDestination: { returns: interop.types.void, params: [NMANavigationManager] },
-            navigationManagerDidReachStopover: { returns: interop.types.void, params: [NMANavigationManager, NMAWaypoint] },
-            navigationManagerDidReroute: { returns: interop.types.void, params: [NMANavigationManager] },
-            navigationManagerDidResumeDueToMapDataAvailability: { returns: interop.types.void, params: [NMANavigationManager] },
-            navigationManagerDidSuspendDueToInsufficientMapData: { returns: interop.types.void, params: [NMANavigationManager] },
-            navigationManagerDidUpdateLaneInformationRoadElement: { returns: interop.types.void, params: [NMANavigationManager, NSArray, NMARoadElement] },
-            navigationManagerDidUpdateRealisticViewsForCurrentManeuver: { returns: interop.types.void, params: [NMANavigationManager, NSDictionary] },
-            navigationManagerDidUpdateRealisticViewsForNextManeuver: { returns: interop.types.void, params: [NMANavigationManager, NSDictionary] },
-            navigationManagerDidUpdateRouteWithResult: { returns: interop.types.void, params: [NMANavigationManager, NMARouteResult] },
             'navigationManager:didUpdateRouteWithResult:': { returns: interop.types.void, params: [NMANavigationManager, NMARouteResult] },
-            navigationManagerDidUpdateSpeedingStatusForCurrentSpeedSpeedLimit: { returns: interop.types.void, params: [NMANavigationManager, interop.types.bool, interop.types.uint8, interop.types.uint8] },
-            navigationManagerHasCurrentManeuverNextManeuver: { returns: interop.types.void, params: [NMANavigationManager, NMAManeuver, NMAManeuver] },
-            'navigationManager:hasCurrentManeuver:nextManeuver:': { returns: interop.types.void, params: [NMANavigationManager, NMAManeuver, NMAManeuver] },
-
-            navigationManagerShouldPlayVoiceFeedbackWithText: { returns: interop.types.void, params: [NMANavigationManager, interop.types.UTF8CString] },
-            navigationManagerWillPlayVoiceFeedbackWithText: { returns: interop.types.void, params: [NMANavigationManager, interop.types.UTF8CString] },
-            navigationManagerWillReroute: { returns: interop.types.void, params: [NMANavigationManager] }
         }
     });
 
