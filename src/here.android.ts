@@ -225,20 +225,18 @@ export class Here extends HereBase {
         this.clearCircles()
         console.log('remove position manager')
         const navigationManager = com.here.android.mpa.guidance.NavigationManager.getInstance()
-        navigationManager.removePositionListener(this.positionListener)
-        //this.positionListener.setOwner(null);
-        this.positionListener = null;
-        console.log('remove reroute listener')
-        navigationManager.removeRerouteListener(this.rerouteListener)
-        //this.rerouteListener.setOwner(null)
-        this.rerouteListener = null;
         if (this.navigationManagerListener) {
-            console.log('remove navigation manager listener')
             navigationManager.removeNavigationManagerEventListener(this.navigationManagerListener)
             this.navigationManagerListener = null;
         }
-        //this.positionListener = null;
-        //this.rerouteListener = null;
+        if (this.positionListener) {
+            navigationManager.removePositionListener(this.positionListener)
+            this.positionListener = null;
+        }
+        if (this.rerouteListener) {
+            navigationManager.removeRerouteListener(this.rerouteListener);
+            this.rerouteListener = null;
+        }
         console.log('stop navigation manager!!!!')
         if (navigationManager) {
             navigationManager.stop()
@@ -512,6 +510,24 @@ export class Here extends HereBase {
                             navigationManager.addNavigationManagerEventListener(
                                 new java.lang.ref.WeakReference(this.navigationManagerListener)
                             )
+                            if (this.positionListener) {
+                                navigationManager.removePositionListener(this.positionListener)
+                                this.positionListener = null;
+                            }
+                            this.positionListener = this._newPositionListener(that);
+                            if (this.rerouteListener) {
+                                navigationManager.removeRerouteListener(this.rerouteListener);
+                                this.rerouteListener = null;
+                            }
+                            this.rerouteListener = this._newRerouteListener(that);
+
+                            navigationManager.addPositionListener(
+                                new java.lang.ref.WeakReference(this.positionListener)
+                            )
+
+                            navigationManager.addRerouteListener(
+                                new java.lang.ref.WeakReference(this.rerouteListener)
+                            )
                             navigationManager.setMapUpdateMode(com.here.android.mpa.guidance.NavigationManager.MapUpdateMode.ROADVIEW_NOZOOM)
                             resolve()
                         } else {
@@ -554,17 +570,42 @@ export class Here extends HereBase {
     }
 
     stopNavigation(): void {
-        /*if (this.fragment) {
+        if (this.fragment) {
             const mapGesture = typeof this.fragment.getMapGesture === 'function' ? this.fragment.getMapGesture() : null;
-            this.fragment.removeOnMapRenderListener(this.listener);
             if (mapGesture) {
+                console.log('clear map gesture')
                 this.fragment.getMapGesture().removeOnGestureListener(this.gestureListener);
             }
-        }*/
+        }
+        const navigationManager = com.here.android.mpa.guidance.NavigationManager.getInstance()
+        if (this.navigationManagerListener) {
+            console.log('remove navigation manager listener')
+            navigationManager.removeNavigationManagerEventListener(this.navigationManagerListener)
+            console.log('set navigation manager listener to null')
+            this.navigationManagerListener = null;
+            console.log('set navigation manager listener to null - done')
+        }
+        if (this.positionListener) {
+            console.log('remove position listener')
+            navigationManager.removePositionListener(this.positionListener)
+            console.log('set position listener to null')
+            this.positionListener = null;
+            console.log('set position listener to null - done')
+        }
+        if (this.rerouteListener) {
+            console.log('remove rerouter listener')
+            navigationManager.removeRerouteListener(this.rerouteListener);
+            console.log('set reouter listener to null')
+            this.rerouteListener = null;
+            console.log('set reouter listener to null - done')
+        }
         console.log('clear markers')
         this.clearMarkers()
         console.log('clear circles')
         this.clearCircles()
+        if (navigationManager) {
+            navigationManager.stop()
+        }
         console.log('stop navigation manager')
         com.here.android.mpa.guidance.NavigationManager.getInstance().stop()
         console.log('navigation manager stopped')
@@ -806,6 +847,7 @@ export class Here extends HereBase {
                     com.here.android.mpa.mapping.Map.MOVE_PRESERVE_TILT
                 )
                 console.log('notify about position update!')
+                console.dir(`Navigation: lat: ${lat}, lng: ${lng}, heading: ${heading}`)
                 owner.notify({
                     eventName: HereBase.geoPositionChange,
                     object: owner,
@@ -813,8 +855,6 @@ export class Here extends HereBase {
                     longitude: lng,
                     heading
                 });
-                console.dir(`Navigation: lat: ${lat}, lng: ${lng}, heading: ${heading}`)
-
                 return
             }
         }
@@ -842,12 +882,13 @@ export class Here extends HereBase {
             }
 
             onEnded(navigationMode) {
+                console.log("Navigation ended")
                 //android.widget.Toast.makeText(this._context, navigationMode + " was ended", android.widget.Toast.LENGTH_SHORT).show();
                 //stopForegroundService();
             }
 
             onMapUpdateModeChanged(mapUpdateMode) {
-                console.log("Running state changed in onMapUpdateModeChanged")
+                console.log("Running state changed in onMapUpdateModeChanged: ", mapUpdateMode)
                 //android.widget.Toast.makeText(this._context, "Map update mode is changed to " + mapUpdateMode, android.widget.Toast.LENGTH_SHORT).show();
             }
 
@@ -923,18 +964,6 @@ export class Here extends HereBase {
 
                     const navigationManager = com.here.android.mpa.guidance.NavigationManager.getInstance()
                     navigationManager.setMap(map)
-
-                    owner.positionListener = owner._newPositionListener(that);
-                    owner.rerouteListener = owner._newRerouteListener(that);
-
-                    navigationManager.addPositionListener(
-                        new java.lang.ref.WeakReference(owner.positionListener)
-                    )
-
-                    navigationManager.addRerouteListener(
-                        new java.lang.ref.WeakReference(owner.rerouteListener)
-                    )
-
                     owner.navigationMarkerIcon = new com.here.android.mpa.common.Image()
                     const decodedStringMarker = android.util.Base64.decode(
                         icon_source.replace('data:image/png;base64,', ''),
