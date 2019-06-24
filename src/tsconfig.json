@@ -22,7 +22,7 @@
     },
     "exclude": [
         "node_modules",
-        "typings/android.d.ts",
+        "typings",
         "**/*.spec.ts"
     ],
     "compileOnSave": false
