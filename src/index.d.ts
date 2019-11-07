@@ -12,7 +12,9 @@ export declare class Here extends HereBase {
 
   // Markers
   addMarkers(markers: HereMarker[]): Promise<any>;
+  addMarker(marker: HereMarker): void;
   removeMarkers(markers?: number[]): Promise<any>;
+  clearMarkers(): void;
   updateMarkers(markers: HereMarker[]): Promise<any>;
   updateMarker(marker: HereMarker): Promise<any>;
   _getMarkersCount(): number;
@@ -25,7 +27,10 @@ export declare class Here extends HereBase {
   resumeNavigation(): Promise<any>;
   startSimulation(): Promise<any>;
   stopNavigation(): void;
-  setNavigationMode(mode: string): Promise<any>
+  setNavigationMode(mode: string): Promise<any>;
+  getCurrentPosition(): Promise<any>;
+  navigateTo(latitude: number, longitude: number): Promise<any>;
+  removeNavigation(): void;
 
   // Circles
   addCircle(circle): void;

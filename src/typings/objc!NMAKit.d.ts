@@ -410,11 +410,36 @@ declare class NMAAddress extends NSObject {
 	additionalData(): NSDictionary<string, string>;
 }
 
+declare class NMAAddressFilter extends NSObject {
+
+	static alloc(): NMAAddressFilter; // inherited from NSObject
+
+	static new(): NMAAddressFilter; // inherited from NSObject
+
+	city: string;
+
+	countryCode: string;
+
+	county: string;
+
+	district: string;
+
+	stateCode: string;
+
+	zipCode: string;
+}
+
 declare class NMAApplicationContext extends NSObject {
 
 	static alloc(): NMAApplicationContext; // inherited from NSObject
 
 	static disableSdkVersionInCrashStack(): void;
+
+	static enableEnhancedMapMatcher(enabled: boolean): void;
+
+	static getMapApprovalCodeWithCountry(locale: NSLocale): string;
+
+	static getMapDataProviderCopyrightStatementWithCountry(locale: NSLocale): string;
 
 	static isInitialized(): boolean;
 
@@ -431,6 +456,10 @@ declare class NMAApplicationContext extends NSObject {
 	static setAppIdAppCodeLicenseKey(appId: string, appCode: string, licenseKey: string): NMAApplicationContextError;
 
 	static setAppIdAppCodeLicenseKeyMapVariant(appId: string, appCode: string, licenseKey: string, mapVariant: NMAMapVariant): NMAApplicationContextError;
+
+	static setDiskCacheSize(size: number): boolean;
+
+	static setMapCenter(initialCenter: NMAGeoCoordinates): void;
 
 	static setNetworkAccessAllowed(networkAccessAllowed: boolean): void;
 }
@@ -455,6 +484,8 @@ declare const enum NMAApplicationContextError {
 
 	IncorrectLicenseKey = 8
 }
+
+declare var NMAApplicationContextLicenseKeyExpiredNotification: string;
 
 declare var NMAApplicationContextOnlineStatusDidChangeNotification: string;
 
@@ -1156,6 +1187,8 @@ declare class NMACoreRouter extends NMARouter {
 
 	dynamicPenalty: NMADynamicPenalty;
 
+	calculateRouteWithPointsRoutingModeCompletionBlock(points: NSArray<NMAGeoCoordinates> | NMAGeoCoordinates[], mode: NMARoutingMode, completion: (p1: NMARouteResult, p2: NMARoutingError) => void): NSProgress;
+
 	calculateRouteWithStopsRoutingModeCompletionBlock(stops: NSArray<any> | any[], mode: NMARoutingMode, completion: (p1: NMARouteResult, p2: NMARoutingError) => void): NSProgress;
 }
 
@@ -1300,6 +1333,8 @@ declare class NMADevicePositionSource extends NSObject implements CLLocationMana
 
 	locationManagerDidExitRegion(manager: CLLocationManager, region: CLRegion): void;
 
+	locationManagerDidFailRangingBeaconsForConstraintError(manager: CLLocationManager, beaconConstraint: CLBeaconIdentityConstraint, error: NSError): void;
+
 	locationManagerDidFailWithError(manager: CLLocationManager, error: NSError): void;
 
 	locationManagerDidFinishDeferredUpdatesWithError(manager: CLLocationManager, error: NSError): void;
@@ -1307,6 +1342,8 @@ declare class NMADevicePositionSource extends NSObject implements CLLocationMana
 	locationManagerDidPauseLocationUpdates(manager: CLLocationManager): void;
 
 	locationManagerDidRangeBeaconsInRegion(manager: CLLocationManager, beacons: NSArray<CLBeacon> | CLBeacon[], region: CLBeaconRegion): void;
+
+	locationManagerDidRangeBeaconsSatisfyingConstraint(manager: CLLocationManager, beacons: NSArray<CLBeacon> | CLBeacon[], beaconConstraint: CLBeaconIdentityConstraint): void;
 
 	locationManagerDidResumeLocationUpdates(manager: CLLocationManager): void;
 
@@ -1404,6 +1441,8 @@ declare class NMADiscoveryRequest extends NMARequest {
 	static new(): NMADiscoveryRequest; // inherited from NSObject
 
 	textFormat: NMATextFormat;
+
+	addContent(content: string): void;
 
 	setSearchAreaWithCenterRadius(center: NMAGeoCoordinates, radius: number): void;
 }
@@ -1923,6 +1962,8 @@ declare class NMAGeoBoundingBox extends NSObject implements NSCoding {
 
 	static new(): NMAGeoBoundingBox; // inherited from NSObject
 
+	readonly areaSize: number;
+
 	bottomLeft: NMAGeoCoordinates;
 
 	bottomRight: NMAGeoCoordinates;
@@ -1959,7 +2000,7 @@ declare class NMAGeoBoundingBox extends NSObject implements NSCoding {
 
 	containsGeoCoordinates(coordinates: NMAGeoCoordinates): boolean;
 
-	encodeWithCoder(aCoder: NSCoder): void;
+	encodeWithCoder(coder: NSCoder): void;
 
 	initContainingGeoBoundingBoxes(boxes: NSArray<NMAGeoBoundingBox> | NMAGeoBoundingBox[]): this;
 
@@ -1967,7 +2008,7 @@ declare class NMAGeoBoundingBox extends NSObject implements NSCoding {
 
 	initWithCenterWidthHeight(center: NMAGeoCoordinates, width: number, height: number): this;
 
-	initWithCoder(aDecoder: NSCoder): this;
+	initWithCoder(coder: NSCoder): this;
 
 	initWithTopLeftBottomRight(topLeft: NMAGeoCoordinates, bottomRight: NMAGeoCoordinates): this;
 
@@ -2006,11 +2047,11 @@ declare class NMAGeoCoordinates extends NSObject implements NSCoding {
 
 	distanceTo(coordinates: NMAGeoCoordinates): number;
 
-	encodeWithCoder(aCoder: NSCoder): void;
+	encodeWithCoder(coder: NSCoder): void;
 
 	headingTo(coordinates: NMAGeoCoordinates): number;
 
-	initWithCoder(aDecoder: NSCoder): this;
+	initWithCoder(coder: NSCoder): this;
 
 	initWithLatitudeLongitude(latitude: number, longitude: number): this;
 
@@ -2171,6 +2212,15 @@ declare const enum NMAGeoPositionSource {
 }
 
 declare var NMAGeoPositionUnknownValue: number;
+
+interface NMAGeoShiftableDelegate extends NSObjectProtocol {
+
+	shift(position: NMAGeoPosition): NMAGeoPosition;
+}
+declare var NMAGeoShiftableDelegate: {
+
+	prototype: NMAGeoShiftableDelegate;
+};
 
 declare class NMAGeocodeRequest extends NMARequest {
 
@@ -2409,6 +2459,112 @@ declare const enum NMAIndoorPositioningMode {
 	Private = 3
 }
 
+declare class NMAIsoline extends NSObject {
+
+	static alloc(): NMAIsoline; // inherited from NSObject
+
+	static new(): NMAIsoline; // inherited from NSObject
+
+	readonly componentConnections: NSArray<NMAIsolineComponentConnection>;
+
+	readonly components: NSArray<NMAGeoPolygon>;
+}
+
+declare class NMAIsolineComponentConnection extends NSObject {
+
+	static alloc(): NMAIsolineComponentConnection; // inherited from NSObject
+
+	static new(): NMAIsolineComponentConnection; // inherited from NSObject
+
+	from: number;
+
+	readonly shape: NMAGeoPolyline;
+
+	to: number;
+}
+
+declare const enum NMAIsolineError {
+
+	None = 0,
+
+	Unknown = 1,
+
+	OutOfMemory = 2,
+
+	InvalidParameters = 3,
+
+	InvalidOperation = 4,
+
+	GraphDisconnected = 5,
+
+	RoutingCancelled = 6,
+
+	InvalidCredentials = 7,
+
+	InsufficientMapData = 8,
+
+	NetworkCommunication = 9,
+
+	UnsupportedMapVersion = 10
+}
+
+declare class NMAIsolineOptions extends NSObject {
+
+	static alloc(): NMAIsolineOptions; // inherited from NSObject
+
+	static new(): NMAIsolineOptions; // inherited from NSObject
+
+	computeSingleComponent: boolean;
+
+	quality: NMAIsolineQuality;
+
+	viewResolution: number;
+}
+
+declare const enum NMAIsolineQuality {
+
+	Best = 0,
+
+	Performance = 1,
+
+	Balanced = 2
+}
+
+declare const enum NMAIsolineRangeType {
+
+	Undefined = 0,
+
+	Distance = 1,
+
+	Time = 2
+}
+
+declare class NMAIsolineRouter extends NSObject {
+
+	static alloc(): NMAIsolineRouter; // inherited from NSObject
+
+	static new(): NMAIsolineRouter; // inherited from NSObject
+
+	busy: boolean;
+
+	connectivity: NMAIsolineRouterConnectivity;
+
+	calculateFromRoutingModeIsolineOptionsRangeTypeRangesCompletionBlock(point: NMAGeoCoordinates, mode: NMARoutingMode, options: NMAIsolineOptions, type: NMAIsolineRangeType, ranges: NSArray<any> | any[], completion: (p1: NSArray<NMAIsoline>, p2: NMAIsolineError) => void): boolean;
+
+	calculateToRoutingModeIsolineOptionsRangeTypeRangesCompletionBlock(destination: NMAGeoCoordinates, mode: NMARoutingMode, options: NMAIsolineOptions, type: NMAIsolineRangeType, ranges: NSArray<any> | any[], completion: (p1: NSArray<NMAIsoline>, p2: NMAIsolineError) => void): boolean;
+
+	cancel(): boolean;
+}
+
+declare const enum NMAIsolineRouterConnectivity {
+
+	Default = 0,
+
+	Offline = 1,
+
+	Online = 2
+}
+
 declare class NMALaneInformation extends NSObject {
 
 	static alloc(): NMALaneInformation; // inherited from NSObject
@@ -2438,6 +2594,8 @@ declare class NMALaneInformation extends NSObject {
 	readonly heightRestriction: number;
 
 	readonly hov: boolean;
+
+	readonly matchedDirection: NMALaneInformationDirection;
 
 	readonly passing: boolean;
 
@@ -2997,6 +3155,14 @@ declare class NMAMapCircle extends NMAMapObject {
 
 	center: NMAGeoCoordinates;
 
+	customPattern: NMAImage;
+
+	dashPrimaryLength: number;
+
+	dashSecondaryLength: number;
+
+	dashed: boolean;
+
 	depthTestEnabled: boolean;
 
 	fillColor: UIColor;
@@ -3004,6 +3170,8 @@ declare class NMAMapCircle extends NMAMapObject {
 	lineColor: UIColor;
 
 	lineWidth: number;
+
+	patternStyle: NMAPatternStyle;
 
 	radius: number;
 
@@ -3032,6 +3200,8 @@ declare class NMAMapContainer extends NMAMapObject {
 }
 
 declare const enum NMAMapDataGroup {
+
+	ScooterAttributes = 13,
 
 	LinkGDBIdPVId = 26,
 
@@ -3187,6 +3357,29 @@ declare const enum NMAMapGestureType {
 	All = 255
 }
 
+declare class NMAMapLabeledMarker extends NMAMapMarker {
+
+	static alloc(): NMAMapLabeledMarker; // inherited from NSObject
+
+	static mapLabeledMarkerWithGeoCoordinates(coordinates: NMAGeoCoordinates): NMAMapLabeledMarker;
+
+	static mapLabeledMarkerWithGeoCoordinatesIcon(coordinates: NMAGeoCoordinates, icon: NMAImage): NMAMapLabeledMarker;
+
+	static mapLabeledMarkerWithGeoCoordinatesImage(coordinates: NMAGeoCoordinates, image: UIImage): NMAMapLabeledMarker;
+
+	static mapMarkerWithGeoCoordinates(coordinates: NMAGeoCoordinates): NMAMapLabeledMarker; // inherited from NMAMapMarker
+
+	static mapMarkerWithGeoCoordinatesIcon(coordinates: NMAGeoCoordinates, icon: NMAImage): NMAMapLabeledMarker; // inherited from NMAMapMarker
+
+	static mapMarkerWithGeoCoordinatesImage(coordinates: NMAGeoCoordinates, image: UIImage): NMAMapLabeledMarker; // inherited from NMAMapMarker
+
+	static new(): NMAMapLabeledMarker; // inherited from NSObject
+
+	setTextForLanguage(text: string, language: string): boolean;
+
+	textForLanguage(language: string): string;
+}
+
 declare const enum NMAMapLayerCategory {
 
 	Land = 0,
@@ -3334,8 +3527,6 @@ declare const enum NMAMapLayerCategory {
 	BorderLineOfControl = 71,
 
 	NeighborhoodArea = 72,
-
-	LandParcel = 73,
 
 	LabelContinent = 74,
 
@@ -3562,7 +3753,11 @@ declare const enum NMAMapMatchMode {
 
 	Car = 0,
 
-	Pedestrian = 1
+	Pedestrian = 1,
+
+	Truck = 2,
+
+	Scooter = 3
 }
 
 declare class NMAMapModelObject extends NMAMapObject {
@@ -3711,6 +3906,8 @@ declare class NMAMapOverlay extends UIView implements NMAMapViewDelegate {
 	mapViewDidRenderBitmapWithWidthHeightBytesPerPixel(mapView: NMAMapView, bitmap: interop.Pointer | interop.Reference<any>, width: number, height: number, bytesPerPixel: number): void;
 
 	mapViewDidSelectObjects(mapView: NMAMapView, objects: NSArray<NMAViewObject> | NMAViewObject[]): void;
+
+	mapViewDidTapOnSafetySpot(mapView: NMAMapView, info: NMASafetySpot): void;
 
 	performSelector(aSelector: string): any;
 
@@ -3991,6 +4188,14 @@ declare class NMAMapPolygon extends NMAMapObject {
 
 	static new(): NMAMapPolygon; // inherited from NSObject
 
+	customPattern: NMAImage;
+
+	dashPrimaryLength: number;
+
+	dashSecondaryLength: number;
+
+	dashed: boolean;
+
 	depthTestEnabled: boolean;
 
 	fillColor: UIColor;
@@ -4000,6 +4205,8 @@ declare class NMAMapPolygon extends NMAMapObject {
 	lineColor: UIColor;
 
 	lineWidth: number;
+
+	patternStyle: NMAPatternStyle;
 
 	readonly vertices: NSArray<NMAGeoCoordinates>;
 
@@ -4034,6 +4241,8 @@ declare class NMAMapPolyline extends NMAMapObject {
 
 	static new(): NMAMapPolyline; // inherited from NSObject
 
+	customPattern: NMAImage;
+
 	dashPrimaryLength: number;
 
 	dashSecondaryLength: number;
@@ -4051,6 +4260,8 @@ declare class NMAMapPolyline extends NMAMapObject {
 	outlineColor: UIColor;
 
 	outlineWidth: number;
+
+	patternStyle: NMAPatternStyle;
 
 	perspective: boolean;
 
@@ -4105,6 +4316,8 @@ declare class NMAMapRoute extends NMAMapObject {
 
 	color: UIColor;
 
+	maneuverNumberColor: UIColor;
+
 	maneuverNumberDisplayed: boolean;
 
 	outlineColor: UIColor;
@@ -4113,9 +4326,15 @@ declare class NMAMapRoute extends NMAMapObject {
 
 	route: NMARoute;
 
+	textColor: UIColor;
+
+	textOutlineColor: UIColor;
+
 	trafficEnabled: boolean;
 
 	traveledColor: UIColor;
+
+	upcomingColor: UIColor;
 
 	constructor(o: { route: NMARoute; });
 
@@ -4374,7 +4593,9 @@ declare const enum NMAMapVariant {
 
 	Global = 0,
 
-	Korea = 1
+	Korea = 1,
+
+	China = 2
 }
 
 declare class NMAMapView extends UIView {
@@ -4398,6 +4619,8 @@ declare class NMAMapView extends UIView {
 	static shouldBeginRenderingAutomatically(enabled: boolean): void;
 
 	static snapshotWithGeoCoordinatesZoomLevelOrientationSizeBlock(coordinates: NMAGeoCoordinates, zoom: number, orientation: number, size: CGSize, resultBlock: (p1: UIImage) => void): void;
+
+	readonly availableMapSchemes: NSArray<string>;
 
 	readonly boundingBox: NMAGeoBoundingBox;
 
@@ -4427,8 +4650,6 @@ declare class NMAMapView extends UIView {
 
 	gestureDelegate: NMAMapGestureDelegate;
 
-	kineticPanningEnabled: boolean;
-
 	landmarksVisible: boolean;
 
 	longPressDuration: number;
@@ -4453,6 +4674,8 @@ declare class NMAMapView extends UIView {
 
 	orientation: number;
 
+	padding: UIEdgeInsets;
+
 	pauseOnWillResignActive: boolean;
 
 	readonly positionIndicator: NMAPositionIndicator;
@@ -4467,11 +4690,7 @@ declare class NMAMapView extends UIView {
 
 	softwareRenderToBitmap: boolean;
 
-	streetLevelCoverageVisible: boolean;
-
 	tilt: number;
-
-	trafficAutoUpdateEnabled: boolean;
 
 	trafficDisplayFilter: NMATrafficSeverity;
 
@@ -4505,7 +4724,11 @@ declare class NMAMapView extends UIView {
 
 	createCustomizableSchemeWithNameBasedOnScheme(schemeName: string, baseSchemeName: string): NMACustomizableScheme;
 
+	disableKineticForGestures(gestures: NMAMapGestureType): void;
+
 	disableMapGestures(gestures: NMAMapGestureType): void;
+
+	enableKineticForGestures(gestures: NMAMapGestureType): void;
 
 	enableMapGestures(gestures: NMAMapGestureType): void;
 
@@ -4522,6 +4745,8 @@ declare class NMAMapView extends UIView {
 	hideTrafficLayers(layers: NMATrafficLayer): void;
 
 	isFleetFeatureShown(fleetFeature: NMAMapFleetFeatureType): boolean;
+
+	isKineticForGestureEnabled(gesture: NMAMapGestureType): boolean;
 
 	isMapGestureEnabled(gesture: NMAMapGestureType): boolean;
 
@@ -4565,7 +4790,13 @@ declare class NMAMapView extends UIView {
 
 	respondToEventsWithBlock(events: NMAMapEvent, block: (p1: NMAMapEvent, p2: NMAMapView, p3: any) => boolean): number;
 
+	roadElementAtCoordinates(coordinates: NMAGeoCoordinates): NMARoadElement;
+
+	roadElementAtCoordinatesLang(coordinates: NMAGeoCoordinates, marcLangCode: string): NMARoadElement;
+
 	roadElementsInArea(geoArea: NMAGeoBoundingBox): NSArray<NMARoadElement>;
+
+	roadElementsInAreaLang(geoArea: NMAGeoBoundingBox, marcLangCode: string): NSArray<NMARoadElement>;
 
 	setBoundingBoxInsideRectWithAnimation(boundingBox: NMAGeoBoundingBox, screenRect: CGRect, animationType: NMAMapAnimation): void;
 
@@ -4631,6 +4862,8 @@ interface NMAMapViewDelegate extends NSObjectProtocol {
 	mapViewDidRenderBitmapWithWidthHeightBytesPerPixel?(mapView: NMAMapView, bitmap: interop.Pointer | interop.Reference<any>, width: number, height: number, bytesPerPixel: number): void;
 
 	mapViewDidSelectObjects?(mapView: NMAMapView, objects: NSArray<NMAViewObject> | NMAViewObject[]): void;
+
+	mapViewDidTapOnSafetySpot?(mapView: NMAMapView, info: NMASafetySpot): void;
 }
 declare var NMAMapViewDelegate: {
 
@@ -4834,6 +5067,8 @@ declare class NMANavigationManager extends NSObject {
 
 	readonly currentManeuver: NMAManeuver;
 
+	readonly currentRouteLeg: number;
+
 	delegate: NMANavigationManagerDelegate;
 
 	readonly distanceFromStart: number;
@@ -4890,6 +5125,8 @@ declare class NMANavigationManager extends NSObject {
 
 	readonly trafficWarner: NMATrafficWarner;
 
+	readonly truckRestrictionWarner: NMATruckRestrictionWarner;
+
 	ttsOutputFormat: NMATTSOutputFormat;
 
 	vibrationEnabled: boolean;
@@ -4922,7 +5159,17 @@ declare class NMANavigationManager extends NSObject {
 
 	playVoiceCommand(): void;
 
+	remainingDistanceToRouteElementPositionOnElement(routeElementIndex: number, positionOnElement: NMAGeoCoordinates): number;
+
+	remainingDistanceToSubleg(subleg: number): number;
+
 	resetAnnouncementRules(): void;
+
+	setDistanceAndStopTimeToTriggerStopoverReachedStopTime(distance: number, time: number): NMANavigationError;
+
+	setDistanceToTriggerStopoverReached(distance: number): NMANavigationError;
+
+	setDistanceWithUTurnToTriggerStopoverReached(distance: number): NMANavigationError;
 
 	setLowSpeedOffsetHighSpeedOffsetSpeedBoundary(lowSpeedOffset: number, highSpeedOffset: number, speedBoundary: number): NSError;
 
@@ -4964,7 +5211,7 @@ declare class NMANavigationManager extends NSObject {
 
 	timeBasedDistanceToUpcomingManeuverForVoicePromptTypeRoadType(voicePromptType: NMANavigationVoicePromptType, roadType: NMANavigationRoadType): number;
 
-	timeToArrivalWithTraffic(mode: NMATrafficPenaltyMode): number;
+	timeToArrivalForSublegMode(subleg: number, mode: NMATrafficPenaltyMode): number;
 
 	timeToArrivalWithTrafficWholeRoute(mode: NMATrafficPenaltyMode, wholeRoute: boolean): number;
 }
@@ -4974,6 +5221,8 @@ interface NMANavigationManagerDelegate extends NSObjectProtocol {
 	navigationManagerDidChangeRoutingState?(navigationManager: NMANavigationManager, state: NMATrafficEnabledRoutingState): void;
 
 	navigationManagerDidFindAlternateRouteWithResult?(navigationManager: NMANavigationManager, routeResult: NMARouteResult): void;
+
+	navigationManagerDidFindAlternateRoutes?(navigationManager: NMANavigationManager, routeResult: NMARouteResult): void;
 
 	navigationManagerDidFindPosition?(navigationManager: NMANavigationManager): void;
 
@@ -4989,15 +5238,17 @@ interface NMANavigationManagerDelegate extends NSObjectProtocol {
 
 	navigationManagerDidReroute?(navigationManager: NMANavigationManager): void;
 
+	navigationManagerDidRerouteWithError?(navigationManager: NMANavigationManager, error: NMARoutingError): void;
+
 	navigationManagerDidResumeDueToMapDataAvailability?(navigationManager: NMANavigationManager): void;
 
 	navigationManagerDidSuspendDueToInsufficientMapData?(navigationManager: NMANavigationManager): void;
 
 	navigationManagerDidUpdateLaneInformationRoadElement?(navigationManager: NMANavigationManager, laneInformations: NSArray<NMALaneInformation> | NMALaneInformation[], roadElement: NMARoadElement): void;
 
-	navigationManagerDidUpdateRealisticViewsForCurrentManeuver?(navigationManager: NMANavigationManager, realisticViews: NSDictionary<string, NMAImage>): void;
+	navigationManagerDidUpdateRealisticViewsForCurrentManeuver?(navigationManager: NMANavigationManager, realisticViews: NSDictionary<number, NSDictionary<string, NMAImage>>): void;
 
-	navigationManagerDidUpdateRealisticViewsForNextManeuver?(navigationManager: NMANavigationManager, realisticViews: NSDictionary<string, NMAImage>): void;
+	navigationManagerDidUpdateRealisticViewsForNextManeuver?(navigationManager: NMANavigationManager, realisticViews: NSDictionary<number, NSDictionary<string, NMAImage>>): void;
 
 	navigationManagerDidUpdateRouteWithResult?(navigationManager: NMANavigationManager, routeResult: NMARouteResult): void;
 
@@ -5071,6 +5322,17 @@ declare const enum NMANavigationVoicePromptType {
 	Reminder2 = 2,
 
 	Command = 3
+}
+
+declare const enum NMAPatternStyle {
+
+	None = 0,
+
+	Dash = 1,
+
+	CustomBlend = 2,
+
+	CustomFill = 3
 }
 
 declare class NMAPhongMaterial extends NMAMaterial {
@@ -5379,6 +5641,8 @@ declare class NMAPlaces extends NSObject {
 
 	createAutoSuggestionRequestWithLocationPartialTermResultType(location: NMAGeoCoordinates, partialTerm: string, resultType: NMAPlacesAutoSuggestionResultType): NMAAutoSuggestionRequest;
 
+	createAutoSuggestionRequestWithLocationPartialTermResultTypeFilter(location: NMAGeoCoordinates, partialTerm: string, resultType: NMAPlacesAutoSuggestionResultType, filter: NMAAddressFilter): NMAAutoSuggestionRequest;
+
 	createExploreRequestWithLocationSearchAreaFilters(location: NMAGeoCoordinates, searchArea: NMAGeoBoundingBox, filters: NMACategoryFilter): NMADiscoveryRequest;
 
 	createHereRequestWithLocationFilters(location: NMAGeoCoordinates, filters: NMACategoryFilter): NMADiscoveryRequest;
@@ -5386,6 +5650,8 @@ declare class NMAPlaces extends NSObject {
 	createLookupRequestWithReferenceIdentifierInSource(referenceIdentifier: string, source: string): NMAPlaceRequest;
 
 	createSearchRequestWithLocationQuery(location: NMAGeoCoordinates, query: string): NMADiscoveryRequest;
+
+	createSearchRequestWithLocationQueryFilter(location: NMAGeoCoordinates, query: string, filter: NMAAddressFilter): NMADiscoveryRequest;
 
 	createSuggestionRequestWithLocationPartialTerm(location: NMAGeoCoordinates, partialTerm: string): NMASuggestionRequest;
 
@@ -5741,6 +6007,8 @@ declare class NMAPositioningManager extends NSObject {
 
 	dataSource: NMAPositionDataSource;
 
+	geoShiftableDelegate: NMAGeoShiftableDelegate;
+
 	logType: NMAPositionLogType;
 
 	mapMatchMode: NMAMapMatchMode;
@@ -5776,7 +6044,9 @@ declare const enum NMAPrefetchRequestError {
 
 	InvalidParameters = 3,
 
-	OperationNotAllowed = 4
+	OperationNotAllowed = 4,
+
+	RouteAreaTooBig = 5
 }
 
 declare const enum NMAPrefetchStatus {
@@ -5863,13 +6133,15 @@ declare class NMARequest extends NSObject implements NSCoding {
 
 	constructor(o: { coder: NSCoder; }); // inherited from NSCoding
 
+	addCustomHeaderValue(name: string, value: string): void;
+
 	addSource(source: string): void;
 
 	cancel(): boolean;
 
-	encodeWithCoder(aCoder: NSCoder): void;
+	encodeWithCoder(coder: NSCoder): void;
 
-	initWithCoder(aDecoder: NSCoder): this;
+	initWithCoder(coder: NSCoder): this;
 
 	startWithBlock(completionBlock: (p1: NMARequest, p2: any, p3: NSError) => void): NSError;
 
@@ -6015,6 +6287,8 @@ declare class NMARoadElement extends NSObject {
 	readonly type: NMARoadElementType;
 
 	readonly uniqueId: string;
+
+	trafficSignsOrError(): NSArray<NMATrafficSign>;
 }
 
 declare const enum NMARoadElementAttribute {
@@ -6151,6 +6425,8 @@ declare class NMARoute extends NSObject {
 
 	readonly routingMode: NMARoutingMode;
 
+	readonly routingZones: NSArray<NMARoutingZone>;
+
 	readonly sections: NSArray<NMAUrbanMobilityRouteSection>;
 
 	readonly sourceAttribution: NMATransitRouteSourceAttribution;
@@ -6161,23 +6437,35 @@ declare class NMARoute extends NSObject {
 
 	readonly tariffOptions: NSArray<NMAUrbanMobilityTariff>;
 
-	readonly tta: NMARouteTta;
-
 	userTag: string;
 
 	readonly waypoints: NSArray<NMAWaypoint>;
 
 	consumptionWithParametersDynamicPenalty(consumptionParameters: NMARouteConsumptionParameters, dynamicPenalty: NMADynamicPenalty): NMARouteConsumption;
 
+	distanceFromRouteElementFromPositionToRouteElementToPosition(fromRouteElement: number, fromPosition: NMAGeoCoordinates, toRouteElement: number, toPosition: NMAGeoCoordinates): number;
+
 	lastReachablePositionWithConsumptionCurrentCapacity(routeConsumption: NMARouteConsumption, capacity: number): NMAGeoCoordinates;
+
+	lengthForSubleg(subleg: number): number;
+
+	routeElementsFromDurationError(duration: number): NSArray<NMARouteElement>;
+
+	routeElementsFromLengthError(length: number): NSArray<NMARouteElement>;
+
+	routeElementsFromManeuverError(maneuver: NMAManeuver): NSArray<NMARouteElement>;
+
+	routeElementsFromStartDistanceLengthError(startDistance: number, length: number): NSArray<NMARouteElement>;
+
+	routeElementsFromStartTimeDurationError(startTime: number, duration: number): NSArray<NMARouteElement>;
 
 	serializedRouteWithCompletionBlock(completionBlock: (p1: NSData, p2: NSError) => void): void;
 
-	ttaForSubleg(subleg: number): NMARouteTta;
+	ttaExcludingTrafficForSubleg(subleg: number): NMARouteTta;
 
-	ttaWithTraffic(mode: NMATrafficPenaltyMode): NMARouteTta;
+	ttaIncludingTrafficForSubleg(subleg: number): NMARouteTta;
 
-	ttaWithTrafficForSubleg(mode: NMATrafficPenaltyMode, subleg: number): NMARouteTta;
+	ttaUsingDownloadedTrafficForSubleg(subleg: number): NMARouteTta;
 }
 
 declare class NMARouteConsumption extends NSObject {
@@ -6252,6 +6540,8 @@ declare class NMARouteElement extends NSObject {
 
 	readonly transitRouteElement: NMATransitRouteElement;
 
+	readonly travelDirection: NMATravelDirection;
+
 	readonly type: NMARouteElementType;
 }
 
@@ -6262,6 +6552,15 @@ declare const enum NMARouteElementType {
 	Road = 1,
 
 	Invalid = 2
+}
+
+declare const enum NMARouteError {
+
+	InvalidParameter = 1,
+
+	NotSupported = 2,
+
+	Unknown = 3
 }
 
 declare class NMARoutePositionSource extends NSObject implements NMAPositionDataSource {
@@ -6440,7 +6739,13 @@ declare class NMARoutingMode extends NSObject {
 
 	deviationDistanceToPedestrianReroute: number;
 
+	excludeRoutingZones: NSArray<string>;
+
 	hazardousGoods: NMAHazardousGoodsType;
+
+	languagePreference: string;
+
+	licensePlateLastCharacter: string;
 
 	limitedVehicleWeight: number;
 
@@ -6451,6 +6756,8 @@ declare class NMARoutingMode extends NSObject {
 	routingOptions: NMARoutingOption;
 
 	routingType: NMARoutingType;
+
+	speedProfile: NMASpeedProfile;
 
 	startDirection: number;
 
@@ -6534,6 +6841,30 @@ declare const enum NMARoutingViolatedOption {
 	OptionStartDirection = 16384,
 
 	PermanentTruckRestriction = 32768
+}
+
+declare class NMARoutingZone extends NSObject {
+
+	static alloc(): NMARoutingZone; // inherited from NSObject
+
+	static new(): NMARoutingZone; // inherited from NSObject
+
+	readonly identifier: string;
+
+	readonly name: string;
+
+	readonly type: NMARoutingZoneType;
+}
+
+declare const enum NMARoutingZoneType {
+
+	Vignette = 0,
+
+	CongestionPricing = 1,
+
+	AdministrativeClass = 2,
+
+	Environmental = 3
 }
 
 declare class NMASafetySpot extends NSObject {
@@ -8729,6 +9060,74 @@ declare const enum NMASchemeIntegerProperty {
 	IntegerPropertyCount = 46
 }
 
+declare const enum NMASignCategory {
+
+	Unknown = 0,
+
+	RegulatorySign = 1,
+
+	InformativeSign = 2,
+
+	WarningSign = 3
+}
+
+declare const enum NMASignDirection {
+
+	Unknown = 0,
+
+	Positive = 1,
+
+	Negative = 2,
+
+	Both = 3
+}
+
+declare const enum NMASignLocation {
+
+	Unknown = 0,
+
+	Right = 1,
+
+	Left = 2,
+
+	Overhead = 3
+}
+
+declare const enum NMASignSubcategory {
+
+	Unknown = 0,
+
+	PrioritySign = 1
+}
+
+declare const enum NMASignTransportType {
+
+	Unknown = 0,
+
+	Truck = 1,
+
+	HeavyTruck = 2,
+
+	Bus = 3,
+
+	AutoTrailer = 4,
+
+	Motorhome = 5,
+
+	Motorcycle = 6
+}
+
+declare const enum NMASignWeatherAffects {
+
+	Unknown = 0,
+
+	Rain = 1,
+
+	Snow = 2,
+
+	Fog = 3
+}
+
 declare class NMASignpost extends NSObject {
 
 	static alloc(): NMASignpost; // inherited from NSObject
@@ -8763,381 +9162,12 @@ declare class NMASignpostLocalizedLabel extends NSObject {
 	readonly text: string;
 }
 
-declare class NMAStreetLevelBillboard extends NMAStreetLevelIconBase {
-
-	static alloc(): NMAStreetLevelBillboard; // inherited from NSObject
-
-	static new(): NMAStreetLevelBillboard; // inherited from NSObject
-
-	static streetLevelBillboardWithGeoCoordinatesIcon(coordinates: NMAGeoCoordinates, icon: NMAImage): NMAStreetLevelBillboard;
-
-	static streetLevelBillboardWithGeoCoordinatesImage(coordinates: NMAGeoCoordinates, image: UIImage): NMAStreetLevelBillboard;
-
-	normalVector: NMAVector3d;
-
-	orientation: NMAStreetLevelBillboardOrientation;
-
-	renderedSize: CGSize;
-
-	upVector: NMAVector3d;
-
-	constructor(o: { geoCoordinates: NMAGeoCoordinates; icon: NMAImage; });
-
-	constructor(o: { geoCoordinates: NMAGeoCoordinates; image: UIImage; });
-
-	initWithGeoCoordinatesIcon(coordinates: NMAGeoCoordinates, icon: NMAImage): this;
-
-	initWithGeoCoordinatesImage(coordinates: NMAGeoCoordinates, image: UIImage): this;
-
-	setOrientationNormalVectorUpVector(orientation: NMAStreetLevelBillboardOrientation, normalVector: NMAVector3d, upVector: NMAVector3d): void;
-}
-
-declare const enum NMAStreetLevelBillboardOrientation {
-
-	Fixed = 0,
-
-	FollowsCameraVerticalFixed = 1,
-
-	FollowsCamera = 2
-}
-
-declare class NMAStreetLevelBuilding extends NMAProxyObject {
-
-	static alloc(): NMAStreetLevelBuilding; // inherited from NSObject
-
-	static new(): NMAStreetLevelBuilding; // inherited from NSObject
-
-	readonly buildingId: string;
-
-	highlight: number;
-
-	closestPositionToGeoCoordinatesWithDistanceLimit(coordinates: NMAGeoCoordinates, distanceLimit: number): NMAGeoCoordinates;
-}
-
-declare const enum NMAStreetLevelCoverage {
-
-	Available = 0,
-
-	Unavailable = 1,
-
-	Failed = 2
-}
-
-declare const enum NMAStreetLevelCoverageError {
-
-	None = 0,
-
-	InvalidGeoCoordinates = 1,
-
-	NetworkFailure = 2,
-
-	OperationNotAllowed = 3
-}
-
-declare var NMAStreetLevelCoverageErrorDomain: string;
-
-declare class NMAStreetLevelCoverageResult extends NSObject {
-
-	static alloc(): NMAStreetLevelCoverageResult; // inherited from NSObject
-
-	static new(): NMAStreetLevelCoverageResult; // inherited from NSObject
-
-	readonly coverage: NMAStreetLevelCoverage;
-
-	readonly error: NSError;
-
-	readonly requestCoordinates: NMAGeoCoordinates;
-
-	readonly requestRadius: number;
-}
-
-interface NMAStreetLevelGestureDelegate extends NSObjectProtocol {
-
-	streetLevelViewDidReceiveDoubleTapFromRecognizer?(view: NMAStreetLevelView, recognizer: UITapGestureRecognizer): void;
-
-	streetLevelViewDidReceivePanFromRecognizer?(view: NMAStreetLevelView, recognizer: UIPanGestureRecognizer): void;
-
-	streetLevelViewDidReceivePinchFromRecognizer?(view: NMAStreetLevelView, recognizer: UIPinchGestureRecognizer): void;
-
-	streetLevelViewDidReceiveTapFromRecognizer?(view: NMAStreetLevelView, recognizer: UITapGestureRecognizer): void;
-}
-declare var NMAStreetLevelGestureDelegate: {
-
-	prototype: NMAStreetLevelGestureDelegate;
-};
-
-declare const enum NMAStreetLevelGestureType {
-
-	Tap = 1,
-
-	DoubleTap = 2,
-
-	Pinch = 4,
-
-	Pan = 8,
-
-	All = 255
-}
-
-declare const enum NMAStreetLevelHorizontalPlacement {
+declare const enum NMASpeedProfile {
 
 	Default = 0,
 
-	Centroid = 1,
-
-	ClosestSurface = 2,
-
-	Facade = 3
+	Fast = 1
 }
-
-declare class NMAStreetLevelIcon extends NMAStreetLevelIconBase {
-
-	static alloc(): NMAStreetLevelIcon; // inherited from NSObject
-
-	static new(): NMAStreetLevelIcon; // inherited from NSObject
-
-	static streetLevelIconWithGeoCoordinatesIcon(coordinates: NMAGeoCoordinates, icon: NMAImage): NMAStreetLevelIcon;
-
-	static streetLevelIconWithGeoCoordinatesImage(coordinates: NMAGeoCoordinates, image: UIImage): NMAStreetLevelIcon;
-
-	constructor(o: { geoCoordinates: NMAGeoCoordinates; icon: NMAImage; });
-
-	constructor(o: { geoCoordinates: NMAGeoCoordinates; image: UIImage; });
-
-	initWithGeoCoordinatesIcon(coordinates: NMAGeoCoordinates, icon: NMAImage): this;
-
-	initWithGeoCoordinatesImage(coordinates: NMAGeoCoordinates, image: UIImage): this;
-}
-
-declare class NMAStreetLevelIconBase extends NMAStreetLevelObject {
-
-	static alloc(): NMAStreetLevelIconBase; // inherited from NSObject
-
-	static new(): NMAStreetLevelIconBase; // inherited from NSObject
-
-	alpha: number;
-
-	anchorPoint: CGPoint;
-
-	building: NMAStreetLevelBuilding;
-
-	readonly horizontalPlacement: NMAStreetLevelHorizontalPlacement;
-
-	image: NMAImage;
-
-	position: NMAGeoCoordinates;
-
-	readonly verticalPlacement: NMAStreetLevelVerticalPlacement;
-
-	readonly verticalPlacementParameter: number;
-
-	setHorizontalPlacementVerticalPlacementVerticalPlacementParameter(horizontalPlacement: NMAStreetLevelHorizontalPlacement, verticalPlacement: NMAStreetLevelVerticalPlacement, verticalPlacementParameter: number): void;
-}
-
-declare class NMAStreetLevelLink extends NMAProxyObject {
-
-	static alloc(): NMAStreetLevelLink; // inherited from NSObject
-
-	static new(): NMAStreetLevelLink; // inherited from NSObject
-
-	readonly linkedLocation: NMAGeoCoordinates;
-
-	readonly orientation: NMAStreetLevelOrientation;
-}
-
-interface NMAStreetLevelLocalizationDelegate extends NSObjectProtocol {
-
-	streetLevelViewLocalizedStringForStringId?(view: NMAStreetLevelView, localizedStringId: NMAStreetLevelLocalizedStringId): string;
-}
-declare var NMAStreetLevelLocalizationDelegate: {
-
-	prototype: NMAStreetLevelLocalizationDelegate;
-};
-
-declare const enum NMAStreetLevelLocalizedStringId {
-
-	ReportAnIssue = 0
-}
-
-declare class NMAStreetLevelObject extends NMAUserObject {
-
-	static alloc(): NMAStreetLevelObject; // inherited from NSObject
-
-	static new(): NMAStreetLevelObject; // inherited from NSObject
-}
-
-interface NMAStreetLevelOrientation {
-	heading: number;
-	pitch: number;
-}
-declare var NMAStreetLevelOrientation: interop.StructType<NMAStreetLevelOrientation>;
-
-declare class NMAStreetLevelRoute extends NMAStreetLevelObject {
-
-	static alloc(): NMAStreetLevelRoute; // inherited from NSObject
-
-	static new(): NMAStreetLevelRoute; // inherited from NSObject
-
-	static streetLevelRouteWithRoute(route: NMARoute): NMAStreetLevelRoute;
-
-	color: UIColor;
-
-	displayType: NMARouteDisplayType;
-
-	route: NMARoute;
-
-	constructor(o: { route: NMARoute; });
-
-	initWithRoute(route: NMARoute): this;
-}
-
-declare class NMAStreetLevelSelectedObject extends NSObject {
-
-	static alloc(): NMAStreetLevelSelectedObject; // inherited from NSObject
-
-	static new(): NMAStreetLevelSelectedObject; // inherited from NSObject
-
-	readonly normalVector: NMAVector3d;
-
-	readonly position: NMAGeoCoordinates;
-
-	readonly streetLevelObject: NMAViewObject;
-
-	readonly textureCoordinates: CGPoint;
-}
-
-declare const enum NMAStreetLevelVerticalPlacement {
-
-	Default = 0,
-
-	Terrain = 1,
-
-	Facade = 2,
-
-	Attachment = 3
-}
-
-declare class NMAStreetLevelView extends UIView {
-
-	static alloc(): NMAStreetLevelView; // inherited from NSObject
-
-	static appearance(): NMAStreetLevelView; // inherited from UIAppearance
-
-	static appearanceForTraitCollection(trait: UITraitCollection): NMAStreetLevelView; // inherited from UIAppearance
-
-	static appearanceForTraitCollectionWhenContainedIn(trait: UITraitCollection, ContainerClass: typeof NSObject): NMAStreetLevelView; // inherited from UIAppearance
-
-	static appearanceForTraitCollectionWhenContainedInInstancesOfClasses(trait: UITraitCollection, containerTypes: NSArray<typeof NSObject> | typeof NSObject[]): NMAStreetLevelView; // inherited from UIAppearance
-
-	static appearanceWhenContainedIn(ContainerClass: typeof NSObject): NMAStreetLevelView; // inherited from UIAppearance
-
-	static appearanceWhenContainedInInstancesOfClasses(containerTypes: NSArray<typeof NSObject> | typeof NSObject[]): NMAStreetLevelView; // inherited from UIAppearance
-
-	static checkCoverageAtGeoCoordinatesWithRadiusCompletion(coordinates: NMAGeoCoordinates, radius: number, block: (p1: NMAStreetLevelCoverageResult) => void): void;
-
-	static new(): NMAStreetLevelView; // inherited from NSObject
-
-	readonly buildings: NSArray<NMAStreetLevelBuilding>;
-
-	copyrightLogoHorizontalMargin: number;
-
-	copyrightLogoPosition: NMALayoutPosition;
-
-	copyrightLogoVerticalMargin: number;
-
-	delegate: NMAStreetLevelViewDelegate;
-
-	gestureDelegate: NMAStreetLevelGestureDelegate;
-
-	heading: number;
-
-	localizationDelegate: NMAStreetLevelLocalizationDelegate;
-
-	readonly maximumHeading: number;
-
-	readonly maximumPitch: number;
-
-	readonly maximumZoom: number;
-
-	readonly minimumHeading: number;
-
-	readonly minimumPitch: number;
-
-	readonly minimumZoom: number;
-
-	navigationLinksVisible: boolean;
-
-	pitch: number;
-
-	readonly position: NMAGeoCoordinates;
-
-	reportLinkHorizontalMargin: number;
-
-	reportLinkPosition: NMALayoutPosition;
-
-	reportLinkVerticalMargin: number;
-
-	streetGeometryVisible: boolean;
-
-	readonly userObjects: NSArray<NMAStreetLevelObject>;
-
-	zoom: number;
-
-	addStreetLevelObject(object: NMAStreetLevelObject): boolean;
-
-	cameraOrientationFromScreenPoint(point: CGPoint): NMAStreetLevelOrientation;
-
-	cancelMoveToSectionWithAnimation(animation: boolean): void;
-
-	disableStreetLevelGestures(gestures: number): void;
-
-	enableStreetLevelGestures(gestures: number): void;
-
-	geoCoordinatesFromScreenPoint(point: CGPoint): NMAGeoCoordinates;
-
-	isStreetLevelGestureEnabled(gesture: NMAStreetLevelGestureType): boolean;
-
-	moveToSectionAtGeoCoordinatesWithSearchRadiusAnimationCameraTargetZoom(geoCoordinates: NMAGeoCoordinates, radius: number, animation: boolean, cameraTarget: NMAGeoCoordinates, zoom: number): void;
-
-	moveToSectionAtGeoCoordinatesWithSearchRadiusAnimationOrientationZoom(geoCoordinates: NMAGeoCoordinates, radius: number, animation: boolean, orientation: NMAStreetLevelOrientation, zoom: number): void;
-
-	performDefaultActionForGestureRecognizer(recognizer: UIGestureRecognizer): void;
-
-	removeStreetLevelObject(object: NMAStreetLevelObject): void;
-
-	rotateFromScreenPointToScreenPoint(from: CGPoint, to: CGPoint): void;
-
-	screenPointFromGeoCoordinates(geoCoordinates: NMAGeoCoordinates): CGPoint;
-
-	setNavigationLinkImageForPressedState(image: NMAImage, pressed: boolean): boolean;
-
-	streetLevelObjectsAtScreenPoint(point: CGPoint): NSArray<NMAStreetLevelObject>;
-}
-
-interface NMAStreetLevelViewDelegate extends NSObjectProtocol {
-
-	streetLevelViewDidChangePositionTo?(view: NMAStreetLevelView, position: NMAGeoCoordinates): void;
-
-	streetLevelViewDidMoveToWithSuccess?(view: NMAStreetLevelView, geoCoordinates: NMAGeoCoordinates, success: boolean): void;
-
-	streetLevelViewDidOrientTo?(view: NMAStreetLevelView, orientation: NMAStreetLevelOrientation): void;
-
-	streetLevelViewDidSelectObjects?(view: NMAStreetLevelView, selectedObjects: NSArray<NMAStreetLevelSelectedObject> | NMAStreetLevelSelectedObject[]): void;
-
-	streetLevelViewDidZoomTo?(view: NMAStreetLevelView, zoomLevel: number): void;
-
-	streetLevelViewShouldMoveToLink?(view: NMAStreetLevelView, link: NMAStreetLevelLink): boolean;
-
-	streetLevelViewWillMoveTo?(view: NMAStreetLevelView, geoCoordinates: NMAGeoCoordinates): void;
-
-	streetLevelViewWillOrientFrom?(view: NMAStreetLevelView, orientation: NMAStreetLevelOrientation): void;
-
-	streetLevelViewWillZoomFrom?(view: NMAStreetLevelView, zoomLevel: number): void;
-}
-declare var NMAStreetLevelViewDelegate: {
-
-	prototype: NMAStreetLevelViewDelegate;
-};
 
 declare const enum NMASubsequentRouteType {
 
@@ -9513,9 +9543,13 @@ declare class NMATrafficManager extends NSObject {
 
 	cancelRequest(requestId: number): void;
 
+	disableTrafficAutoUpdate(): boolean;
+
 	getTrafficEventsOnRouteElementsWithCompletion(routeElements: NSArray<NMARouteElement> | NMARouteElement[], completionBlock: (p1: NSArray<NMATrafficEvent>, p2: NMATrafficRequestError) => void): void;
 
 	getTrafficEventsOnRouteWithCompletion(route: NMARoute, completionBlock: (p1: NSArray<NMATrafficEvent>, p2: NMATrafficRequestError) => void): void;
+
+	isTrafficAutoUpdateEnabled(): boolean;
 
 	removeObserver(observer: NMATrafficManagerObserver): void;
 
@@ -9622,6 +9656,39 @@ declare const enum NMATrafficSeverity {
 	VeryHigh = 3,
 
 	Blocking = 4
+}
+
+declare class NMATrafficSign extends NSObject {
+
+	static alloc(): NMATrafficSign; // inherited from NSObject
+
+	static new(): NMATrafficSign; // inherited from NSObject
+
+	readonly applicableForTransportTypes: NSSet<number>;
+
+	readonly category: NMASignCategory;
+
+	readonly coordinate: NMAGeoCoordinates;
+
+	readonly direction: NMASignDirection;
+
+	readonly duration: string;
+
+	readonly location: NMASignLocation;
+
+	readonly prewarning: string;
+
+	readonly signValue: string;
+
+	readonly subcategory: NMASignSubcategory;
+
+	readonly subtype: number;
+
+	readonly type: number;
+
+	readonly validityTime: string;
+
+	readonly weatherAffects: NMASignWeatherAffects;
 }
 
 declare class NMATrafficWarner extends NSObject {
@@ -10011,6 +10078,169 @@ declare const enum NMATransportMode {
 	Scooter = 8
 }
 
+declare const enum NMATravelDirection {
+
+	Forward = 0,
+
+	Backward = 1
+}
+
+declare class NMATruckRestriction extends NSObject {
+
+	static alloc(): NMATruckRestriction; // inherited from NSObject
+
+	static new(): NMATruckRestriction; // inherited from NSObject
+
+	readonly truckHazMatType: NMATruckRestrictionHazMat;
+
+	readonly truckRestrictionType: NMATruckRestrictionType;
+
+	readonly truckTrailerType: NMATruckRestrictionTrailerType;
+
+	readonly truckWeatherType: NMATruckRestrictionWeatherType;
+
+	readonly value: number;
+
+	hasHazMatRestriction(): boolean;
+
+	hasTrailerRestriction(): boolean;
+
+	hasValue(): boolean;
+
+	hasWeatherRestriction(): boolean;
+}
+
+declare const enum NMATruckRestrictionHazMat {
+
+	None = 0,
+
+	Explosives = 1,
+
+	Gas = 2,
+
+	Flammable = 3,
+
+	FlammableSolidCombustible = 4,
+
+	Organic = 5,
+
+	Poison = 6,
+
+	Radioactive = 7,
+
+	Corrosive = 8,
+
+	Other = 9,
+
+	Any = 10,
+
+	Pih = 11,
+
+	HarmfulForWater = 12,
+
+	ExplosiveFlammable = 13,
+
+	TunnelCategoryB = 14,
+
+	TunnelCategoryC = 15,
+
+	TunnelCategoryD = 16,
+
+	TunnelCategoryE = 17,
+
+	Unknown = 18
+}
+
+declare class NMATruckRestrictionNotification extends NSObject {
+
+	static alloc(): NMATruckRestrictionNotification; // inherited from NSObject
+
+	static new(): NMATruckRestrictionNotification; // inherited from NSObject
+
+	readonly isOnRoute: boolean;
+
+	readonly truckRestrictions: NSArray<NMATruckRestriction>;
+}
+
+declare const enum NMATruckRestrictionTrailerType {
+
+	None = 0,
+
+	Value1 = 1,
+
+	Value2 = 2,
+
+	Value3 = 3,
+
+	Value4 = 4,
+
+	Unknown = 5
+}
+
+declare const enum NMATruckRestrictionType {
+
+	TruckRestriction = 0,
+
+	WeightRestriction = 1,
+
+	HeightRestriction = 2,
+
+	LengthRestriction = 3,
+
+	WidthRestriction = 4,
+
+	WeightPerAxelRestriction = 5,
+
+	KpraLengthRestriction = 6,
+
+	PreferredRoute = 7,
+
+	HazMatPermitRequired = 8,
+
+	SpeedLimit = 9,
+
+	Toll = 10,
+
+	Unknown = 11
+}
+
+declare class NMATruckRestrictionWarner extends NSObject {
+
+	static alloc(): NMATruckRestrictionWarner; // inherited from NSObject
+
+	static new(): NMATruckRestrictionWarner; // inherited from NSObject
+
+	static truckRestrictionsForRoadElementRoutingMode(roadElement: NMARoadElement, mode: NMARoutingMode): NSArray<NMATruckRestriction>;
+
+	delegate: NMATruckRestrictionWarnerDelegate;
+
+	start(): void;
+
+	stop(): void;
+}
+
+interface NMATruckRestrictionWarnerDelegate extends NSObjectProtocol {
+
+	truckRestrictionWarnerDidDetectTruckRestriction?(truckWarner: NMATruckRestrictionWarner, truckNotification: NMATruckRestrictionNotification): void;
+}
+declare var NMATruckRestrictionWarnerDelegate: {
+
+	prototype: NMATruckRestrictionWarnerDelegate;
+};
+
+declare const enum NMATruckRestrictionWeatherType {
+
+	None = 0,
+
+	Rain = 1,
+
+	Snow = 2,
+
+	Fog = 3,
+
+	Unknown = 4
+}
+
 declare const enum NMATruckRestrictionsMode {
 
 	NoViolations = 0,
@@ -10039,6 +10269,8 @@ declare const enum NMATunnelCategory {
 
 	E = 4
 }
+
+declare var NMAUnknownWaypointCourse: number;
 
 declare class NMAUrbanMobilityAccessPoint extends NSObject {
 
@@ -11217,6 +11449,8 @@ declare class NMAVenue3dContent extends NSObject {
 
 	readonly address: NMAAddress;
 
+	readonly categoryId: string;
+
 	readonly customAttributes: NSDictionary<string, NSObject>;
 
 	readonly email: string;
@@ -11230,6 +11464,8 @@ declare class NMAVenue3dContent extends NSObject {
 	readonly placeCategoryId: string;
 
 	readonly searchTags: NSArray<string>;
+
+	readonly uniqueId: string;
 
 	readonly uniqueVenueId: string;
 
@@ -11252,21 +11488,13 @@ declare class NMAVenue3dController extends NSObject {
 
 	readonly venue: NMAVenue3dVenue;
 
-	readonly venueZoom: boolean;
-
 	deselectSpace(): void;
 
 	getLocationAtXYWithSpacePrefered(x: number, y: number, preferSpace: boolean): NMAVenue3dBaseLocation;
 
-	getNormalGeoCoordinatesFromScaled(geoCoordinate: NMAGeoCoordinates): NMAGeoCoordinates;
-
-	getScaledGeoCoordinatesFromNormal(geoCoordinate: NMAGeoCoordinates): NMAGeoCoordinates;
-
 	getStyleSettingsForSpace(space: NMAVenue3dSpace): NMAVenue3dStyleSettings;
 
 	setStyleSettingsForSpace(settings: NMAVenue3dStyleSettings, space: NMAVenue3dSpace): void;
-
-	useVenueZoom(venueZoomInUse: boolean): boolean;
 }
 
 declare const enum NMAVenue3dDeselectEvent {
@@ -11282,89 +11510,6 @@ declare const enum NMAVenue3dDeselectEvent {
 	DeselectEventSelectedOther = 4,
 
 	DeselectEventManual = 5
-}
-
-declare class NMAVenue3dGestureHandler extends NSObject implements NMAMapGestureDelegate, NMAVenue3dMapLayerDelegate {
-
-	static alloc(): NMAVenue3dGestureHandler; // inherited from NSObject
-
-	static gestureHandlerWithVenueMapLayer(venueMapLayer: NMAVenue3dMapLayer): NMAVenue3dGestureHandler;
-
-	static new(): NMAVenue3dGestureHandler; // inherited from NSObject
-
-	readonly debugDescription: string; // inherited from NSObjectProtocol
-
-	readonly description: string; // inherited from NSObjectProtocol
-
-	readonly hash: number; // inherited from NSObjectProtocol
-
-	readonly isProxy: boolean; // inherited from NSObjectProtocol
-
-	readonly superclass: typeof NSObject; // inherited from NSObjectProtocol
-
-	readonly  // inherited from NSObjectProtocol
-
-	constructor(o: { venueMapLayer: NMAVenue3dMapLayer; });
-
-	class(): typeof NSObject;
-
-	conformsToProtocol(aProtocol: any /* Protocol */): boolean;
-
-	initWithVenueMapLayer(venueMapLayer: NMAVenue3dMapLayer): this;
-
-	isEqual(object: any): boolean;
-
-	isKindOfClass(aClass: typeof NSObject): boolean;
-
-	isMemberOfClass(aClass: typeof NSObject): boolean;
-
-	mapViewDidReceiveDoubleTapAtLocation(mapView: NMAMapView, location: CGPoint): void;
-
-	mapViewDidReceiveLongPressAtLocation(mapView: NMAMapView, location: CGPoint): void;
-
-	mapViewDidReceivePanAtLocation(mapView: NMAMapView, translation: CGPoint, location: CGPoint): void;
-
-	mapViewDidReceivePinchAtLocation(mapView: NMAMapView, pinch: number, location: CGPoint): void;
-
-	mapViewDidReceiveRotationAtLocation(mapView: NMAMapView, rotation: number, location: CGPoint): void;
-
-	mapViewDidReceiveTapAtLocation(mapView: NMAMapView, location: CGPoint): void;
-
-	mapViewDidReceiveTwoFingerPanAtLocation(mapView: NMAMapView, translation: CGPoint, location: CGPoint): void;
-
-	mapViewDidReceiveTwoFingerTapAtLocation(mapView: NMAMapView, location: CGPoint): void;
-
-	performSelector(aSelector: string): any;
-
-	performSelectorWithObject(aSelector: string, object: any): any;
-
-	performSelectorWithObjectWithObject(aSelector: string, object1: any, object2: any): any;
-
-	respondsToSelector(aSelector: string): boolean;
-
-	retainCount(): number;
-
-	self(): this;
-
-	venueMapLayerDidChangeFromLevelToLevelInVenue(venueMapLayer: NMAVenue3dMapLayer, oldLevel: NMAVenue3dLevel, newLevel: NMAVenue3dLevel, venue: NMAVenue3dVenue): void;
-
-	venueMapLayerDidCreateVenueController(venueMapLayer: NMAVenue3dMapLayer, venueController: NMAVenue3dController): void;
-
-	venueMapLayerDidDeselectSpaceInVenue(venueMapLayer: NMAVenue3dMapLayer, space: NMAVenue3dSpace, venue: NMAVenue3dVenue): void;
-
-	venueMapLayerDidDeselectVenueWithEvent(venueMapLayer: NMAVenue3dMapLayer, venue: NMAVenue3dVenue, event: NMAVenue3dDeselectEvent): void;
-
-	venueMapLayerDidHideVenue(venueMapLayer: NMAVenue3dMapLayer, venue: NMAVenue3dVenue): void;
-
-	venueMapLayerDidSelectSpaceInVenue(venueMapLayer: NMAVenue3dMapLayer, space: NMAVenue3dSpace, venue: NMAVenue3dVenue): void;
-
-	venueMapLayerDidSelectVenue(venueMapLayer: NMAVenue3dMapLayer, venue: NMAVenue3dVenue): void;
-
-	venueMapLayerDidShowVenue(venueMapLayer: NMAVenue3dMapLayer, venue: NMAVenue3dVenue): void;
-
-	venueMapLayerDidStart(venueMapLayer: NMAVenue3dMapLayer): void;
-
-	venueMapLayerDidTapVenueAtPoint(venueMapLayer: NMAVenue3dMapLayer, venue: NMAVenue3dVenue, point: CGPoint): void;
 }
 
 declare class NMAVenue3dLevel extends NSObject {
@@ -11448,13 +11593,9 @@ declare class NMAVenue3dMapLayer extends NSObject {
 
 	venueUpdatesEnabled: boolean;
 
-	venueZoomDelegate: NMAVenue3dVenueZoomDelegate;
-
 	visible: boolean;
 
 	addListener(listener: NMAVenue3dMapLayerDelegate): void;
-
-	addVenueZoomListener(listener: NMAVenue3dVenueZoomDelegate): void;
 
 	cancelVenueSelection(): boolean;
 
@@ -11462,15 +11603,9 @@ declare class NMAVenue3dMapLayer extends NSObject {
 
 	deselectVenue(): void;
 
-	enableVenueZoom(enable: boolean): void;
-
 	isVenueVisible(venueId: string): boolean;
 
-	isVenueZoomEnabled(): boolean;
-
 	removeListener(listener: NMAVenue3dMapLayerDelegate): void;
-
-	removeVenueZoomListener(listener: NMAVenue3dVenueZoomDelegate): void;
 
 	selectVenue(venue: NMAVenue3dVenue): void;
 
@@ -11574,6 +11709,8 @@ declare class NMAVenue3dNavigationManager extends NSObject {
 	reroutingTimeout: number;
 
 	readonly timeToArrival: number;
+
+	readonly venue: NMAVenue3dVenue;
 
 	readonly venueMapLayer: NMAVenue3dMapLayer;
 
@@ -12368,7 +12505,13 @@ declare class NMAWaypoint extends NSObject {
 
 	static new(): NMAWaypoint; // inherited from NSObject
 
+	course: number;
+
+	fuzzyMatchingRadius: number;
+
 	readonly identifier: string;
+
+	junctionSnappingRadius: number;
 
 	readonly mappedPosition: NMAGeoCoordinates;
 
@@ -12377,6 +12520,10 @@ declare class NMAWaypoint extends NSObject {
 	originalPosition: NMAGeoCoordinates;
 
 	readonly roadInfo: NMAWaypointRoadInfo;
+
+	selectiveMatchingRadius: number;
+
+	waitingTime: number;
 
 	readonly waypointDirection: NMAWaypointDirection;
 
@@ -12395,6 +12542,8 @@ declare class NMAWaypoint extends NSObject {
 	initWithGeoCoordinatesWaypointType(position: NMAGeoCoordinates, type: NMAWaypointType): this;
 
 	setIdentifierWaypointDirection(identifier: string, direction: NMAWaypointDirection): void;
+
+	setStreetNameHint(hint: string): void;
 }
 
 declare const enum NMAWaypointDirection {

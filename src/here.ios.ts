@@ -14,7 +14,6 @@ import { ios_icon } from './icon-source';
 
 declare var NMAMapView,
     NMAApplicationContext,
-    NMAMapViewDelegate,
     NMAMapSchemeHybridDay,
     NMAMapSchemeSatelliteDay,
     NMAMapSchemeTerrainDay,
@@ -28,6 +27,19 @@ declare var NMAMapView,
     NMARoutingType,
     NMATransportMode,
     NMARoutingOption,
+    NMAMapRoute,
+    NMAWaypoint,
+    NMAPositioningManager,
+    NMAWaypointType,
+    NMANavigationManagerDelegate,
+    NMARouteResult,
+    NMAImage,
+    NMADevicePositionSource,
+    NMARoutePositionSource,
+    NMAMapTrackingOrientation,
+    NMANavigationError,
+    NMALayoutPosition,
+    NMAMapCircle,
     NMARoutingMode;
 
 global.moduleMerge(common, exports);
@@ -110,7 +122,7 @@ export class Here extends HereBase {
         })
     }
 
-    public updateRoute(newRoute: NMARoute): void {
+    public updateRoute(newRoute): void {
         if (!newRoute) {
             return;
         }
@@ -770,11 +782,11 @@ const NMANavigationManagerDelegateImpl = (NSObject as any).extend({
     },
 
 }, {
-        protocols: [NMANavigationManagerDelegate],
-        exposedMethods: {
-            'navigationManager:didUpdateRouteWithResult:': { returns: interop.types.void, params: [NMANavigationManager, NMARouteResult] },
-        }
-    });
+    protocols: [NMANavigationManagerDelegate],
+    exposedMethods: {
+        'navigationManager:didUpdateRouteWithResult:': { returns: interop.types.void, params: [NMANavigationManager, NMARouteResult] },
+    }
+});
 
 NMANavigationManagerDelegateImpl.initWithOwner = function (owner) {
     const delegate = NMANavigationManagerDelegateImpl.new();
@@ -784,6 +796,7 @@ NMANavigationManagerDelegateImpl.initWithOwner = function (owner) {
 
 // @ts-ignore
 @ObjCClass(NMAMapViewDelegate)
+// @ts-ignore
 class NMAMapViewDelegateImpl extends NSObject implements NMAMapViewDelegate {
     owner: WeakRef<Here>;
 
@@ -809,6 +822,7 @@ class NMAMapViewDelegateImpl extends NSObject implements NMAMapViewDelegate {
 
 // @ts-ignore
 @ObjCClass(NMAMapGestureDelegate)
+// @ts-ignore
 class NMAMapGestureDelegateImpl extends NSObject implements NMAMapGestureDelegate {
     owner: WeakRef<Here>;
 

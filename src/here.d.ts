@@ -34,9 +34,14 @@ export declare class Here extends HereBase {
     setCenter(lat: number, lon: number, animated: boolean): Promise<any>;
     addMarkers(markers: HereMarker[]): Promise<any>;
     removeMarkers(markers?: number[]): Promise<any>;
+    addMarker(marker: HereMarker): void;
+    clearMarkers(): void;
     updateMarkers(markers: HereMarker[]): Promise<any>;
     updateMarker(marker: HereMarker): Promise<any>;
     addCircle(circle: any): void;
+    getCurrentPosition(): Promise<any>;
+    navigateTo(latitude: number, longitude: number): Promise<any>;
+    removeNavigation(): void;
     navigationManagerDidFindPosition(navigationManager: any): void;
     navigationManagerdidUpdateRouteWithResult(navigationManager: any, routeResult: any): void;
     navigationManagerDidLosePosition(navigationManager: any): void;

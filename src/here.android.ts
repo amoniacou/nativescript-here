@@ -168,7 +168,9 @@ export class Here extends HereBase {
         const nativeView = new android.widget.LinearLayout(this._context);
         nativeView.setId(this._layoutId);
         this.fragment = new com.here.android.mpa.mapping.SupportMapFragment() as any;
-        const manager = (app.android.foregroundActivity as android.support.v7.app.AppCompatActivity).getSupportFragmentManager(); // (this as any)._getFragmentManager() as android.support.v4.app.FragmentManager;
+       const activity =
+          app.android.foregroundActivity || app.android.startActivity;
+        const manager = activity.getSupportFragmentManager();
         manager
             .beginTransaction()
             .replace(this._layoutId, this.fragment as any, this.FRAGMENT_ID)
