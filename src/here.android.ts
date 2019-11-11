@@ -770,7 +770,7 @@ export class Here extends HereBase {
 
     _newRerouteListener(that): any {
         class RerouteListener extends com.here.android.mpa.guidance.NavigationManager.RerouteListener {
-            static ownerLink;
+            public ownerLink;
 
             setOwner(thatLink) {
                 this.ownerLink = thatLink;
@@ -811,7 +811,7 @@ export class Here extends HereBase {
 
     _newPositionListener(that): any {
         class PositionListenerImpl extends com.here.android.mpa.guidance.NavigationManager.PositionListener {
-            static ownerLink;
+            public ownerLink;
 
             setOwner(thatLink) {
                 this.ownerLink = thatLink;
@@ -864,7 +864,7 @@ export class Here extends HereBase {
 
     _newNavigationManagerListener(that): any {
         class NavigationManagerEventListener extends com.here.android.mpa.guidance.NavigationManager.NavigationManagerEventListener {
-            static ownerLink;
+            public ownerLink;
 
             setOwner(thatLink) {
                 this.ownerLink = thatLink;
