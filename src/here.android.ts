@@ -125,7 +125,8 @@ export class Here extends HereBase {
                 routePlan.addWaypoint(waypoint)
             })
 
-            const routerListener = new com.here.android.mpa.routing.CoreRouter.Listener({
+            const routerListener = new com.here.android.mpa.routing.Router.Listener({
+                onProgress(_percent): void { },
                 onCalculateRouteFinished(routeResults, routingError): void {
                     if (routingError == com.here.android.mpa.routing.RoutingError.NONE) {
                         const route = routeResults.get(0).getRoute();
@@ -165,8 +166,8 @@ export class Here extends HereBase {
         const nativeView = new android.widget.LinearLayout(this._context);
         nativeView.setId(this._layoutId);
         this.fragment = new com.here.android.mpa.mapping.SupportMapFragment() as any;
-       const activity =
-          app.android.foregroundActivity || app.android.startActivity;
+        const activity =
+            app.android.foregroundActivity || app.android.startActivity;
         const manager = activity.getSupportFragmentManager();
         manager
             .beginTransaction()
@@ -1117,12 +1118,12 @@ export class Here extends HereBase {
     }
 
     _newRouterListener(that, resolve, reject) {
-        return new com.here.android.mpa.routing.CoreRouter.Listener({
-	/*            onProgress(percent): void {
+        return new com.here.android.mpa.routing.Router.Listener({
+            onProgress(percent): void {
                 const owner = that ? that.get() : null;
                 owner.routeProgress = percent;
                 //android.widget.Toast.makeText(this._context, `Calculate route: ${percent}%`, android.widget.Toast.LENGTH_SHORT).show();
-		},*/
+            },
 
             onCalculateRouteFinished(routeResults, routingError): void {
                 const owner = that ? that.get() : null;
